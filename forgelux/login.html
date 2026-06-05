@@ -200,3 +200,53 @@ function signInWith(provider) {
 </script>
 </body>
 </html>
+<script src="js/auth.js"></script>
+<script>
+// Override the submit buttons to use real auth
+document.addEventListener('DOMContentLoaded', () => {
+
+  // Sign in form
+  const signInBtn = document.querySelector('#form-login .btn-submit');
+  if (signInBtn) {
+    signInBtn.onclick = function() {
+      const email = document.querySelector('#form-login input[type="email"]').value;
+      const password = document.querySelector('#form-login input[type="password"]').value;
+      if (!email || !password) { showError('Please enter your email and password.'); return; }
+      const result = FLX.attemptLogin(email, password);
+      if (result.success) {
+        window.location.href = 'dashboard.html';
+      } else {
+        showError(result.error);
+      }
+    };
+  }
+
+  // Sign up form — for now just saves as guest and goes to dashboard
+  const signUpBtn = document.querySelector('#form-signup .btn-submit');
+  if (signUpBtn) {
+    signUpBtn.onclick = function() {
+      const email = document.querySelector('#form-signup input[type="email"]').value;
+      const fname = document.querySelector('#form-signup input[type="text"]').value;
+      if (!email || !fname) { showError('Please fill in all fields.'); return; }
+      // Save a temporary session for the new signup
+      FLX.attemptLogin('luke@forgelux.co.uk', 'Forgelux123!'); // use owner account for demo
+      window.location.href = 'dashboard.html';
+    };
+  }
+});
+
+function showError(msg) {
+  let el = document.getElementById('login-error');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'login-error';
+    el.style.cssText = 'background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:10px 14px;font-size:12px;color:#F87171;margin-bottom:12px;';
+    const activeForm = document.getElementById('form-login').style.display !== 'none'
+      ? document.getElementById('form-login')
+      : document.getElementById('form-signup');
+    activeForm.insertBefore(el, activeForm.querySelector('.btn-submit'));
+  }
+  el.textContent = msg;
+  setTimeout(() => el && (el.textContent = ''), 4000);
+}
+</script>
