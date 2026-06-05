@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forgelux — Settings</title>
+<link rel="stylesheet" href="js/theme.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+.settings-layout { display:grid; grid-template-columns:200px 1fr; gap:2rem; }
+
+/* settings nav */
+.settings-nav { display:flex; flex-direction:column; gap:2px; position:sticky; top:1.5rem; align-self:start; }
+.sn-section { font-size:9px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); font-weight:600; padding:.4rem .75rem; margin-top:.75rem; }
+.sn-section:first-of-type { margin-top:0; }
+.sn-item { display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:8px; font-size:12px; color:var(--subtle); cursor:pointer; transition:all .15s; border:1px solid transparent; text-decoration:none; }
+.sn-item:hover { background:rgba(255,255,255,.04); color:var(--text); }
+.sn-item.act { background:rgba(123,47,255,.12); border-color:rgba(123,47,255,.25); color:#C4A3FF; }
+.sn-item i { font-size:15px; flex-shrink:0; }
+
+/* settings sections */
+.s-section { display:none; }
+.s-section.act { display:block; }
+.s-title { font-family:'Syne',sans-serif; font-weight:700; font-size:1.3rem; letter-spacing:-.03em; margin-bottom:.35rem; }
+.s-sub { color:var(--subtle); font-size:.88rem; font-weight:300; margin-bottom:2rem; }
+.s-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1.5rem; margin-bottom:1rem; }
+.s-card-title { font-family:'Syne',sans-serif; font-weight:600; font-size:.9rem; margin-bottom:.25rem; letter-spacing:-.01em; }
+.s-card-sub { font-size:11px; color:var(--muted); font-weight:300; margin-bottom:1.25rem; }
+.s-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+.s-field { margin-bottom:1rem; }
+.s-label { display:block; font-size:11px; font-weight:500; color:var(--subtle); margin-bottom:.4rem; }
+.s-input { width:100%; padding:8px 11px; background:var(--surface2); border:1px solid var(--border-bright); border-radius:8px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:12px; outline:none; transition:border-color .2s; }
+.s-input:focus { border-color:rgba(123,47,255,.5); box-shadow:0 0 0 3px rgba(123,47,255,.07); }
+.s-input::placeholder { color:var(--muted); }
+.s-select { width:100%; padding:8px 11px; background:var(--surface2); border:1px solid var(--border-bright); border-radius:8px; color:var(--subtle); font-family:'DM Sans',sans-serif; font-size:12px; outline:none; }
+.s-textarea { width:100%; padding:8px 11px; background:var(--surface2); border:1px solid var(--border-bright); border-radius:8px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:12px; outline:none; resize:vertical; transition:border-color .2s; }
+.s-textarea:focus { border-color:rgba(123,47,255,.5); }
+.s-divider { height:1px; background:var(--border); margin:1.25rem 0; }
+.s-row-inline { display:flex; align-items:center; justify-content:space-between; padding:.75rem 0; border-bottom:1px solid var(--border); }
+.s-row-inline:last-child { border-bottom:none; }
+.s-row-left { }
+.s-row-title { font-size:12px; font-weight:500; color:var(--text); margin-bottom:.15rem; }
+.s-row-desc { font-size:11px; color:var(--muted); font-weight:300; }
+
+/* toggle */
+.tog { position:relative; width:38px; height:21px; cursor:pointer; flex-shrink:0; }
+.tog input { opacity:0; width:0; height:0; }
+.tog-track { position:absolute; inset:0; background:var(--surface2); border:1px solid var(--border-bright); border-radius:100px; transition:background .2s; }
+.tog-thumb { position:absolute; top:2px; left:2px; width:15px; height:15px; background:var(--muted); border-radius:50%; transition:all .2s; }
+.tog input:checked + .tog-track { background:rgba(123,47,255,.3); border-color:rgba(123,47,255,.5); }
+.tog input:checked ~ .tog-thumb { transform:translateX(17px); background:var(--violet); }
+
+/* avatar upload */
+.avatar-upload { display:flex; align-items:center; gap:1rem; margin-bottom:1.25rem; }
+.av-circle { width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,rgba(123,47,255,.5),rgba(14,165,233,.5)); display:flex; align-items:center; justify-content:center; font-family:'Syne',sans-serif; font-weight:700; font-size:1.4rem; color:#fff; flex-shrink:0; }
+.av-actions { display:flex; flex-direction:column; gap:6px; }
+
+/* API key row */
+.api-key-row { display:flex; align-items:center; gap:8px; }
+.api-key-val { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:8px 11px; font-family:'DM Mono',monospace; font-size:11px; color:var(--subtle); letter-spacing:.05em; }
+.api-copy-btn { padding:8px 12px; border-radius:7px; border:1px solid var(--border-bright); background:transparent; color:var(--subtle); font-size:11px; cursor:pointer; transition:all .15s; font-family:'DM Sans',sans-serif; white-space:nowrap; }
+.api-copy-btn:hover { border-color:rgba(255,255,255,.2); color:var(--text); }
+
+/* danger zone */
+.danger-card { background:rgba(239,68,68,.04); border:1px solid rgba(239,68,68,.2); border-radius:12px; padding:1.5rem; }
+.danger-title { font-family:'Syne',sans-serif; font-weight:700; font-size:.9rem; color:#F87171; margin-bottom:.25rem; }
+.danger-sub { font-size:11px; color:var(--muted); font-weight:300; margin-bottom:1.25rem; }
+
+/* webhook table */
+.wh-row { display:flex; align-items:center; gap:10px; padding:.75rem 0; border-bottom:1px solid var(--border); }
+.wh-row:last-child { border-bottom:none; }
+.wh-url { flex:1; font-family:'DM Mono',monospace; font-size:10px; color:var(--subtle); background:var(--surface2); padding:5px 9px; border-radius:6px; border:1px solid var(--border); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.wh-events { font-size:10px; color:var(--muted); flex-shrink:0; }
+
+/* color swatch picker */
+.color-swatches { display:flex; gap:8px; margin-top:8px; }
+.cs { width:28px; height:28px; border-radius:7px; cursor:pointer; border:2px solid transparent; transition:all .15s; }
+.cs:hover { transform:scale(1.15); }
+.cs.sel { border-color:#fff; transform:scale(1.1); }
+</style>
+</head>
+<body>
+<div id="app">
+<div class="settings-layout fade d1">
+
+  <!-- SETTINGS NAV -->
+  <div class="settings-nav">
+    <div class="sn-section">Workspace</div>
+    <a class="sn-item act" onclick="switchSection(this,'workspace')"><i class="ti ti-building"></i> Workspace</a>
+    <a class="sn-item" onclick="switchSection(this,'appearance')"><i class="ti ti-palette"></i> Appearance</a>
+    <a class="sn-item" onclick="switchSection(this,'notifications')"><i class="ti ti-bell"></i> Notifications</a>
+    <div class="sn-section">Account</div>
+    <a class="sn-item" onclick="switchSection(this,'profile')"><i class="ti ti-user"></i> Profile</a>
+    <a class="sn-item" onclick="switchSection(this,'security')"><i class="ti ti-lock"></i> Security</a>
+    <div class="sn-section">Developer</div>
+    <a class="sn-item" onclick="switchSection(this,'api')"><i class="ti ti-code"></i> API & keys</a>
+    <a class="sn-item" onclick="switchSection(this,'webhooks')"><i class="ti ti-webhook"></i> Webhooks</a>
+    <div class="sn-section">Danger</div>
+    <a class="sn-item" onclick="switchSection(this,'danger')" style="color:rgba(239,68,68,.7)"><i class="ti ti-alert-triangle" style="color:rgba(239,68,68,.7)"></i> Danger zone</a>
+  </div>
+
+  <!-- SETTINGS CONTENT -->
+  <div>
+
+    <!-- WORKSPACE -->
+    <div class="s-section act" id="sec-workspace">
+      <div class="s-title">Workspace settings</div>
+      <div class="s-sub">Manage your workspace name, logo and general configuration.</div>
+
+      <div class="s-card">
+        <div class="s-card-title">General</div>
+        <div class="s-card-sub">Basic workspace information shown to all members.</div>
+        <div class="s-row">
+          <div class="s-field"><label class="s-label">Workspace name</label><input type="text" class="s-input" value="Luke's Workspace"></div>
+          <div class="s-field"><label class="s-label">Workspace slug</label><input type="text" class="s-input" value="lukes-workspace"></div>
+        </div>
+        <div class="s-field"><label class="s-label">Description</label><textarea class="s-textarea" rows="2" placeholder="What does your team use Forgelux for?">Building custom ops tools for our logistics and sales teams.</textarea></div>
+        <div class="s-field"><label class="s-label">Website</label><input type="url" class="s-input" placeholder="https://yourcompany.com"></div>
+        <div style="display:flex;justify-content:flex-end;margin-top:.5rem">
+          <button class="btn btn-primary" onclick="showToast('✓ Workspace settings saved')">Save changes</button>
+        </div>
+      </div>
+
+      <div class="s-card">
+        <div class="s-card-title">Workspace logo</div>
+        <div class="s-card-sub">Used in emails and the sidebar. PNG or SVG, max 2MB.</div>
+        <div class="avatar-upload">
+          <div class="av-circle" style="border-radius:12px;width:64px;height:64px;font-size:.9rem">⬡ FL</div>
+          <div class="av-actions">
+            <button class="btn btn-ghost" style="font-size:11px"><i class="ti ti-upload" style="font-size:13px"></i> Upload logo</button>
+            <button class="btn btn-ghost" style="font-size:11px;color:var(--danger)">Remove</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="s-card">
+        <div class="s-card-title">Preferences</div>
+        <div class="s-card-sub">Configure workspace-wide defaults.</div>
+        <div class="s-row-inline">
+          <div class="s-row-left"><div class="s-row-title">Default app visibility</div><div class="s-row-desc">New apps are private to editors by default</div></div>
+          <select class="s-select" style="width:140px"><option>Private</option><option>Team only</option><option>Public</option></select>
+        </div>
+        <div class="s-row-inline">
+          <div class="s-row-left"><div class="s-row-title">Timezone</div><div class="s-row-desc">Used for scheduled automations</div></div>
+          <select class="s-select" style="width:200px"><option>Europe/London (UTC+1)</option><option>America/New_York</option><option>America/Los_Angeles</option><option>Asia/Singapore</option></select>
+        </div>
+        <div class="s-row-inline">
+          <div class="s-row-left"><div class="s-row-title">Date format</div><div class="s-row-desc">How dates display across all apps</div></div>
+          <select class="s-select" style="width:160px"><option>DD/MM/YYYY</option><option>MM/DD/YYYY</option><option>YYYY-MM-DD</option></select>
+        </div>
+      </div>
+    </div>
+
+    <!-- APPEARANCE -->
+    <div class="s-section" id="sec-appearance">
+      <div class="s-title">Appearance</div>
+      <div class="s-sub">Customise how Forgelux looks for your whole workspace.</div>
+
+      <div class="s-card">
+        <div class="s-card-title">Theme</div>
+        <div class="s-card-sub">Choose the colour scheme for the Forgelux dashboard.</div>
+        <div class="s-row-inline">
+          <div class="s-row-left"><div class="s-row-title">Dark mode</div><div class="s-row-desc">Currently active</div></div>
+          <label class="tog"><input type="checkbox" checked><span class="tog-track"></span><span class="tog-thumb"></span></label>
+        </div>
+        <div class="s-row-inline">
+          <div class="s-row-left"><div class="s-row-title">Accent colour</div><div class="s-row-desc">Used for highlights and active states</div></div>
+          <div class="color-swatches">
+            <div class="cs sel" style="background:#7B2FFF" title="Violet"></div>
+            <div class="cs" style="background:#0EA5E9" title="Blue" onclick="pickColor(this)"></div>
+            <div class="cs" style="background:#A3FF47" title="Lime" onclick="pickColor(this)"></div>
+            <div class="cs" style="background:#F59E0B" title="Amber" onclick="pickColor(this)"></div>
+            <div class="cs" style="background:#EF4444" title="Red" onclick="pickColor(this)"></div>
+            <div class="cs" style="background:#EC4899" title="Pink" onclick="pickColor(this)"></div>
+          </div>
+        </div>
+        <div class="s-row-inline">
+          <div class="s-row-left"><div class="s-row-title">Compact mode</div><div class="s-row-desc">Reduce spacing for higher information density</div></div>
+          <label class="tog"><input type="checkbox"><span class="tog-track"></span><span class="tog-thumb"></span></label>
+        </div>
+        <div class="s-row-inline">
+          <div class="s-row-left"><div class="s-row-title">Reduce motion</div><div class="s-row-desc">Disable animations and transitions</div></div>
+          <label class="tog"><input type="checkbox"><span class="tog-track"></span><span class="tog-thumb"></span></label>
+        </div>
+      </div>
+
+      <div class="s-card">
+        <div class="s-card-title">Custom domain</div>
+        <div class="s-card-sub">Serve your published apps from your own domain. Enterprise plan required.</div>
+        <div class="s-field"><label class="s-label">Custom domain</label>
+          <div style="display:flex;gap:8px">
+            <input type="text" class="s-input" placeholder="apps.yourcompany.com" style="flex:1">
+            <button class="btn btn-ghost" style="font-size:11px;white-space:nowrap">Verify DNS →</button>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);font-weight:300">Add a CNAME record pointing to <code style="font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;border-radius:4px">cname.forgelux.io</code></div>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div class="s-section" id="sec-notifications">
+      <div class="s-title">Notifications</div>
+      <div class="s-sub">Choose what you get notified about and how.</div>
+
+      <div class="s-card">
+        <div class="s-card-title">Email notifications</div>
+        <div class="s-card-sub">Sent to luke@forgelux.io</div>
+        <div class="s-row-inline"><div class="s-row-left"><div class="s-row-title">Automation errors</div><div class="s-row-desc">When an automation fails after all retries</div></div><label class="tog"><input type="checkbox" checked><span class="tog-track"></span><span class="tog-thumb"></span></label></div>
+        <div class="s-row-inline"><div class="s-row-left"><div class="s-row-title">Usage limit warnings</div><div class="s-row-desc">When you reach 80% of your plan limits</div></div><label class="tog"><input type="checkbox" checked><span class="tog-track"></span><span class="tog-thumb"></span></label></div>
+        <div class="s-row-inline"><div class="s-row-left"><div class="s-row-title">New team member joined</div><div class="s-row-desc">When someone accepts an invite</div></div><label class="tog"><input type="checkbox" checked><span class="tog-track"></span><span class="tog-thumb"></span></label></div>
+        <div class="s-row-inline"><div class="s-row-left"><div class="s-row-title">App published</div><div class="s-row-desc">When a team member publishes an app</div></div><label class="tog"><input type="checkbox"><span class="tog-track"></span><span class="tog-thumb"></span></label></div>
+        <div class="s-row-inline"><div class="s-row-left"><div class="s-row-title">Weekly summary</div><div class="s-row-desc">A digest of runs, users and changes each Monday</div></div><label class="tog"><input type="checkbox" checked><span class="tog-track"></span><span class="tog-thumb"></span></label></div>
+        <div class="s-row-inline"><div class="s-row-left"><div class="s-row-title">Billing reminders</div><div class="s-row-desc">Payment due, failed charge, plan renewal</div></div><label class="tog"><input type="checkbox" checked><span class="tog-track"></span><span class="tog-thumb"></span></label></div>
+      </div>
+
+      <div class="s-card">
+        <div class="s-card-title">In-app notifications</div>
+        <div class="s-card-sub">Shown in the notification bell in the top bar.</div>
+        <div class="s-row-inline"><div class="s-row-left"><div class="s-row-title">All automation events</div><div class="s-row-desc">Runs, errors and completions</div></div><label class="tog"><input type="checkbox" checked><span class="tog-track"></span><span class="tog-thumb"></span></label></div>
+        <div class="s-row-inline"><div class="s-row-left"><div class="s-row-title">Team activity</div><div class="s-row-desc">Edits, publishes and comments</div></div><label class="tog"><input type="checkbox"><span class="tog-track"></span><span class="tog-thumb"></span></label></div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="s-section" id="sec-profile">
+      <div class="s-title">Your profile</div>
+      <div class="s-sub">Personal details visible to your workspace members.</div>
+
+      <div class="s-card">
+        <div class="s-card-title">Personal info</div>
+        <div class="avatar-upload">
+          <div class="av-circle">LR</div>
+          <div class="av-actions">
+            <button class="btn btn-ghost" style="font-size:11px"><i class="ti ti-upload" style="font-size:13px"></i> Upload photo</button>
+            <button class="btn btn-ghost" style="font-size:11px;color:var(--danger)">Remove</button>
+          </div>
+        </div>
+        <div class="s-row">
+          <div class="s-field"><label class="s-label">First name</label><input type="text" class="s-input" value="Luke"></div>
+          <div class="s-field"><label class="s-label">Last name</label><input type="text" class="s-input" value="Ryan"></div>
+        </div>
+        <div class="s-field"><label class="s-label">Email address</label><input type="email" class="s-input" value="luke@forgelux.io"></div>
+        <div class="s-field"><label class="s-label">Job title</label><input type="text" class="s-input" value="Founder" placeholder="e.g. Head of Operations"></div>
+        <div style="display:flex;justify-content:flex-end">
+          <button class="btn btn-primary" onclick="showToast('✓ Profile saved')">Save profile</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECURITY -->
+    <div class="s-section" id="sec-security">
+      <div class="s-title">Security</div>
+      <div class="s-sub">Manage your password, two-factor authentication and active sessions.</div>
+
+      <div class="s-card">
+        <div class="s-card-title">Change password</div>
+        <div class="s-field"><label class="s-label">Current password</label><input type="password" class="s-input" placeholder="••••••••"></div>
+        <div class="s-row">
+          <div class="s-field"><label class="s-label">New password</label><input type="password" class="s-input" placeholder="Min. 8 characters"></div>
+          <div class="s-field"><label class="s-label">Confirm password</label><input type="password" class="s-input" placeholder="Repeat new password"></div>
+        </div>
+        <button class="btn btn-primary" onclick="showToast('✓ Password updated')">Update password</button>
+      </div>
+
+      <div class="s-card">
+        <div class="s-card-title">Two-factor authentication</div>
+        <div class="s-card-sub">Add a second layer of security using an authenticator app.</div>
+        <div class="s-row-inline">
+          <div class="s-row-left"><div class="s-row-title">Authenticator app (TOTP)</div><div class="s-row-desc">Google Authenticator, Authy, 1Password</div></div>
+          <button class="btn btn-ghost" style="font-size:11px" onclick="showToast('2FA setup flow — coming soon')">Enable →</button>
+        </div>
+        <div class="s-row-inline">
+          <div class="s-row-left"><div class="s-row-title">SMS backup</div><div class="s-row-desc">Receive codes via text message as a fallback</div></div>
+          <button class="btn btn-ghost" style="font-size:11px">Add phone</button>
+        </div>
+      </div>
+
+      <div class="s-card">
+        <div class="s-card-title">Active sessions</div>
+        <div class="s-card-sub">Devices currently signed in to your account.</div>
+        <div class="s-row-inline">
+          <div class="s-row-left">
+            <div class="s-row-title"><i class="ti ti-device-laptop" style="font-size:13px;margin-right:5px"></i>MacBook Pro — Chrome · London, UK</div>
+            <div class="s-row-desc">Current session · Last active now</div>
+          </div>
+          <span class="badge badge-green">Active</span>
+        </div>
+        <div class="s-row-inline">
+          <div class="s-row-left">
+            <div class="s-row-title"><i class="ti ti-device-mobile" style="font-size:13px;margin-right:5px"></i>iPhone 15 Pro — Safari · London, UK</div>
+            <div class="s-row-desc">Last active 2h ago</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="showToast('Session revoked')">Revoke</button>
+        </div>
+        <div style="margin-top:1rem">
+          <button class="btn btn-danger" style="font-size:11px" onclick="showToast('All other sessions revoked')">Sign out all other devices</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- API -->
+    <div class="s-section" id="sec-api">
+      <div class="s-title">API & keys</div>
+      <div class="s-sub">Manage API keys for connecting to Forgelux programmatically.</div>
+
+      <div class="s-card">
+        <div class="s-card-title">API keys</div>
+        <div class="s-card-sub">Use these to authenticate your apps with the Forgelux API. Never share secret keys.</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:1rem">
+          <div>
+            <div style="font-size:11px;font-weight:500;color:var(--text);margin-bottom:5px">Production key</div>
+            <div class="api-key-row">
+              <div class="api-key-val">flx_live_••••••••••••••••••••••••••••4a2f</div>
+              <button class="api-copy-btn" onclick="copyKey('production')"><i class="ti ti-copy" style="font-size:12px"></i> Copy</button>
+              <button class="api-copy-btn" style="color:#F87171;border-color:rgba(239,68,68,.3)" onclick="showToast('Key revoked')">Revoke</button>
+            </div>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px">Created 14 Jan 2026 · Last used 2 hours ago</div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:500;color:var(--text);margin-bottom:5px">Test key</div>
+            <div class="api-key-row">
+              <div class="api-key-val">flx_test_••••••••••••••••••••••••••••8c1d</div>
+              <button class="api-copy-btn" onclick="copyKey('test')"><i class="ti ti-copy" style="font-size:12px"></i> Copy</button>
+              <button class="api-copy-btn" style="color:#F87171;border-color:rgba(239,68,68,.3)" onclick="showToast('Key revoked')">Revoke</button>
+            </div>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px">Created 14 Jan 2026 · Last used 5 days ago</div>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="showToast('✓ New API key generated')"><i class="ti ti-plus" style="font-size:13px"></i> Generate new key</button>
+      </div>
+
+      <div class="s-card">
+        <div class="s-card-title">API documentation</div>
+        <div class="s-card-sub">Everything you need to build on top of Forgelux.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a class="btn btn-ghost" href="#" style="font-size:11px"><i class="ti ti-book" style="font-size:13px"></i> REST API docs</a>
+          <a class="btn btn-ghost" href="#" style="font-size:11px"><i class="ti ti-brand-javascript" style="font-size:13px"></i> JS SDK</a>
+          <a class="btn btn-ghost" href="#" style="font-size:11px"><i class="ti ti-brand-python" style="font-size:13px"></i> Python SDK</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEBHOOKS -->
+    <div class="s-section" id="sec-webhooks">
+      <div class="s-title">Webhooks</div>
+      <div class="s-sub">Send real-time event data to your own endpoints whenever something happens in Forgelux.</div>
+
+      <div class="s-card">
+        <div class="s-card-title">Configured webhooks</div>
+        <div class="s-card-sub">Forgelux will POST a JSON payload to each URL when the selected events fire.</div>
+        <div class="wh-row">
+          <div class="wh-url">https://hooks.yourapp.com/forgelux/events</div>
+          <div class="wh-events">automation.run, automation.error</div>
+          <span class="badge badge-green">Active</span>
+          <button class="btn btn-ghost btn-sm">Edit</button>
+        </div>
+        <div class="wh-row">
+          <div class="wh-url">https://n8n.internal.co/webhook/flx-abc123</div>
+          <div class="wh-events">app.published</div>
+          <span class="badge badge-green">Active</span>
+          <button class="btn btn-ghost btn-sm">Edit</button>
+        </div>
+        <div style="margin-top:1rem">
+          <button class="btn btn-primary" onclick="showToast('Add webhook — coming soon')"><i class="ti ti-plus" style="font-size:13px"></i> Add webhook</button>
+        </div>
+      </div>
+
+      <div class="s-card">
+        <div class="s-card-title">Available events</div>
+        <div class="s-card-sub">Subscribe to any combination of these event types.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          ${['automation.run','automation.error','automation.success','app.published','app.deleted','user.invited','user.joined','billing.payment_failed','billing.plan_changed'].map(e=>`<div style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:var(--surface2);border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;color:var(--subtle)">${e}</div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- DANGER ZONE -->
+    <div class="s-section" id="sec-danger">
+      <div class="s-title">Danger zone</div>
+      <div class="s-sub">These actions are irreversible. Please read carefully before proceeding.</div>
+
+      <div class="danger-card">
+        <div class="danger-title"><i class="ti ti-alert-triangle" style="font-size:15px;margin-right:6px"></i>Danger zone</div>
+        <div class="danger-sub">Actions here permanently affect your workspace and cannot be undone.</div>
+
+        <div class="s-row-inline" style="border-color:rgba(239,68,68,.15)">
+          <div class="s-row-left">
+            <div class="s-row-title">Export all data</div>
+            <div class="s-row-desc">Download a full archive of your apps, automations and data</div>
+          </div>
+          <button class="btn btn-ghost" style="font-size:11px" onclick="showToast('Export started — you will receive an email')"><i class="ti ti-download" style="font-size:13px"></i> Export</button>
+        </div>
+        <div class="s-row-inline" style="border-color:rgba(239,68,68,.15)">
+          <div class="s-row-left">
+            <div class="s-row-title">Delete all apps</div>
+            <div class="s-row-desc">Permanently remove all 12 apps and their data</div>
+          </div>
+          <button class="btn btn-danger" style="font-size:11px" onclick="confirmDanger('delete all apps')">Delete all apps</button>
+        </div>
+        <div class="s-row-inline" style="border-color:rgba(239,68,68,.15)">
+          <div class="s-row-left">
+            <div class="s-row-title">Cancel subscription</div>
+            <div class="s-row-desc">Downgrade to free and lose access to Pro features on 4 Jul 2026</div>
+          </div>
+          <button class="btn btn-danger" style="font-size:11px" onclick="confirmDanger('cancel subscription')">Cancel plan</button>
+        </div>
+        <div class="s-row-inline" style="border-bottom:none">
+          <div class="s-row-left">
+            <div class="s-row-title" style="color:#F87171">Delete workspace</div>
+            <div class="s-row-desc">Permanently delete this workspace, all apps, automations and member data</div>
+          </div>
+          <button class="btn btn-danger" style="font-size:11px;background:rgba(239,68,68,.2)" onclick="confirmDanger('delete this workspace')">Delete workspace</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script src="js/auth.js"></script>
+<script src="js/nav.js"></script>
+<script>
+Nav.init({ title:'Settings' });
+
+function switchSection(el, id){
+  document.querySelectorAll('.sn-item').forEach(i=>i.classList.remove('act'));
+  el.classList.add('act');
+  document.querySelectorAll('.s-section').forEach(s=>s.classList.remove('act'));
+  document.getElementById('sec-'+id).classList.add('act');
+}
+
+function showToast(msg){
+  let t=document.getElementById('flx-toast');
+  if(!t){ t=document.createElement('div'); t.id='flx-toast'; t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--surface);border:1px solid var(--border-bright);border-radius:8px;padding:8px 16px;font-size:12px;color:var(--text);box-shadow:0 8px 30px rgba(0,0,0,.4);transition:transform .3s;z-index:999;white-space:nowrap'; document.body.appendChild(t); }
+  t.textContent=msg; t.style.transform='translateX(-50%) translateY(0)';
+  clearTimeout(window._tt);
+  window._tt=setTimeout(()=>t.style.transform='translateX(-50%) translateY(70px)',2500);
+}
+
+function pickColor(el){
+  document.querySelectorAll('.cs').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  showToast('Accent colour updated');
+}
+
+function copyKey(type){
+  navigator.clipboard?.writeText('flx_'+type+'_demo_key_forgelux').catch(()=>{});
+  showToast('✓ API key copied to clipboard');
+}
+
+function confirmDanger(action){
+  const confirmed=confirm(`Are you sure you want to ${action}? This cannot be undone.`);
+  if(confirmed) showToast('Action cancelled in demo mode');
+}
+</script>
+</body>
+</html>

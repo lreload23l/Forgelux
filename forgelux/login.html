@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forgelux — Sign in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#080A0F;--surface:#111318;--surface2:#161B25;--border:rgba(255,255,255,0.07);--border-bright:rgba(255,255,255,0.14);--violet:#7B2FFF;--blue:#0EA5E9;--lime:#A3FF47;--text:#FFFFFF;--muted:#6B7280;--subtle:#9CA3AF}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;display:flex}
+
+/* LEFT PANEL */
+.left{width:45%;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:space-between;padding:3rem;position:relative;overflow:hidden;flex-shrink:0}
+.left::before{content:'';position:absolute;bottom:-20%;left:-20%;width:600px;height:600px;background:radial-gradient(ellipse,rgba(123,47,255,0.15) 0%,transparent 65%);pointer-events:none}
+.left-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.5rem;letter-spacing:-0.03em;background:linear-gradient(135deg,#fff 40%,#7B2FFF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;cursor:pointer;text-decoration:none}
+.left-body{position:relative;z-index:1}
+.left h2{font-family:'Syne',sans-serif;font-weight:800;font-size:2.4rem;letter-spacing:-0.04em;line-height:1.1;margin-bottom:1.25rem}
+.left h2 .gr{background:linear-gradient(135deg,var(--violet),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.left p{color:var(--subtle);font-size:0.95rem;font-weight:300;line-height:1.7;margin-bottom:2.5rem;max-width:380px}
+.proof{display:flex;flex-direction:column;gap:0.75rem}
+.proof-item{display:flex;align-items:center;gap:0.75rem;font-size:0.88rem;color:var(--subtle);font-weight:300}
+.proof-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0}
+.left-footer{font-size:0.78rem;color:var(--muted);position:relative;z-index:1}
+
+/* RIGHT PANEL */
+.right{flex:1;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:3rem 2rem;overflow-y:auto}
+.login-box{width:100%;max-width:420px}
+.tab-row{display:flex;gap:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:4px;margin-bottom:2.5rem}
+.tab{flex:1;padding:0.6rem;text-align:center;font-size:0.88rem;font-weight:400;color:var(--muted);cursor:pointer;border-radius:7px;transition:background 0.2s,color 0.2s;border:none;background:transparent;font-family:'DM Sans',sans-serif}
+.tab.act{background:var(--surface2);color:var(--text);font-weight:500}
+.form-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.6rem;letter-spacing:-0.03em;margin-bottom:0.4rem}
+.form-sub{font-size:0.88rem;color:var(--subtle);font-weight:300;margin-bottom:2rem}
+.social-row{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1.75rem}
+.btn-social{display:flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.7rem;border-radius:8px;border:1px solid var(--border-bright);background:var(--surface);color:var(--subtle);font-size:0.85rem;font-weight:400;cursor:pointer;transition:border-color 0.2s,color 0.2s;font-family:'DM Sans',sans-serif}
+.btn-social:hover{border-color:var(--muted);color:var(--text)}
+.btn-social svg{width:16px;height:16px;flex-shrink:0}
+.divider-text{display:flex;align-items:center;gap:1rem;font-size:0.78rem;color:var(--muted);margin-bottom:1.75rem}
+.divider-text::before,.divider-text::after{content:'';flex:1;height:1px;background:var(--border)}
+.form-group{margin-bottom:1.25rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
+.form-label{display:block;font-size:0.8rem;font-weight:500;color:var(--subtle);margin-bottom:0.45rem}
+.form-input{width:100%;padding:0.75rem 1rem;background:var(--surface);border:1px solid var(--border-bright);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:300;outline:none;transition:border-color 0.2s,box-shadow 0.2s}
+.form-input::placeholder{color:var(--muted)}
+.form-input:focus{border-color:rgba(123,47,255,0.6);box-shadow:0 0 0 3px rgba(123,47,255,0.1)}
+.form-helper{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.45rem}
+.form-link{font-size:0.78rem;color:var(--violet);text-decoration:none;cursor:pointer;transition:opacity 0.2s}
+.form-link:hover{opacity:0.8}
+.btn-submit{width:100%;padding:0.9rem;background:var(--lime);color:#080A0F;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:600;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;letter-spacing:0.01em;margin-top:0.5rem}
+.btn-submit:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(163,255,71,0.25)}
+.form-footer{text-align:center;margin-top:1.5rem;font-size:0.84rem;color:var(--muted);font-weight:300}
+.form-footer a{color:var(--violet);text-decoration:none;cursor:pointer}
+.form-terms{font-size:0.75rem;color:var(--muted);text-align:center;margin-top:1.25rem;line-height:1.5;font-weight:300}
+.form-terms a{color:var(--subtle);text-decoration:underline;cursor:pointer}
+.pw-strength{margin-top:0.5rem;display:flex;gap:4px}
+.pw-bar{flex:1;height:3px;border-radius:2px;background:var(--border-bright);transition:background 0.3s}
+.pw-bar.weak{background:#EF4444}
+.pw-bar.fair{background:#F59E0B}
+.pw-bar.strong{background:var(--lime)}
+.plan-select-row{display:grid;grid-template-columns:repeat(3,1fr);gap:0.6rem;margin-bottom:1.25rem}
+.plan-opt{padding:0.75rem 0.5rem;border-radius:8px;border:1px solid var(--border-bright);background:var(--surface);text-align:center;cursor:pointer;transition:border-color 0.2s,background 0.2s}
+.plan-opt.selected{border-color:rgba(123,47,255,0.6);background:rgba(123,47,255,0.08)}
+.plan-opt-name{font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:600;display:block;margin-bottom:0.2rem}
+.plan-opt-price{font-size:0.72rem;color:var(--muted)}
+.plan-opt.selected .plan-opt-price{color:#C4A3FF}
+
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--border-bright);border-radius:2px}
+
+@media(max-width:768px){.left{display:none}.right{padding:2rem 1.5rem}}
+</style>
+</head>
+<body>
+
+<!-- LEFT -->
+<div class="left">
+  <a class="left-logo" href="index.html">Forgelux</a>
+  <div class="left-body">
+    <h2>Your apps.<br><span class="gr">Forged here.</span></h2>
+    <p>Join businesses building custom web apps, mobile tools and automations — without writing a single line of code.</p>
+    <div class="proof">
+      <div class="proof-item"><div class="proof-icon" style="background:rgba(123,47,255,0.2)">🏗️</div>Visual app builder — no code needed</div>
+      <div class="proof-item"><div class="proof-icon" style="background:rgba(14,165,233,0.2)">⚡</div>Business automations in minutes</div>
+      <div class="proof-item"><div class="proof-icon" style="background:rgba(163,255,71,0.15)">📱</div>Web & mobile apps under one plan</div>
+      <div class="proof-item"><div class="proof-icon" style="background:rgba(123,47,255,0.2)">🔒</div>SOC 2 certified · 98% uptime SLA</div>
+      <div class="proof-item"><div class="proof-icon" style="background:rgba(14,165,233,0.2)">💳</div>14-day free trial · no card required</div>
+    </div>
+  </div>
+  <div class="left-footer">© 2026 Forgelux Ltd · <a href="#" style="color:var(--muted);text-decoration:underline">Privacy</a> · <a href="#" style="color:var(--muted);text-decoration:underline">Terms</a></div>
+</div>
+
+<!-- RIGHT -->
+<div class="right">
+  <div class="login-box">
+    <div class="tab-row">
+      <button class="tab" id="tab-login" onclick="switchTab('login')">Sign in</button>
+      <button class="tab" id="tab-signup" onclick="switchTab('signup')">Create account</button>
+    </div>
+
+    <!-- SIGN IN -->
+    <div id="form-login">
+      <div class="form-title">Welcome back</div>
+      <div class="form-sub">Sign in to your Forgelux workspace</div>
+      <div class="social-row">
+        <button class="btn-social" onclick="signInWith('Google')">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Google
+        </button>
+        <button class="btn-social" onclick="signInWith('GitHub')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.341-3.369-1.341-.454-1.155-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.268 2.75 1.026A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.026 2.747-1.026.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.162 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+          GitHub
+        </button>
+      </div>
+      <div class="divider-text">or continue with email</div>
+      <div class="form-group"><label class="form-label">Email address</label><input type="email" class="form-input" placeholder="you@company.com"></div>
+      <div class="form-group">
+        <div class="form-helper"><label class="form-label" style="margin:0">Password</label><a class="form-link">Forgot password?</a></div>
+        <input type="password" class="form-input" placeholder="••••••••">
+      </div>
+      <button class="btn-submit" onclick="window.location.href='dashboard.html'">Sign in to Forgelux</button>
+      <div class="form-footer">Don't have an account? <a onclick="switchTab('signup')">Create one free</a></div>
+    </div>
+
+    <!-- SIGN UP -->
+    <div id="form-signup" style="display:none">
+      <div class="form-title">Start for free</div>
+      <div class="form-sub">14-day trial · no credit card needed</div>
+      <div class="social-row">
+        <button class="btn-social" onclick="signInWith('Google')">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Google
+        </button>
+        <button class="btn-social" onclick="signInWith('GitHub')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.341-3.369-1.341-.454-1.155-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.268 2.75 1.026A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.026 2.747-1.026.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.162 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+          GitHub
+        </button>
+      </div>
+      <div class="divider-text">or sign up with email</div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">First name</label><input type="text" class="form-input" placeholder="Luke"></div>
+        <div class="form-group"><label class="form-label">Last name</label><input type="text" class="form-input" placeholder="Ryan"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Work email</label><input type="email" class="form-input" placeholder="you@company.com"></div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" placeholder="Min. 8 characters" oninput="checkPw(this.value)">
+        <div class="pw-strength"><div class="pw-bar" id="pw1"></div><div class="pw-bar" id="pw2"></div><div class="pw-bar" id="pw3"></div><div class="pw-bar" id="pw4"></div></div>
+      </div>
+      <div style="font-size:0.78rem;color:var(--subtle);margin-bottom:0.6rem">Choose your plan</div>
+      <div class="plan-select-row">
+        <div class="plan-opt" id="opt-starter" onclick="selectPlan('starter')"><span class="plan-opt-name">Starter</span><span class="plan-opt-price">£29/mo</span></div>
+        <div class="plan-opt selected" id="opt-pro" onclick="selectPlan('pro')"><span class="plan-opt-name">Pro</span><span class="plan-opt-price">£99/mo</span></div>
+        <div class="plan-opt" id="opt-ent" onclick="selectPlan('enterprise')"><span class="plan-opt-name">Enterprise</span><span class="plan-opt-price">Custom</span></div>
+      </div>
+      <button class="btn-submit" onclick="window.location.href='dashboard.html'">Create my account →</button>
+      <div class="form-terms">By signing up you agree to the <a>Terms of Service</a> and <a>Privacy Policy</a>.</div>
+      <div class="form-footer">Already have an account? <a onclick="switchTab('login')">Sign in</a></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Default to signup tab
+const params = new URLSearchParams(window.location.search);
+switchTab(params.get('tab') === 'login' ? 'login' : 'signup');
+
+function switchTab(tab) {
+  document.getElementById('tab-login').classList.toggle('act', tab==='login');
+  document.getElementById('tab-signup').classList.toggle('act', tab==='signup');
+  document.getElementById('form-login').style.display = tab==='login' ? 'block' : 'none';
+  document.getElementById('form-signup').style.display = tab==='signup' ? 'block' : 'none';
+}
+
+function selectPlan(plan) {
+  ['starter','pro','ent'].forEach(p => document.getElementById('opt-'+p).classList.remove('selected'));
+  const map = {starter:'opt-starter', pro:'opt-pro', enterprise:'opt-ent'};
+  document.getElementById(map[plan]).classList.add('selected');
+}
+
+function checkPw(val) {
+  const bars = ['pw1','pw2','pw3','pw4'].map(id => document.getElementById(id));
+  bars.forEach(b => b.className = 'pw-bar');
+  if (!val) return;
+  let score = 0;
+  if (val.length >= 8) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+  const cls = score <= 1 ? 'weak' : score <= 2 ? 'fair' : 'strong';
+  for (let i = 0; i < score; i++) bars[i].classList.add(cls);
+}
+
+function signInWith(provider) {
+  // In production: redirect to OAuth flow
+  window.location.href = 'dashboard.html';
+}
+</script>
+</body>
+</html>

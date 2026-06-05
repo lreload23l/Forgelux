@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forgelux — My Apps</title>
+<link rel="stylesheet" href="js/theme.css">
+<style>
+.filter-bar { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.75rem; flex-wrap: wrap; }
+.filter-btn { padding: 0.45rem 1rem; border-radius: 100px; font-size: 0.8rem; border: 1px solid var(--border-bright); background: transparent; color: var(--subtle); cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
+.filter-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+.filter-btn.active { background: rgba(123,47,255,0.14); border-color: rgba(123,47,255,0.4); color: #C4A3FF; }
+.filter-sep { flex: 1; }
+.view-toggle { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.view-btn { padding: 0.45rem 0.75rem; font-size: 0.85rem; cursor: pointer; background: transparent; border: none; color: var(--muted); transition: all 0.15s; }
+.view-btn.active { background: var(--surface2); color: var(--text); }
+
+/* GRID VIEW */
+.apps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem; }
+.app-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  overflow: hidden; cursor: pointer; transition: border-color 0.2s, transform 0.15s;
+  display: flex; flex-direction: column;
+}
+.app-card:hover { border-color: var(--border-bright); transform: translateY(-3px); }
+.app-card-cover {
+  height: 110px; position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center; font-size: 2.5rem;
+}
+.cover-v { background: linear-gradient(135deg, rgba(123,47,255,0.25), rgba(14,165,233,0.15)); }
+.cover-b { background: linear-gradient(135deg, rgba(14,165,233,0.2), rgba(123,47,255,0.1)); }
+.cover-l { background: linear-gradient(135deg, rgba(163,255,71,0.15), rgba(14,165,233,0.1)); }
+.cover-o { background: linear-gradient(135deg, rgba(251,146,60,0.2), rgba(239,68,68,0.1)); }
+.cover-p { background: linear-gradient(135deg, rgba(236,72,153,0.2), rgba(123,47,255,0.1)); }
+.cover-t { background: linear-gradient(135deg, rgba(20,184,166,0.2), rgba(163,255,71,0.1)); }
+.app-status-badge { position: absolute; top: 0.65rem; right: 0.65rem; }
+.app-card-body { padding: 1.1rem; flex: 1; display: flex; flex-direction: column; }
+.app-card-name { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.95rem; letter-spacing: -0.01em; margin-bottom: 0.25rem; }
+.app-card-desc { font-size: 0.78rem; color: var(--muted); font-weight: 300; margin-bottom: 0.9rem; flex: 1; line-height: 1.5; }
+.app-card-meta { display: flex; align-items: center; gap: 0.6rem; font-size: 0.72rem; color: var(--muted); margin-bottom: 0.9rem; flex-wrap: wrap; }
+.app-card-meta span { display: flex; align-items: center; gap: 0.3rem; }
+.app-card-actions { display: flex; gap: 0.5rem; border-top: 1px solid var(--border); padding-top: 0.9rem; margin-top: auto; }
+.ac-btn { flex: 1; padding: 0.45rem; border-radius: 6px; font-size: 0.75rem; font-family: 'DM Sans', sans-serif; font-weight: 400; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--subtle); transition: all 0.15s; text-align: center; }
+.ac-btn:hover { border-color: var(--border-bright); color: var(--text); }
+.ac-btn.open { background: rgba(163,255,71,0.08); border-color: rgba(163,255,71,0.25); color: var(--lime); }
+.ac-btn.open:hover { background: rgba(163,255,71,0.15); }
+
+/* LIST VIEW */
+.apps-list { display: none; }
+.apps-list.visible { display: block; }
+.apps-grid.hidden { display: none; }
+
+/* new app card */
+.new-app-card {
+  background: var(--surface); border: 2px dashed var(--border-bright); border-radius: 14px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.65rem; padding: 2rem; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+  min-height: 240px; text-align: center;
+}
+.new-app-card:hover { border-color: rgba(123,47,255,0.4); background: rgba(123,47,255,0.04); }
+.new-app-icon { font-size: 1.8rem; opacity: 0.5; }
+.new-app-label { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.9rem; color: var(--subtle); }
+.new-app-sub { font-size: 0.75rem; color: var(--muted); font-weight: 300; }
+
+/* stats row */
+.stats-strip { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; margin-bottom: 2rem; }
+.stat-chip { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; }
+.stat-chip-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.5rem; letter-spacing: -0.03em; margin-bottom: 0.2rem; }
+.stat-chip-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
+
+/* modal new app */
+.template-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem; }
+.template-opt {
+  padding: 1rem; border-radius: 10px; border: 1px solid var(--border-bright);
+  background: var(--surface2); cursor: pointer; transition: border-color 0.2s;
+  display: flex; flex-direction: column; gap: 0.4rem;
+}
+.template-opt:hover { border-color: rgba(123,47,255,0.4); }
+.template-opt.selected { border-color: rgba(123,47,255,0.6); background: rgba(123,47,255,0.08); }
+.template-opt-icon { font-size: 1.3rem; }
+.template-opt-name { font-size: 0.85rem; font-weight: 600; color: var(--text); font-family: 'Syne', sans-serif; }
+.template-opt-desc { font-size: 0.72rem; color: var(--muted); font-weight: 300; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- STATS -->
+  <div class="stats-strip fade d1">
+    <div class="stat-chip"><div class="stat-chip-val">12</div><div class="stat-chip-label">Total apps</div></div>
+    <div class="stat-chip"><div class="stat-chip-val">9</div><div class="stat-chip-label">Live</div></div>
+    <div class="stat-chip"><div class="stat-chip-val">2</div><div class="stat-chip-label">Drafts</div></div>
+    <div class="stat-chip"><div class="stat-chip-val">1</div><div class="stat-chip-label">Paused</div></div>
+  </div>
+
+  <!-- FILTER BAR -->
+  <div class="filter-bar fade d2">
+    <button class="filter-btn active" onclick="setFilter(this,'all')">All apps</button>
+    <button class="filter-btn" onclick="setFilter(this,'live')">Live</button>
+    <button class="filter-btn" onclick="setFilter(this,'draft')">Drafts</button>
+    <button class="filter-btn" onclick="setFilter(this,'web')">Web apps</button>
+    <button class="filter-btn" onclick="setFilter(this,'mobile')">Mobile</button>
+    <button class="filter-btn" onclick="setFilter(this,'automation')">Automations</button>
+    <div class="filter-sep"></div>
+    <div class="view-toggle">
+      <button class="view-btn active" id="vbtn-grid" onclick="setView('grid')">⊞</button>
+      <button class="view-btn" id="vbtn-list" onclick="setView('list')">≡</button>
+    </div>
+  </div>
+
+  <!-- GRID VIEW -->
+  <div class="apps-grid fade d3" id="grid-view">
+
+    <div class="app-card" data-type="web" data-status="live">
+      <div class="app-card-cover cover-v"><span>📊</span><span class="app-status-badge badge badge-green">Live</span></div>
+      <div class="app-card-body">
+        <div class="app-card-name">Sales Dashboard</div>
+        <div class="app-card-desc">Real-time pipeline view connected to Salesforce. Shared with the whole sales team.</div>
+        <div class="app-card-meta">
+          <span>👤 248 users</span><span>⚡ 1.2k runs/mo</span><span>🔗 Salesforce</span>
+        </div>
+        <div class="app-card-actions">
+          <button class="ac-btn open">Open</button>
+          <button class="ac-btn">Edit</button>
+          <button class="ac-btn">Analytics</button>
+          <button class="ac-btn">⋯</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="app-card" data-type="web" data-status="live">
+      <div class="app-card-cover cover-b"><span>🚚</span><span class="app-status-badge badge badge-green">Live</span></div>
+      <div class="app-card-body">
+        <div class="app-card-name">Logistics Tracker</div>
+        <div class="app-card-desc">Live shipment status dashboard for the ops team. Pulls from internal database.</div>
+        <div class="app-card-meta">
+          <span>👤 91 users</span><span>🗄 Custom DB</span>
+        </div>
+        <div class="app-card-actions">
+          <button class="ac-btn open">Open</button>
+          <button class="ac-btn">Edit</button>
+          <button class="ac-btn">Analytics</button>
+          <button class="ac-btn">⋯</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="app-card" data-type="automation" data-status="live">
+      <div class="app-card-cover cover-l"><span>🧾</span><span class="app-status-badge badge badge-green">Live</span></div>
+      <div class="app-card-body">
+        <div class="app-card-name">Client Onboarding</div>
+        <div class="app-card-desc">Multi-step flow: new lead → CRM update → welcome email → Slack notify.</div>
+        <div class="app-card-meta">
+          <span>⚡ 312 runs/mo</span><span>🔗 HubSpot, Slack</span>
+        </div>
+        <div class="app-card-actions">
+          <button class="ac-btn open">Open</button>
+          <button class="ac-btn">Edit</button>
+          <button class="ac-btn">Runs</button>
+          <button class="ac-btn">⋯</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="app-card" data-type="mobile" data-status="draft">
+      <div class="app-card-cover cover-o"><span>📝</span><span class="app-status-badge badge badge-muted">Draft</span></div>
+      <div class="app-card-body">
+        <div class="app-card-name">Expense Reporter</div>
+        <div class="app-card-desc">Mobile app for staff to submit expenses on the go. Syncs with Xero.</div>
+        <div class="app-card-meta">
+          <span>📱 Mobile</span><span>🔗 Xero</span><span>Updated today</span>
+        </div>
+        <div class="app-card-actions">
+          <button class="ac-btn open">Continue</button>
+          <button class="ac-btn">Preview</button>
+          <button class="ac-btn">Publish</button>
+          <button class="ac-btn">⋯</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="app-card" data-type="web" data-status="live">
+      <div class="app-card-cover cover-p"><span>📦</span><span class="app-status-badge badge badge-green">Live</span></div>
+      <div class="app-card-body">
+        <div class="app-card-name">Inventory Manager</div>
+        <div class="app-card-desc">Stock level tracker with low-inventory alerts and reorder automation.</div>
+        <div class="app-card-meta">
+          <span>👤 34 users</span><span>⚡ 88 runs/mo</span>
+        </div>
+        <div class="app-card-actions">
+          <button class="ac-btn open">Open</button>
+          <button class="ac-btn">Edit</button>
+          <button class="ac-btn">Analytics</button>
+          <button class="ac-btn">⋯</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="app-card" data-type="automation" data-status="paused">
+      <div class="app-card-cover cover-t"><span>📧</span><span class="app-status-badge badge badge-yellow">Paused</span></div>
+      <div class="app-card-body">
+        <div class="app-card-name">Weekly Digest</div>
+        <div class="app-card-desc">Sends a curated weekly summary to all subscribers every Monday at 8am.</div>
+        <div class="app-card-meta">
+          <span>⚡ Paused</span><span>🔗 Mailchimp</span>
+        </div>
+        <div class="app-card-actions">
+          <button class="ac-btn open">Resume</button>
+          <button class="ac-btn">Edit</button>
+          <button class="ac-btn">History</button>
+          <button class="ac-btn">⋯</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEW APP CARD -->
+    <div class="new-app-card" onclick="openModal()">
+      <div class="new-app-icon">＋</div>
+      <div class="new-app-label">Create new app</div>
+      <div class="new-app-sub">Start from a template or blank canvas</div>
+    </div>
+
+  </div>
+
+  <!-- LIST VIEW -->
+  <div class="apps-list card fade d3" id="list-view">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>App name</th><th>Type</th><th>Status</th><th>Users / Runs</th><th>Integrations</th><th>Last updated</th><th></th></tr>
+        </thead>
+        <tbody>
+          <tr><td>📊 Sales Dashboard</td><td><span class="badge badge-blue">Web app</span></td><td><span class="badge badge-green">Live</span></td><td>248 users</td><td>Salesforce</td><td>2h ago</td><td><a class="btn btn-ghost btn-sm" href="builder.html">Edit</a></td></tr>
+          <tr><td>🚚 Logistics Tracker</td><td><span class="badge badge-blue">Web app</span></td><td><span class="badge badge-green">Live</span></td><td>91 users</td><td>Custom DB</td><td>1d ago</td><td><a class="btn btn-ghost btn-sm" href="builder.html">Edit</a></td></tr>
+          <tr><td>🧾 Client Onboarding</td><td><span class="badge badge-violet">Automation</span></td><td><span class="badge badge-green">Live</span></td><td>312 runs/mo</td><td>HubSpot, Slack</td><td>3d ago</td><td><a class="btn btn-ghost btn-sm" href="automations.html">Edit</a></td></tr>
+          <tr><td>📝 Expense Reporter</td><td><span class="badge badge-muted">Mobile</span></td><td><span class="badge badge-muted">Draft</span></td><td>—</td><td>Xero</td><td>Today</td><td><a class="btn btn-primary btn-sm" href="builder.html">Continue</a></td></tr>
+          <tr><td>📦 Inventory Manager</td><td><span class="badge badge-blue">Web app</span></td><td><span class="badge badge-green">Live</span></td><td>34 users</td><td>—</td><td>5d ago</td><td><a class="btn btn-ghost btn-sm" href="builder.html">Edit</a></td></tr>
+          <tr><td>📧 Weekly Digest</td><td><span class="badge badge-violet">Automation</span></td><td><span class="badge badge-yellow">Paused</span></td><td>—</td><td>Mailchimp</td><td>1w ago</td><td><a class="btn btn-ghost btn-sm" href="automations.html">Edit</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- NEW APP MODAL -->
+<div class="modal-overlay" id="new-app-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Create a new app</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">App name</label>
+      <input type="text" class="form-input" placeholder="e.g. Customer Portal">
+    </div>
+    <div class="form-group">
+      <label class="form-label">App type</label>
+      <div class="template-grid">
+        <div class="template-opt selected" onclick="selectTpl(this)">
+          <div class="template-opt-icon">🌐</div>
+          <div class="template-opt-name">Web app</div>
+          <div class="template-opt-desc">Dashboard or internal tool</div>
+        </div>
+        <div class="template-opt" onclick="selectTpl(this)">
+          <div class="template-opt-icon">📱</div>
+          <div class="template-opt-name">Mobile app</div>
+          <div class="template-opt-desc">iOS & Android PWA</div>
+        </div>
+        <div class="template-opt" onclick="selectTpl(this)">
+          <div class="template-opt-icon">⚡</div>
+          <div class="template-opt-name">Automation</div>
+          <div class="template-opt-desc">Multi-step workflow</div>
+        </div>
+        <div class="template-opt" onclick="selectTpl(this)">
+          <div class="template-opt-icon">📄</div>
+          <div class="template-opt-name">Form / survey</div>
+          <div class="template-opt-desc">Data collection flow</div>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Start from</label>
+      <select class="form-select">
+        <option>Blank canvas</option>
+        <option>Sales dashboard template</option>
+        <option>CRM portal template</option>
+        <option>Inventory tracker template</option>
+        <option>Employee directory template</option>
+        <option>Project tracker template</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <a class="btn btn-primary" href="builder.html">Create & open builder →</a>
+    </div>
+  </div>
+</div>
+
+<script src="js/auth.js"></script>
+<script src="js/nav.js"></script>
+<script>
+Nav.init({
+  title: 'My Apps',
+  actions: `<button class="topbar-btn topbar-btn-primary" onclick="openModal()">＋ New App</button>`
+});
+
+function setFilter(btn, type) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.app-card').forEach(c => {
+    const show = type === 'all' || c.dataset.type === type || c.dataset.status === type;
+    c.style.display = show ? 'flex' : 'none';
+  });
+}
+
+function setView(v) {
+  document.getElementById('vbtn-grid').classList.toggle('active', v === 'grid');
+  document.getElementById('vbtn-list').classList.toggle('active', v === 'list');
+  document.getElementById('grid-view').classList.toggle('hidden', v !== 'grid');
+  document.getElementById('list-view').classList.toggle('visible', v === 'list');
+}
+
+function openModal() { document.getElementById('new-app-modal').classList.add('open'); }
+function closeModal() { document.getElementById('new-app-modal').classList.remove('open'); }
+function selectTpl(el) {
+  document.querySelectorAll('.template-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+document.getElementById('new-app-modal').addEventListener('click', e => { if(e.target === e.currentTarget) closeModal(); });
+</script>
+</body>
+</html>

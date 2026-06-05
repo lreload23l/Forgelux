@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forgelux — Billing</title>
+<link rel="stylesheet" href="js/theme.css">
+<style>
+.billing-layout { display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; }
+
+/* current plan card */
+.plan-hero {
+  background: linear-gradient(135deg, rgba(123,47,255,0.1) 0%, rgba(14,165,233,0.05) 100%);
+  border: 1px solid rgba(123,47,255,0.3); border-radius: 14px;
+  padding: 1.75rem; margin-bottom: 1.5rem; position: relative; overflow: hidden;
+}
+.plan-hero::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--violet), var(--blue));
+}
+.plan-hero-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem; }
+.plan-hero-name { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.6rem; letter-spacing: -0.04em; }
+.plan-hero-badge { background: rgba(123,47,255,0.2); color: #C4A3FF; border: 1px solid rgba(123,47,255,0.4); border-radius: 100px; font-size: 0.72rem; padding: 0.3rem 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; }
+.plan-hero-price { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 2rem; letter-spacing: -0.04em; }
+.plan-hero-price span { font-size: 0.9rem; font-weight: 400; color: var(--muted); }
+.plan-hero-renews { font-size: 0.8rem; color: var(--subtle); margin-top: 0.2rem; }
+.plan-usage-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
+.pug-item { }
+.pug-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.4rem; font-weight: 600; }
+.pug-bar { height: 4px; background: var(--border-bright); border-radius: 2px; overflow: hidden; margin-bottom: 0.3rem; }
+.pug-fill { height: 100%; border-radius: 2px; }
+.pf-v { background: linear-gradient(90deg, var(--violet), var(--blue)); }
+.pf-l { background: var(--lime); }
+.pf-b { background: var(--blue); }
+.pug-val { font-size: 0.78rem; color: var(--subtle); }
+.pug-val strong { color: var(--text); font-weight: 500; }
+
+/* plan comparison */
+.plan-compare { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; margin-bottom: 1.5rem; }
+.plan-option {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 1.25rem; position: relative; transition: border-color 0.2s;
+}
+.plan-option:hover { border-color: var(--border-bright); }
+.plan-option.current { border-color: rgba(123,47,255,0.4); background: rgba(123,47,255,0.04); }
+.plan-option.current::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--violet), var(--blue)); border-radius: 12px 12px 0 0; }
+.po-tag { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin-bottom: 0.5rem; color: var(--muted); }
+.po-tag.active { color: #C4A3FF; }
+.po-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 0.25rem; }
+.po-price { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.4rem; letter-spacing: -0.03em; }
+.po-price span { font-size: 0.8rem; font-weight: 400; color: var(--muted); }
+.po-features { margin-top: 0.9rem; list-style: none; display: flex; flex-direction: column; gap: 0.35rem; }
+.po-features li { font-size: 0.78rem; color: var(--subtle); display: flex; align-items: center; gap: 0.4rem; font-weight: 300; }
+.po-features li::before { content: '✓'; color: var(--lime); font-size: 0.7rem; flex-shrink: 0; }
+.po-btn { width: 100%; margin-top: 1rem; padding: 0.6rem; border-radius: 7px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500; cursor: pointer; border: 1px solid var(--border-bright); background: transparent; color: var(--subtle); transition: all 0.15s; }
+.po-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+.po-btn.upgrade { background: var(--lime); border-color: var(--lime); color: #080A0F; font-weight: 600; }
+.po-btn.upgrade:hover { box-shadow: 0 4px 14px rgba(163,255,71,0.25); }
+.po-btn.current-plan { border-color: rgba(123,47,255,0.4); color: #C4A3FF; cursor: default; }
+
+/* payment method */
+.pm-card {
+  display: flex; align-items: center; gap: 1rem;
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+  padding: 1rem 1.25rem; margin-bottom: 0.75rem;
+}
+.card-logo { width: 44px; height: 28px; background: #fff; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; color: #1a1a2e; flex-shrink: 0; letter-spacing: -0.03em; }
+.pm-details { flex: 1; }
+.pm-name { font-size: 0.85rem; font-weight: 500; color: var(--text); margin-bottom: 0.15rem; }
+.pm-exp { font-size: 0.72rem; color: var(--muted); }
+.pm-default { font-size: 0.68rem; background: rgba(163,255,71,0.1); color: var(--lime); border: 1px solid rgba(163,255,71,0.25); padding: 0.15rem 0.5rem; border-radius: 100px; }
+
+/* invoice table */
+.inv-amount { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.9rem; color: var(--text); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- CURRENT PLAN -->
+  <div class="plan-hero fade d1">
+    <div class="plan-hero-top">
+      <div>
+        <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:0.4rem;font-weight:600">Current plan</div>
+        <div class="plan-hero-name">Pro <span class="plan-hero-badge">Active</span></div>
+      </div>
+      <div style="text-align:right">
+        <div class="plan-hero-price">£99<span>/mo</span></div>
+        <div class="plan-hero-renews">Renews 4 July 2026 · billed monthly</div>
+        <div style="display:flex;gap:0.5rem;margin-top:0.75rem;justify-content:flex-end;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm">Switch to annual (save 20%)</button>
+          <button class="btn btn-danger btn-sm">Cancel plan</button>
+        </div>
+      </div>
+    </div>
+    <div class="plan-usage-grid">
+      <div class="pug-item">
+        <div class="pug-label">Automation runs</div>
+        <div class="pug-bar"><div class="pug-fill pf-v" style="width:68%"></div></div>
+        <div class="pug-val"><strong>34,012</strong> / 50,000</div>
+      </div>
+      <div class="pug-item">
+        <div class="pug-label">Team seats</div>
+        <div class="pug-bar"><div class="pug-fill pf-b" style="width:28%"></div></div>
+        <div class="pug-val"><strong>7</strong> / 25 members</div>
+      </div>
+      <div class="pug-item">
+        <div class="pug-label">Published apps</div>
+        <div class="pug-bar"><div class="pug-fill pf-l" style="width:100%"></div></div>
+        <div class="pug-val"><strong>Unlimited</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="billing-layout">
+    <div>
+
+      <!-- PLAN COMPARISON -->
+      <div class="section-header fade d2">
+        <span class="section-title">All plans</span>
+        <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;color:var(--muted)">
+          Monthly &nbsp;
+          <label style="position:relative;width:36px;height:20px;cursor:pointer;display:inline-block">
+            <input type="checkbox" id="ann-toggle" style="opacity:0;width:0;height:0" onchange="toggleAnnual()">
+            <span id="ann-track" style="position:absolute;inset:0;background:var(--surface2);border:1px solid var(--border-bright);border-radius:100px;transition:background 0.2s"></span>
+            <span id="ann-thumb" style="position:absolute;top:2px;left:2px;width:14px;height:14px;background:var(--muted);border-radius:50%;transition:transform 0.2s,background 0.2s"></span>
+          </label>
+          &nbsp; Annual &nbsp;<span style="background:rgba(163,255,71,0.1);color:var(--lime);font-size:0.68rem;padding:0.15rem 0.5rem;border-radius:100px;border:1px solid rgba(163,255,71,0.25);">Save 20%</span>
+        </div>
+      </div>
+
+      <div class="plan-compare fade d3">
+        <div class="plan-option">
+          <div class="po-tag">Starter</div>
+          <div class="po-name">Starter</div>
+          <div class="po-price" id="pp-starter">£29<span>/mo</span></div>
+          <ul class="po-features">
+            <li>3 published apps</li>
+            <li>5,000 runs/mo</li>
+            <li>50 integrations</li>
+            <li>5 team members</li>
+          </ul>
+          <button class="po-btn">Downgrade</button>
+        </div>
+        <div class="plan-option current">
+          <div class="po-tag active">★ Current plan</div>
+          <div class="po-name">Pro</div>
+          <div class="po-price" id="pp-pro">£99<span>/mo</span></div>
+          <ul class="po-features">
+            <li>Unlimited apps</li>
+            <li>50,000 runs/mo</li>
+            <li>300+ integrations</li>
+            <li>25 team members</li>
+            <li>Mobile publishing</li>
+          </ul>
+          <button class="po-btn current-plan">Current plan</button>
+        </div>
+        <div class="plan-option">
+          <div class="po-tag">Enterprise</div>
+          <div class="po-name">Enterprise</div>
+          <div class="po-price">Custom</div>
+          <ul class="po-features">
+            <li>Everything in Pro</li>
+            <li>Unlimited runs</li>
+            <li>Unlimited members</li>
+            <li>SSO & SAML</li>
+            <li>Dedicated support</li>
+          </ul>
+          <button class="po-btn upgrade">Contact sales →</button>
+        </div>
+      </div>
+
+      <!-- INVOICES -->
+      <div class="section-header fade d4"><span class="section-title">Invoice history</span><button class="btn btn-ghost btn-sm">Download all</button></div>
+      <div class="card fade d4" style="padding:0">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>4 Jun 2026</td><td>Forgelux Pro — June 2026</td><td class="inv-amount">£99.00</td><td><span class="badge badge-green">Paid</span></td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>
+              <tr><td>4 May 2026</td><td>Forgelux Pro — May 2026</td><td class="inv-amount">£99.00</td><td><span class="badge badge-green">Paid</span></td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>
+              <tr><td>4 Apr 2026</td><td>Forgelux Pro — April 2026</td><td class="inv-amount">£99.00</td><td><span class="badge badge-green">Paid</span></td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>
+              <tr><td>4 Mar 2026</td><td>Forgelux Pro — March 2026</td><td class="inv-amount">£99.00</td><td><span class="badge badge-green">Paid</span></td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>
+              <tr><td>4 Feb 2026</td><td>Forgelux Starter → Pro upgrade</td><td class="inv-amount">£70.00</td><td><span class="badge badge-green">Paid</span></td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>
+              <tr><td>4 Feb 2026</td><td>Forgelux Starter — February 2026</td><td class="inv-amount">£29.00</td><td><span class="badge badge-green">Paid</span></td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div>
+      <!-- PAYMENT METHOD -->
+      <div class="section-header fade d2"><span class="section-title">Payment method</span><button class="btn btn-ghost btn-sm" onclick="openCardModal()">＋ Add card</button></div>
+      <div class="fade d3">
+        <div class="pm-card">
+          <div class="card-logo">VISA</div>
+          <div class="pm-details">
+            <div class="pm-name">•••• •••• •••• 4242</div>
+            <div class="pm-exp">Expires 08 / 28</div>
+          </div>
+          <span class="pm-default">Default</span>
+        </div>
+        <div class="pm-card">
+          <div class="card-logo" style="font-size:0.6rem;letter-spacing:0">MC</div>
+          <div class="pm-details">
+            <div class="pm-name">•••• •••• •••• 8917</div>
+            <div class="pm-exp">Expires 03 / 27</div>
+          </div>
+          <button class="btn btn-ghost btn-sm">Set default</button>
+        </div>
+      </div>
+
+      <!-- BILLING INFO -->
+      <div class="section-header fade d4" style="margin-top:1.75rem"><span class="section-title">Billing details</span><button class="btn btn-ghost btn-sm">Edit</button></div>
+      <div class="card fade d4" style="padding:1rem 1.25rem">
+        <div style="display:flex;flex-direction:column;gap:0.6rem">
+          <div style="display:flex;justify-content:space-between;font-size:0.83rem"><span style="color:var(--muted)">Company</span><span>Forgelux Ltd</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:0.83rem"><span style="color:var(--muted)">Email</span><span>billing@forgelux.io</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:0.83rem"><span style="color:var(--muted)">VAT number</span><span>GB 123 456 789</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:0.83rem"><span style="color:var(--muted)">Country</span><span>United Kingdom</span></div>
+        </div>
+      </div>
+
+      <!-- UPCOMING CHARGE -->
+      <div class="card fade d5" style="margin-top:1rem;background:rgba(163,255,71,0.04);border-color:rgba(163,255,71,0.2);">
+        <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--lime);font-weight:600;margin-bottom:0.6rem">Next charge</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.4rem;letter-spacing:-0.03em;margin-bottom:0.2rem">£99.00</div>
+        <div style="font-size:0.8rem;color:var(--subtle)">4 July 2026 · Visa ending 4242</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD CARD MODAL -->
+<div class="modal-overlay" id="card-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Add payment method</span>
+      <button class="modal-close" onclick="closeCardModal()">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Card number</label>
+      <input type="text" class="form-input" placeholder="1234 5678 9012 3456" maxlength="19">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+      <div class="form-group"><label class="form-label">Expiry</label><input type="text" class="form-input" placeholder="MM / YY"></div>
+      <div class="form-group"><label class="form-label">CVC</label><input type="text" class="form-input" placeholder="•••"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Name on card</label>
+      <input type="text" class="form-input" placeholder="Luke Ryan">
+    </div>
+    <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:var(--muted);margin-bottom:0.5rem">
+      🔒 Payments are encrypted and processed securely via Stripe.
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeCardModal()">Cancel</button>
+      <button class="btn btn-primary">Save card</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/auth.js"></script>
+<script src="js/nav.js"></script>
+<script>
+Nav.init({ title: 'Billing' });
+
+let isAnnual = false;
+function toggleAnnual() {
+  isAnnual = !isAnnual;
+  document.getElementById('ann-track').style.background = isAnnual ? 'rgba(123,47,255,0.3)' : '';
+  document.getElementById('ann-thumb').style.transform = isAnnual ? 'translateX(16px)' : '';
+  document.getElementById('ann-thumb').style.background = isAnnual ? 'var(--violet)' : '';
+  document.getElementById('pp-starter').innerHTML = isAnnual ? '£23<span>/mo</span>' : '£29<span>/mo</span>';
+  document.getElementById('pp-pro').innerHTML = isAnnual ? '£79<span>/mo</span>' : '£99<span>/mo</span>';
+}
+function openCardModal() { document.getElementById('card-modal').classList.add('open'); }
+function closeCardModal() { document.getElementById('card-modal').classList.remove('open'); }
+document.getElementById('card-modal').addEventListener('click', e => { if(e.target===e.currentTarget) closeCardModal(); });
+</script>
+</body>
+</html>

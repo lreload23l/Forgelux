@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forgelux — Build. Automate. Launch.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #080A0F;
+    --surface: #111318;
+    --surface2: #161B25;
+    --border: rgba(255,255,255,0.07);
+    --border-bright: rgba(255,255,255,0.14);
+    --violet: #7B2FFF;
+    --blue: #0EA5E9;
+    --lime: #A3FF47;
+    --text: #FFFFFF;
+    --muted: #6B7280;
+    --subtle: #9CA3AF;
+  }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 16px; line-height: 1.6; overflow-x: hidden; }
+
+  /* PAGE SYSTEM */
+  .page { display: none; min-height: 100vh; }
+  .page.active { display: block; }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.25rem 4rem;
+    background: rgba(8,10,15,0.85); backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo {
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.4rem;
+    letter-spacing: -0.03em; cursor: pointer;
+    background: linear-gradient(135deg, #fff 40%, #7B2FFF);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    text-decoration: none;
+  }
+  .nav-links { display: flex; align-items: center; gap: 2.5rem; list-style: none; }
+  .nav-links a { color: var(--subtle); text-decoration: none; font-size: 0.9rem; font-weight: 400; transition: color 0.2s; letter-spacing: 0.01em; cursor: pointer; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-right { display: flex; align-items: center; gap: 1rem; }
+  .nav-signin { color: var(--subtle); font-size: 0.88rem; font-weight: 400; cursor: pointer; transition: color 0.2s; text-decoration: none; }
+  .nav-signin:hover { color: var(--text); }
+  .nav-cta {
+    background: var(--lime); color: #080A0F !important;
+    padding: 0.55rem 1.25rem; border-radius: 6px;
+    font-weight: 500 !important; font-size: 0.88rem !important;
+    transition: opacity 0.2s !important; cursor: pointer;
+  }
+  .nav-cta:hover { opacity: 0.88; }
+
+  /* HERO */
+  .hero { position: relative; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 8rem 2rem 4rem; overflow: hidden; }
+  .hero::after { content: ''; position: absolute; top: -10%; left: 50%; transform: translateX(-50%); width: 900px; height: 600px; background: radial-gradient(ellipse at center, rgba(123,47,255,0.18) 0%, transparent 65%), radial-gradient(ellipse at 70% 40%, rgba(14,165,233,0.1) 0%, transparent 55%); pointer-events: none; z-index: 0; }
+  .hero-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(123,47,255,0.12); border: 1px solid rgba(123,47,255,0.35); border-radius: 100px; padding: 0.35rem 1rem; font-size: 0.78rem; color: #C4A3FF; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 500; margin-bottom: 2rem; position: relative; z-index: 1; }
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--violet); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.4)} }
+  .hero h1 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: clamp(3rem,7vw,5.5rem); line-height: 1.0; letter-spacing: -0.04em; max-width: 900px; position: relative; z-index: 1; margin-bottom: 1.5rem; }
+  .hero h1 .accent { background: linear-gradient(135deg, var(--violet), var(--blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .hero-sub { font-size: 1.15rem; color: var(--subtle); max-width: 540px; line-height: 1.7; font-weight: 300; position: relative; z-index: 1; margin-bottom: 2.5rem; }
+  .hero-buttons { display: flex; gap: 1rem; align-items: center; position: relative; z-index: 1; flex-wrap: wrap; justify-content: center; }
+  .btn-primary { background: var(--lime); color: #080A0F; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.95rem; padding: 0.85rem 2rem; border-radius: 8px; border: none; cursor: pointer; text-decoration: none; transition: transform 0.15s, box-shadow 0.15s; letter-spacing: 0.01em; display: inline-block; }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(163,255,71,0.25); }
+  .btn-secondary { background: transparent; color: var(--subtle); font-family: 'DM Sans', sans-serif; font-weight: 400; font-size: 0.95rem; padding: 0.85rem 2rem; border-radius: 8px; border: 1px solid var(--border-bright); cursor: pointer; text-decoration: none; transition: border-color 0.2s, color 0.2s; display: inline-block; }
+  .btn-secondary:hover { border-color: var(--muted); color: var(--text); }
+  .hero-stats { display: flex; gap: 3rem; margin-top: 4rem; position: relative; z-index: 1; flex-wrap: wrap; justify-content: center; }
+  .stat { text-align: center; }
+  .stat-num { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.8rem; color: var(--text); letter-spacing: -0.03em; }
+  .stat-label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.15rem; }
+
+  /* MOCKUP */
+  .mockup-section { position: relative; padding: 2rem 2rem 6rem; display: flex; justify-content: center; z-index: 1; }
+  .mockup-wrap { width: 100%; max-width: 960px; background: var(--surface); border: 1px solid var(--border-bright); border-radius: 16px; overflow: hidden; box-shadow: 0 40px 120px rgba(0,0,0,0.7), 0 0 0 1px rgba(123,47,255,0.1); }
+  .mockup-bar { background: var(--surface2); border-bottom: 1px solid var(--border); padding: 0.7rem 1.2rem; display: flex; align-items: center; gap: 0.5rem; }
+  .mockup-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .d-red{background:#FF5F57}.d-yellow{background:#FEBC2E}.d-green{background:#28C840}
+  .mockup-url { flex: 1; text-align: center; font-size: 0.78rem; color: var(--muted); }
+  .mockup-body { display: grid; grid-template-columns: 200px 1fr; min-height: 420px; }
+  .mockup-sidebar { background: rgba(22,27,37,0.6); border-right: 1px solid var(--border); padding: 1.5rem 1rem; }
+  .sidebar-logo { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; color: var(--text); margin-bottom: 2rem; letter-spacing: -0.02em; }
+  .sidebar-section { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 0.6rem; margin-top: 1.2rem; }
+  .sidebar-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.45rem 0.6rem; border-radius: 6px; font-size: 0.82rem; color: var(--subtle); cursor: pointer; transition: background 0.15s; margin-bottom: 0.15rem; }
+  .sidebar-item.active { background: rgba(123,47,255,0.15); color: #C4A3FF; }
+  .sidebar-item:hover:not(.active) { background: rgba(255,255,255,0.04); }
+  .sidebar-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .mockup-main { padding: 1.5rem; }
+  .mockup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+  .mockup-title { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 1rem; }
+  .chip { background: rgba(163,255,71,0.12); color: var(--lime); font-size: 0.7rem; padding: 0.25rem 0.65rem; border-radius: 100px; border: 1px solid rgba(163,255,71,0.25); font-weight: 500; }
+  .metric-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.75rem; margin-bottom: 1.25rem; }
+  .metric-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 0.9rem 1rem; }
+  .metric-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.3rem; }
+  .metric-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.35rem; letter-spacing: -0.02em; }
+  .metric-change { font-size: 0.7rem; color: #4ADE80; margin-top: 0.2rem; }
+  .flow-row { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 1rem; }
+  .flow-node { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.8rem; font-size: 0.75rem; color: var(--subtle); white-space: nowrap; }
+  .flow-node.trigger { border-color: rgba(123,47,255,0.4); color: #C4A3FF; background: rgba(123,47,255,0.08); }
+  .flow-node.action { border-color: rgba(14,165,233,0.4); color: #7DD3FC; background: rgba(14,165,233,0.08); }
+  .flow-node.output { border-color: rgba(163,255,71,0.35); color: var(--lime); background: rgba(163,255,71,0.07); }
+  .flow-arrow { color: var(--muted); font-size: 0.9rem; }
+
+  /* SECTION SHARED */
+  section { position: relative; z-index: 1; padding: 5rem 2rem; max-width: 1100px; margin: 0 auto; }
+  .section-tag { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--violet); font-weight: 600; margin-bottom: 0.8rem; }
+  .section-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: clamp(2rem,4vw,3rem); letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 1rem; max-width: 600px; }
+  .section-sub { color: var(--subtle); font-size: 1rem; font-weight: 300; max-width: 520px; line-height: 1.7; margin-bottom: 3rem; }
+
+  /* FEATURES */
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(300px,1fr)); gap: 1.25rem; }
+  .feature-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 2rem; transition: border-color 0.25s, transform 0.2s; position: relative; overflow: hidden; }
+  .feature-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg,transparent,rgba(123,47,255,0.5),transparent); opacity: 0; transition: opacity 0.3s; }
+  .feature-card:hover { border-color: var(--border-bright); transform: translateY(-3px); }
+  .feature-card:hover::before { opacity: 1; }
+  .feature-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 1.25rem; }
+  .fi-violet{background:rgba(123,47,255,0.15)}.fi-blue{background:rgba(14,165,233,0.15)}.fi-lime{background:rgba(163,255,71,0.12)}
+  .feature-card h3 { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 1.05rem; margin-bottom: 0.6rem; letter-spacing: -0.01em; }
+  .feature-card p { color: var(--subtle); font-size: 0.9rem; line-height: 1.65; font-weight: 300; }
+
+  /* HOW IT WORKS */
+  .steps-row { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 0; position: relative; }
+  .step { padding: 2rem; position: relative; }
+  .step:not(:last-child)::after { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); height: 60%; width: 1px; background: linear-gradient(to bottom,transparent,var(--border-bright),transparent); }
+  .step-num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 3rem; color: rgba(123,47,255,0.2); line-height: 1; margin-bottom: 1rem; letter-spacing: -0.04em; }
+  .step h3 { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 1rem; margin-bottom: 0.5rem; }
+  .step p { color: var(--subtle); font-size: 0.88rem; line-height: 1.6; font-weight: 300; }
+
+  /* PRICING */
+  .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap: 1.25rem; align-items: start; }
+  .pricing-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 2.25rem; position: relative; overflow: hidden; }
+  .pricing-card.featured { border-color: rgba(123,47,255,0.5); background: linear-gradient(145deg,rgba(123,47,255,0.06) 0%,var(--surface) 60%); }
+  .pricing-card.featured::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg,var(--violet),var(--blue)); }
+  .plan-badge { display: inline-block; background: rgba(123,47,255,0.15); color: #C4A3FF; font-size: 0.68rem; padding: 0.25rem 0.7rem; border-radius: 100px; border: 1px solid rgba(123,47,255,0.3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1.25rem; }
+  .plan-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.3rem; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+  .plan-desc { color: var(--subtle); font-size: 0.88rem; font-weight: 300; margin-bottom: 1.5rem; }
+  .plan-price { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 2.5rem; letter-spacing: -0.04em; line-height: 1; margin-bottom: 0.25rem; }
+  .plan-price span { font-size: 1rem; font-weight: 400; color: var(--muted); letter-spacing: 0; }
+  .plan-period { font-size: 0.8rem; color: var(--muted); margin-bottom: 2rem; }
+  .plan-features { list-style: none; margin-bottom: 2rem; }
+  .plan-features li { display: flex; align-items: center; gap: 0.65rem; font-size: 0.88rem; color: var(--subtle); padding: 0.5rem 0; border-bottom: 1px solid var(--border); font-weight: 300; }
+  .plan-features li:last-child { border-bottom: none; }
+  .check { width: 18px; height: 18px; border-radius: 50%; background: rgba(163,255,71,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.7rem; color: var(--lime); }
+  .btn-plan { width: 100%; padding: 0.85rem; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; letter-spacing: 0.01em; }
+  .btn-plan-outline { background: transparent; border: 1px solid var(--border-bright) !important; color: var(--subtle); }
+  .btn-plan-outline:hover { border-color: var(--muted) !important; color: var(--text); }
+  .btn-plan-fill { background: var(--lime); color: #080A0F; font-weight: 600; }
+  .btn-plan-fill:hover { box-shadow: 0 6px 24px rgba(163,255,71,0.25); transform: translateY(-1px); }
+
+  /* PRICING TOGGLE */
+  .pricing-toggle { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 3rem; }
+  .toggle-label { font-size: 0.9rem; color: var(--subtle); }
+  .toggle-label.active-label { color: var(--text); }
+  .toggle-switch { position: relative; width: 46px; height: 26px; cursor: pointer; }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-track { position: absolute; inset: 0; background: var(--surface2); border: 1px solid var(--border-bright); border-radius: 100px; transition: background 0.2s; }
+  .toggle-track.on { background: rgba(123,47,255,0.3); border-color: rgba(123,47,255,0.5); }
+  .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; background: var(--muted); border-radius: 50%; transition: transform 0.2s, background 0.2s; }
+  .toggle-thumb.on { transform: translateX(20px); background: var(--violet); }
+  .save-badge { background: rgba(163,255,71,0.12); color: var(--lime); font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 100px; border: 1px solid rgba(163,255,71,0.25); font-weight: 500; }
+
+  /* TESTIMONIALS */
+  .testimonials-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap: 1.25rem; }
+  .testi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.75rem; }
+  .stars { color: var(--lime); font-size: 0.85rem; margin-bottom: 1rem; letter-spacing: 0.1em; }
+  .testi-text { font-size: 0.9rem; line-height: 1.7; color: var(--subtle); font-weight: 300; margin-bottom: 1.25rem; font-style: italic; }
+  .testi-author { display: flex; align-items: center; gap: 0.75rem; }
+  .testi-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; flex-shrink: 0; }
+  .av1{background:rgba(123,47,255,0.2);color:#C4A3FF}.av2{background:rgba(14,165,233,0.2);color:#7DD3FC}.av3{background:rgba(163,255,71,0.15);color:var(--lime)}
+  .testi-name { font-size: 0.85rem; font-weight: 500; }
+  .testi-role { font-size: 0.75rem; color: var(--muted); }
+
+  /* CTA */
+  .cta-section { text-align: center; padding: 6rem 2rem; position: relative; z-index: 1; max-width: 700px; margin: 0 auto; }
+  .cta-section h2 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: clamp(2.2rem,5vw,3.5rem); letter-spacing: -0.04em; line-height: 1.1; margin-bottom: 1.25rem; }
+  .cta-section p { color: var(--subtle); font-weight: 300; font-size: 1rem; margin-bottom: 2.5rem; line-height: 1.7; }
+
+  /* FOOTER */
+  footer { border-top: 1px solid var(--border); padding: 2.5rem 4rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; position: relative; z-index: 1; }
+  .footer-logo { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem; letter-spacing: -0.02em; background: linear-gradient(135deg,#fff 40%,#7B2FFF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .footer-links { display: flex; gap: 2rem; list-style: none; }
+  .footer-links a { color: var(--muted); text-decoration: none; font-size: 0.85rem; transition: color 0.2s; cursor: pointer; }
+  .footer-links a:hover { color: var(--subtle); }
+  .footer-copy { font-size: 0.8rem; color: var(--muted); }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 0 4rem; position: relative; z-index: 1; }
+
+  /* FADE */
+  @keyframes fadeUp { from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)} }
+  .fade-up{animation:fadeUp 0.7s ease forwards}
+  .delay-1{animation-delay:0.1s;opacity:0}.delay-2{animation-delay:0.25s;opacity:0}
+  .delay-3{animation-delay:0.4s;opacity:0}.delay-4{animation-delay:0.55s;opacity:0}
+
+  /* ========================
+     LOGIN PAGE
+  ======================== */
+  .login-page {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Left panel */
+  .login-left {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .login-left::before {
+    content: '';
+    position: absolute;
+    bottom: -20%;
+    left: -20%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(ellipse, rgba(123,47,255,0.15) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .login-left-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #fff 40%, #7B2FFF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .login-left-body { position: relative; z-index: 1; }
+  .login-left h2 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2.4rem;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+    margin-bottom: 1.25rem;
+  }
+  .login-left h2 .gr {
+    background: linear-gradient(135deg, var(--violet), var(--blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .login-left p {
+    color: var(--subtle);
+    font-size: 0.95rem;
+    font-weight: 300;
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+    max-width: 380px;
+  }
+  .login-proof { display: flex; flex-direction: column; gap: 0.75rem; }
+  .proof-item { display: flex; align-items: center; gap: 0.75rem; font-size: 0.88rem; color: var(--subtle); font-weight: 300; }
+  .proof-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0; }
+  .pi-v { background: rgba(123,47,255,0.15); }
+  .pi-b { background: rgba(14,165,233,0.15); }
+  .pi-l { background: rgba(163,255,71,0.12); }
+  .login-left-footer {
+    font-size: 0.78rem;
+    color: var(--muted);
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Right panel — form */
+  .login-right {
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2rem;
+  }
+  .login-box {
+    width: 100%;
+    max-width: 420px;
+  }
+  .login-tab-row {
+    display: flex;
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 2.5rem;
+  }
+  .login-tab {
+    flex: 1;
+    padding: 0.6rem;
+    text-align: center;
+    font-size: 0.88rem;
+    font-weight: 400;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 7px;
+    transition: background 0.2s, color 0.2s;
+    border: none;
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .login-tab.active { background: var(--surface2); color: var(--text); font-weight: 500; }
+
+  .form-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.6rem;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.4rem;
+  }
+  .form-subtitle { font-size: 0.88rem; color: var(--subtle); font-weight: 300; margin-bottom: 2rem; }
+
+  /* Social logins */
+  .social-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.75rem; }
+  .btn-social {
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    padding: 0.7rem; border-radius: 8px;
+    border: 1px solid var(--border-bright);
+    background: var(--surface);
+    color: var(--subtle); font-size: 0.85rem; font-weight: 400;
+    cursor: pointer; transition: border-color 0.2s, color 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-social:hover { border-color: var(--muted); color: var(--text); }
+  .btn-social svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  .divider-text {
+    display: flex; align-items: center; gap: 1rem;
+    font-size: 0.78rem; color: var(--muted);
+    margin-bottom: 1.75rem;
+  }
+  .divider-text::before, .divider-text::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* Form fields */
+  .form-group { margin-bottom: 1.25rem; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .form-label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--subtle); margin-bottom: 0.45rem; letter-spacing: 0.01em; }
+  .form-input {
+    width: 100%; padding: 0.75rem 1rem;
+    background: var(--surface); border: 1px solid var(--border-bright);
+    border-radius: 8px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 300;
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .form-input::placeholder { color: var(--muted); }
+  .form-input:focus { border-color: rgba(123,47,255,0.6); box-shadow: 0 0 0 3px rgba(123,47,255,0.1); }
+
+  .form-helper { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem; }
+  .form-link { font-size: 0.78rem; color: var(--violet); text-decoration: none; cursor: pointer; transition: opacity 0.2s; }
+  .form-link:hover { opacity: 0.8; }
+
+  .btn-submit {
+    width: 100%; padding: 0.9rem;
+    background: var(--lime); color: #080A0F;
+    border: none; border-radius: 8px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 600;
+    cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+    letter-spacing: 0.01em; margin-top: 0.5rem;
+  }
+  .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(163,255,71,0.25); }
+
+  .form-footer { text-align: center; margin-top: 1.5rem; font-size: 0.84rem; color: var(--muted); font-weight: 300; }
+  .form-footer a { color: var(--violet); text-decoration: none; cursor: pointer; }
+  .form-footer a:hover { text-decoration: underline; }
+
+  .form-terms { font-size: 0.75rem; color: var(--muted); text-align: center; margin-top: 1.25rem; line-height: 1.5; font-weight: 300; }
+  .form-terms a { color: var(--subtle); text-decoration: underline; cursor: pointer; }
+
+  /* Password strength */
+  .pw-strength { margin-top: 0.5rem; display: flex; gap: 4px; }
+  .pw-bar { flex: 1; height: 3px; border-radius: 2px; background: var(--border-bright); transition: background 0.3s; }
+  .pw-bar.weak { background: #EF4444; }
+  .pw-bar.fair { background: #F59E0B; }
+  .pw-bar.strong { background: var(--lime); }
+
+  /* Plan selector in signup */
+  .plan-select-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.6rem; margin-bottom: 1.25rem; }
+  .plan-opt {
+    padding: 0.75rem 0.5rem; border-radius: 8px;
+    border: 1px solid var(--border-bright);
+    background: var(--surface);
+    text-align: center; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .plan-opt:hover { border-color: rgba(123,47,255,0.4); }
+  .plan-opt.selected { border-color: rgba(123,47,255,0.6); background: rgba(123,47,255,0.08); }
+  .plan-opt-name { font-family: 'Syne', sans-serif; font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.2rem; }
+  .plan-opt-price { font-size: 0.72rem; color: var(--muted); }
+  .plan-opt.selected .plan-opt-price { color: #C4A3FF; }
+
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    .hero { padding: 7rem 1.5rem 3rem; }
+    section { padding: 3.5rem 1.5rem; }
+    .mockup-body { grid-template-columns: 1fr; }
+    .mockup-sidebar { display: none; }
+    footer { padding: 2rem 1.5rem; flex-direction: column; align-items: flex-start; }
+    .divider { margin: 0 1.5rem; }
+    .step:not(:last-child)::after { display: none; }
+    .login-page { grid-template-columns: 1fr; }
+    .login-left { display: none; }
+    .social-row { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .plan-select-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <span class="logo" onclick="showPage('landing')">Forgelux</span>
+  <ul class="nav-links">
+    <li><a href="#features" onclick="showPage('landing')">Features</a></li>
+    <li><a href="#how" onclick="showPage('landing')">How it works</a></li>
+    <li><a href="#pricing" onclick="showPage('landing')">Pricing</a></li>
+  </ul>
+  <div class="nav-right">
+    <span class="nav-signin" onclick="showLogin('login')">Sign in</span>
+    <span class="nav-cta" onclick="showLogin('signup')">Start free</span>
+  </div>
+</nav>
+
+<!-- ===================== LANDING PAGE ===================== -->
+<div id="page-landing" class="page active">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge fade-up"><span class="badge-dot"></span>Now in public beta</div>
+    <h1 class="fade-up delay-1">Build powerful apps.<br><span class="accent">Without limits.</span></h1>
+    <p class="hero-sub fade-up delay-2">Forgelux gives your business a custom app-building platform — web apps, mobile tools, and automations — all under one subscription.</p>
+    <div class="hero-buttons fade-up delay-3">
+      <span class="btn-primary" onclick="showLogin('signup')">Start building free</span>
+      <a href="#how" class="btn-secondary">See how it works</a>
+    </div>
+    <div class="hero-stats fade-up delay-4">
+      <div class="stat"><div class="stat-num">2,400+</div><div class="stat-label">Apps built</div></div>
+      <div class="stat"><div class="stat-num">98%</div><div class="stat-label">Uptime SLA</div></div>
+      <div class="stat"><div class="stat-num">14 days</div><div class="stat-label">Free trial</div></div>
+    </div>
+  </div>
+
+  <!-- MOCKUP -->
+  <div class="mockup-section">
+    <div class="mockup-wrap">
+      <div class="mockup-bar">
+        <div class="mockup-dot d-red"></div><div class="mockup-dot d-yellow"></div><div class="mockup-dot d-green"></div>
+        <div class="mockup-url">app.forgelux.io / dashboard</div>
+      </div>
+      <div class="mockup-body">
+        <div class="mockup-sidebar">
+          <div class="sidebar-logo">⬡ Forgelux</div>
+          <div class="sidebar-section">Workspace</div>
+          <div class="sidebar-item active"><span class="sidebar-dot" style="background:#7B2FFF"></span>Dashboard</div>
+          <div class="sidebar-item"><span class="sidebar-dot" style="background:#444"></span>My Apps</div>
+          <div class="sidebar-item"><span class="sidebar-dot" style="background:#444"></span>Automations</div>
+          <div class="sidebar-section">Build</div>
+          <div class="sidebar-item"><span class="sidebar-dot" style="background:#444"></span>App Builder</div>
+          <div class="sidebar-item"><span class="sidebar-dot" style="background:#444"></span>Flow Editor</div>
+          <div class="sidebar-item"><span class="sidebar-dot" style="background:#444"></span>Database</div>
+          <div class="sidebar-section">Account</div>
+          <div class="sidebar-item"><span class="sidebar-dot" style="background:#444"></span>Billing</div>
+          <div class="sidebar-item"><span class="sidebar-dot" style="background:#444"></span>Settings</div>
+        </div>
+        <div class="mockup-main">
+          <div class="mockup-header">
+            <span class="mockup-title">Overview</span>
+            <span class="chip">Pro Plan</span>
+          </div>
+          <div class="metric-row">
+            <div class="metric-card"><div class="metric-label">Active apps</div><div class="metric-val">12</div><div class="metric-change">↑ 3 this month</div></div>
+            <div class="metric-card"><div class="metric-label">Automation runs</div><div class="metric-val">8.4k</div><div class="metric-change">↑ 22% vs last mo</div></div>
+            <div class="metric-card"><div class="metric-label">Users served</div><div class="metric-val">1,284</div><div class="metric-change">↑ 18% vs last mo</div></div>
+          </div>
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:0.75rem;">Recent automation</div>
+          <div class="flow-row">
+            <div class="flow-node trigger">⚡ New form submit</div><div class="flow-arrow">→</div>
+            <div class="flow-node action">✦ Update CRM</div><div class="flow-arrow">→</div>
+            <div class="flow-node action">✉ Send email</div><div class="flow-arrow">→</div>
+            <div class="flow-node output">✓ Notify Slack</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-node trigger">📅 Daily schedule</div><div class="flow-arrow">→</div>
+            <div class="flow-node action">⬇ Pull data</div><div class="flow-arrow">→</div>
+            <div class="flow-node action">⚙ Transform</div><div class="flow-arrow">→</div>
+            <div class="flow-node output">📊 Build report</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="section-tag">Platform</div>
+    <h2 class="section-title">Everything you need to build</h2>
+    <p class="section-sub">From drag-and-drop dashboards to complex multi-step automations. Forgelux handles the infrastructure so you can focus on what matters.</p>
+    <div class="features-grid">
+      <div class="feature-card"><div class="feature-icon fi-violet">🏗️</div><h3>Visual App Builder</h3><p>Build web apps and dashboards visually. Connect to any data source, design your interface, and publish in minutes — no code required.</p></div>
+      <div class="feature-card"><div class="feature-icon fi-blue">⚡</div><h3>Business Automations</h3><p>Create powerful multi-step workflows that connect your tools. Trigger automations from forms, schedules, webhooks, or user actions.</p></div>
+      <div class="feature-card"><div class="feature-icon fi-lime">📱</div><h3>Mobile Apps</h3><p>Turn your web app into a native mobile experience. Progressive Web App delivery with offline support and push notifications built in.</p></div>
+      <div class="feature-card"><div class="feature-icon fi-violet">🔌</div><h3>300+ Integrations</h3><p>Connect to Slack, HubSpot, Salesforce, Google Workspace, Xero, and hundreds more. No custom code needed to hook into your stack.</p></div>
+      <div class="feature-card"><div class="feature-icon fi-blue">🛡️</div><h3>Enterprise Security</h3><p>SOC 2 Type II certified. Role-based access control, audit logs, SSO, and end-to-end encryption on all your data and apps.</p></div>
+      <div class="feature-card"><div class="feature-icon fi-lime">📊</div><h3>Real-time Analytics</h3><p>Track usage, performance, and automation runs across all your apps. Identify bottlenecks and optimise your workflows with live data.</p></div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- HOW IT WORKS -->
+  <section id="how">
+    <div class="section-tag">Process</div>
+    <h2 class="section-title">From idea to live app in hours</h2>
+    <p class="section-sub">No dev team needed. Forgelux is built for business operators who want to move fast without waiting on engineering.</p>
+    <div class="steps-row" style="background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;">
+      <div class="step"><div class="step-num">01</div><h3>Choose a template</h3><p>Start from 80+ pre-built app templates for common business use cases, or build from scratch.</p></div>
+      <div class="step"><div class="step-num">02</div><h3>Customise & connect</h3><p>Drag, drop, and configure. Connect your data sources, third-party tools, and business logic.</p></div>
+      <div class="step"><div class="step-num">03</div><h3>Automate the flow</h3><p>Build automation workflows that run in the background — triggered by time, events, or user actions.</p></div>
+      <div class="step"><div class="step-num">04</div><h3>Publish & scale</h3><p>One click to deploy. Share with your team or customers. Scale without touching infrastructure.</p></div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- PRICING -->
+  <section id="pricing">
+    <div class="section-tag">Pricing</div>
+    <h2 class="section-title">Simple monthly pricing</h2>
+    <p class="section-sub">No per-seat surprises. One flat subscription that grows with your business. All plans include a 14-day free trial.</p>
+
+    <div class="pricing-toggle">
+      <span class="toggle-label active-label" id="lbl-monthly">Monthly</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="billing-toggle" onchange="toggleBilling()">
+        <span class="toggle-track" id="toggle-track"></span>
+        <span class="toggle-thumb" id="toggle-thumb"></span>
+      </label>
+      <span class="toggle-label" id="lbl-annual">Annual</span>
+      <span class="save-badge">Save 20%</span>
+    </div>
+
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <div class="plan-name">Starter</div>
+        <p class="plan-desc">For solo operators and small teams just getting started.</p>
+        <div class="plan-price" id="price-starter">£29<span>/mo</span></div>
+        <div class="plan-period" id="period-starter">billed monthly · 14-day free trial</div>
+        <ul class="plan-features">
+          <li><span class="check">✓</span>3 published apps</li>
+          <li><span class="check">✓</span>5,000 automation runs/mo</li>
+          <li><span class="check">✓</span>50 integrations</li>
+          <li><span class="check">✓</span>5 team members</li>
+          <li><span class="check">✓</span>Community support</li>
+        </ul>
+        <button class="btn-plan btn-plan-outline" onclick="showLogin('signup')">Start free trial</button>
+      </div>
+      <div class="pricing-card featured">
+        <div class="plan-badge">Most popular</div>
+        <div class="plan-name">Pro</div>
+        <p class="plan-desc">For growing businesses that need more power and scale.</p>
+        <div class="plan-price" id="price-pro">£99<span>/mo</span></div>
+        <div class="plan-period" id="period-pro">billed monthly · 14-day free trial</div>
+        <ul class="plan-features">
+          <li><span class="check">✓</span>Unlimited published apps</li>
+          <li><span class="check">✓</span>50,000 automation runs/mo</li>
+          <li><span class="check">✓</span>300+ integrations</li>
+          <li><span class="check">✓</span>25 team members</li>
+          <li><span class="check">✓</span>Mobile app publishing</li>
+          <li><span class="check">✓</span>Priority email support</li>
+        </ul>
+        <button class="btn-plan btn-plan-fill" onclick="showLogin('signup')">Start Pro free</button>
+      </div>
+      <div class="pricing-card">
+        <div class="plan-name">Enterprise</div>
+        <p class="plan-desc">For organisations with advanced security and compliance needs.</p>
+        <div class="plan-price">Custom</div>
+        <div class="plan-period">annual contract · custom onboarding</div>
+        <ul class="plan-features">
+          <li><span class="check">✓</span>Everything in Pro</li>
+          <li><span class="check">✓</span>Unlimited automation runs</li>
+          <li><span class="check">✓</span>Unlimited team members</li>
+          <li><span class="check">✓</span>SSO & SAML</li>
+          <li><span class="check">✓</span>SOC 2 & audit logs</li>
+          <li><span class="check">✓</span>Dedicated account manager</li>
+        </ul>
+        <button class="btn-plan btn-plan-outline">Contact sales</button>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- TESTIMONIALS -->
+  <section>
+    <div class="section-tag">Customers</div>
+    <h2 class="section-title">Built by builders, loved by operators</h2>
+    <p class="section-sub">Teams across industries use Forgelux to replace spreadsheets, outdated software, and expensive dev projects.</p>
+    <div class="testimonials-grid">
+      <div class="testi-card">
+        <div class="stars">★★★★★</div>
+        <p class="testi-text">"We replaced three separate SaaS tools with one Forgelux app. Cut our monthly software spend in half and everything actually talks to each other now."</p>
+        <div class="testi-author"><div class="testi-avatar av1">SR</div><div><div class="testi-name">Sarah R.</div><div class="testi-role">Operations Director, Fintech startup</div></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="stars">★★★★★</div>
+        <p class="testi-text">"Our logistics dashboard went live in 4 days. Previously that would have been a 3-month dev project. Forgelux has genuinely changed how fast we move."</p>
+        <div class="testi-author"><div class="testi-avatar av2">MT</div><div><div class="testi-name">Marcus T.</div><div class="testi-role">Head of Ops, Distribution company</div></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="stars">★★★★★</div>
+        <p class="testi-text">"The automation builder is incredibly intuitive. We automated our entire client onboarding and the team hasn't had to touch it in months."</p>
+        <div class="testi-author"><div class="testi-avatar av3">JL</div><div><div class="testi-name">Jess L.</div><div class="testi-role">CEO, Marketing agency</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <div class="cta-section">
+    <h2>Ready to <span style="background:linear-gradient(135deg,var(--violet),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">forge</span> something?</h2>
+    <p>Start your 14-day free trial. No credit card required. Build your first app in under an hour.</p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+      <span class="btn-primary" onclick="showLogin('signup')">Start building free</span>
+      <span class="btn-secondary" style="cursor:pointer">Book a demo</span>
+    </div>
+  </div>
+
+  <footer>
+    <span class="footer-logo">Forgelux</span>
+    <ul class="footer-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a>Docs</a></li>
+      <li><a>Blog</a></li>
+      <li><a>Contact</a></li>
+    </ul>
+    <span class="footer-copy">© 2026 Forgelux Ltd. All rights reserved.</span>
+  </footer>
+</div>
+
+<!-- ===================== LOGIN PAGE ===================== -->
+<div id="page-login" class="page">
+  <div class="login-page">
+
+    <!-- LEFT PANEL -->
+    <div class="login-left">
+      <span class="login-left-logo" onclick="showPage('landing')">Forgelux</span>
+      <div class="login-left-body">
+        <h2>Your apps.<br><span class="gr">Forged here.</span></h2>
+        <p>Join thousands of businesses building custom web apps, mobile tools, and automations — without writing a single line of code.</p>
+        <div class="login-proof">
+          <div class="proof-item"><div class="proof-icon pi-v">🏗️</div>Visual app builder — no code needed</div>
+          <div class="proof-item"><div class="proof-icon pi-b">⚡</div>Business automations in minutes</div>
+          <div class="proof-item"><div class="proof-icon pi-l">📱</div>Web & mobile apps under one plan</div>
+          <div class="proof-item"><div class="proof-icon pi-v">🔒</div>SOC 2 certified · 98% uptime SLA</div>
+          <div class="proof-item"><div class="proof-icon pi-b">💳</div>14-day free trial · no card required</div>
+        </div>
+      </div>
+      <div class="login-left-footer">© 2026 Forgelux Ltd · <a href="#" style="color:var(--muted);text-decoration:underline;">Privacy</a> · <a href="#" style="color:var(--muted);text-decoration:underline;">Terms</a></div>
+    </div>
+
+    <!-- RIGHT PANEL — FORM -->
+    <div class="login-right">
+      <div class="login-box">
+
+        <!-- TAB ROW -->
+        <div class="login-tab-row">
+          <button class="login-tab" id="tab-login" onclick="switchTab('login')">Sign in</button>
+          <button class="login-tab" id="tab-signup" onclick="switchTab('signup')">Create account</button>
+        </div>
+
+        <!-- SIGN IN FORM -->
+        <div id="form-login">
+          <div class="form-title">Welcome back</div>
+          <div class="form-subtitle">Sign in to your Forgelux workspace</div>
+
+          <div class="social-row">
+            <button class="btn-social">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+              Google
+            </button>
+            <button class="btn-social">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.341-3.369-1.341-.454-1.155-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.268 2.75 1.026A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.026 2.747-1.026.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.162 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+              GitHub
+            </button>
+          </div>
+
+          <div class="divider-text">or continue with email</div>
+
+          <div class="form-group">
+            <label class="form-label">Email address</label>
+            <input type="email" class="form-input" placeholder="you@company.com">
+          </div>
+          <div class="form-group">
+            <div class="form-helper">
+              <label class="form-label" style="margin:0">Password</label>
+              <a class="form-link">Forgot password?</a>
+            </div>
+            <input type="password" class="form-input" placeholder="••••••••">
+          </div>
+          <button class="btn-submit">Sign in to Forgelux</button>
+          <div class="form-footer">Don't have an account? <a onclick="switchTab('signup')">Create one free</a></div>
+        </div>
+
+        <!-- SIGN UP FORM -->
+        <div id="form-signup" style="display:none;">
+          <div class="form-title">Start for free</div>
+          <div class="form-subtitle">14-day trial · no credit card needed</div>
+
+          <div class="social-row">
+            <button class="btn-social">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+              Google
+            </button>
+            <button class="btn-social">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.341-3.369-1.341-.454-1.155-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.268 2.75 1.026A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.026 2.747-1.026.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.162 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+              GitHub
+            </button>
+          </div>
+
+          <div class="divider-text">or sign up with email</div>
+
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">First name</label><input type="text" class="form-input" placeholder="Luke"></div>
+            <div class="form-group"><label class="form-label">Last name</label><input type="text" class="form-input" placeholder="Ryan"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Work email</label><input type="email" class="form-input" placeholder="you@company.com"></div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-input" placeholder="Min. 8 characters" id="pw-input" oninput="checkPw(this.value)">
+            <div class="pw-strength"><div class="pw-bar" id="pw1"></div><div class="pw-bar" id="pw2"></div><div class="pw-bar" id="pw3"></div><div class="pw-bar" id="pw4"></div></div>
+          </div>
+
+          <div style="font-size:0.78rem;color:var(--subtle);margin-bottom:0.6rem;font-weight:400;">Choose your plan</div>
+          <div class="plan-select-row">
+            <div class="plan-opt" id="opt-starter" onclick="selectPlan('starter')"><span class="plan-opt-name">Starter</span><span class="plan-opt-price">£29/mo</span></div>
+            <div class="plan-opt selected" id="opt-pro" onclick="selectPlan('pro')"><span class="plan-opt-name">Pro</span><span class="plan-opt-price">£99/mo</span></div>
+            <div class="plan-opt" id="opt-ent" onclick="selectPlan('enterprise')"><span class="plan-opt-name">Enterprise</span><span class="plan-opt-price">Custom</span></div>
+          </div>
+
+          <button class="btn-submit">Create my account →</button>
+          <div class="form-terms">By signing up you agree to the <a>Terms of Service</a> and <a>Privacy Policy</a>.</div>
+          <div class="form-footer">Already have an account? <a onclick="switchTab('login')">Sign in</a></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Page navigation
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function showLogin(tab) {
+    showPage('login');
+    switchTab(tab);
+  }
+
+  // Tab switching
+  function switchTab(tab) {
+    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+    document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('form-signup').style.display = tab === 'signup' ? 'block' : 'none';
+  }
+
+  // Billing toggle
+  let isAnnual = false;
+  function toggleBilling() {
+    isAnnual = !isAnnual;
+    document.getElementById('toggle-track').classList.toggle('on', isAnnual);
+    document.getElementById('toggle-thumb').classList.toggle('on', isAnnual);
+    document.getElementById('lbl-monthly').classList.toggle('active-label', !isAnnual);
+    document.getElementById('lbl-annual').classList.toggle('active-label', isAnnual);
+
+    const starterEl = document.getElementById('price-starter');
+    const proEl = document.getElementById('price-pro');
+    const starterPeriod = document.getElementById('period-starter');
+    const proPeriod = document.getElementById('period-pro');
+
+    if (isAnnual) {
+      starterEl.innerHTML = '£23<span>/mo</span>';
+      proEl.innerHTML = '£79<span>/mo</span>';
+      starterPeriod.textContent = 'billed £276/yr · saving £72 · 14-day free trial';
+      proPeriod.textContent = 'billed £948/yr · saving £240 · 14-day free trial';
+    } else {
+      starterEl.innerHTML = '£29<span>/mo</span>';
+      proEl.innerHTML = '£99<span>/mo</span>';
+      starterPeriod.textContent = 'billed monthly · 14-day free trial';
+      proPeriod.textContent = 'billed monthly · 14-day free trial';
+    }
+  }
+
+  // Password strength
+  function checkPw(val) {
+    const bars = [document.getElementById('pw1'),document.getElementById('pw2'),document.getElementById('pw3'),document.getElementById('pw4')];
+    bars.forEach(b => { b.className = 'pw-bar'; });
+    if (!val) return;
+    let score = 0;
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const cls = score <= 1 ? 'weak' : score <= 2 ? 'fair' : 'strong';
+    for (let i = 0; i < score; i++) bars[i].classList.add(cls);
+  }
+
+  // Plan selection
+  function selectPlan(plan) {
+    ['starter','pro','ent'].forEach(p => document.getElementById('opt-'+p).classList.remove('selected'));
+    const map = {starter:'opt-starter',pro:'opt-pro',enterprise:'opt-ent'};
+    document.getElementById(map[plan]).classList.add('selected');
+  }
+
+  // Default tab
+  switchTab('signup');
+</script>
+</body>
+</html>

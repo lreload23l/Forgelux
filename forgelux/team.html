@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forgelux — Team</title>
+<link rel="stylesheet" href="js/theme.css">
+<style>
+.team-layout { display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem; }
+.seats-banner {
+  background: linear-gradient(135deg, rgba(123,47,255,0.08), rgba(14,165,233,0.05));
+  border: 1px solid rgba(123,47,255,0.2); border-radius: 12px;
+  padding: 1.1rem 1.5rem; display: flex; align-items: center; gap: 1.5rem;
+  margin-bottom: 1.75rem; flex-wrap: wrap;
+}
+.seats-info { flex: 1; }
+.seats-title { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.95rem; margin-bottom: 0.3rem; }
+.seats-sub { font-size: 0.8rem; color: var(--subtle); font-weight: 300; }
+.seats-bar-wrap { width: 200px; }
+.seats-bar-track { height: 5px; background: var(--border-bright); border-radius: 3px; overflow: hidden; margin-bottom: 0.4rem; }
+.seats-bar-fill { height: 100%; background: linear-gradient(90deg, var(--violet), var(--blue)); border-radius: 3px; width: 28%; }
+.seats-bar-label { font-size: 0.75rem; color: var(--subtle); }
+.seats-bar-label strong { color: var(--text); }
+
+/* member table extras */
+.member-cell { display: flex; align-items: center; gap: 0.75rem; }
+.member-av {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem; font-weight: 600; flex-shrink: 0;
+}
+.av-v{background:rgba(123,47,255,0.2);color:#C4A3FF}
+.av-b{background:rgba(14,165,233,0.2);color:#7DD3FC}
+.av-l{background:rgba(163,255,71,0.15);color:var(--lime)}
+.av-o{background:rgba(251,146,60,0.15);color:#FB923C}
+.av-r{background:rgba(239,68,68,0.15);color:#FCA5A5}
+.av-p{background:rgba(236,72,153,0.15);color:#F9A8D4}
+.av-t{background:rgba(20,184,166,0.15);color:#5EEAD4}
+.member-name-cell { }
+.member-name { font-size: 0.85rem; font-weight: 500; color: var(--text); }
+.member-email { font-size: 0.72rem; color: var(--muted); }
+.online-pip { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+.pip-on { background: var(--success); box-shadow: 0 0 5px rgba(74,222,128,0.5); }
+.pip-off { background: var(--border-bright); }
+.role-select {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+  color: var(--subtle); font-size: 0.78rem; padding: 0.3rem 0.55rem;
+  font-family: 'DM Sans', sans-serif; outline: none; cursor: pointer;
+}
+.role-select:focus { border-color: rgba(123,47,255,0.4); }
+
+/* right panel */
+.role-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; margin-bottom: 0.75rem; }
+.role-card-name { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.88rem; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.5rem; }
+.role-card-desc { font-size: 0.75rem; color: var(--muted); font-weight: 300; line-height: 1.5; }
+.perm-row { display: flex; align-items: center; justify-content: space-between; padding: 0.45rem 0; border-bottom: 1px solid var(--border); font-size: 0.8rem; }
+.perm-row:last-child { border-bottom: none; }
+.perm-label { color: var(--subtle); }
+.perm-yes { color: var(--success); font-size: 0.75rem; }
+.perm-no  { color: var(--muted);   font-size: 0.75rem; }
+
+/* invite modal */
+.invite-method-row { display: flex; gap: 0.75rem; margin-bottom: 1.25rem; }
+.invite-method {
+  flex: 1; padding: 0.75rem; border-radius: 9px; border: 1px solid var(--border-bright);
+  background: var(--surface2); cursor: pointer; text-align: center;
+  font-size: 0.8rem; font-weight: 500; color: var(--subtle); transition: all 0.15s;
+}
+.invite-method:hover { border-color: rgba(123,47,255,0.4); color: var(--text); }
+.invite-method.selected { border-color: rgba(123,47,255,0.5); background: rgba(123,47,255,0.08); color: #C4A3FF; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.6rem; background: var(--surface2); border: 1px solid var(--border-bright); border-radius: 8px; min-height: 44px; }
+.email-tag { background: rgba(123,47,255,0.15); border: 1px solid rgba(123,47,255,0.3); color: #C4A3FF; font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 100px; display: flex; align-items: center; gap: 0.3rem; cursor: pointer; }
+.email-tag-x { font-size: 0.7rem; opacity: 0.6; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SEATS BANNER -->
+  <div class="seats-banner fade d1">
+    <div class="seats-info">
+      <div class="seats-title">Team seats — Pro Plan</div>
+      <div class="seats-sub">7 of 25 seats used. Upgrade to Enterprise for unlimited members.</div>
+    </div>
+    <div class="seats-bar-wrap">
+      <div class="seats-bar-track"><div class="seats-bar-fill"></div></div>
+      <div class="seats-bar-label"><strong>7</strong> / 25 seats used</div>
+    </div>
+    <button class="btn btn-ghost btn-sm">Upgrade plan</button>
+  </div>
+
+  <div class="team-layout">
+
+    <!-- MEMBERS TABLE -->
+    <div class="fade d2">
+      <div class="section-header">
+        <span class="section-title">Members (7)</span>
+        <div style="display:flex;gap:0.5rem">
+          <button class="btn btn-ghost btn-sm">Export CSV</button>
+          <button class="btn btn-primary btn-sm" onclick="openInviteModal()">＋ Invite member</button>
+        </div>
+      </div>
+      <div class="card" style="padding:0">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Member</th><th>Role</th><th>Apps access</th><th>Status</th><th>Last active</th><th></th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="member-cell"><div class="member-av av-v">LR</div><div class="member-name-cell"><div class="member-name">Luke Ryan <span style="font-size:0.65rem;color:var(--muted)">(you)</span></div><div class="member-email">luke@forgelux.io</div></div></div></td>
+                <td><span class="badge badge-violet">Owner</span></td>
+                <td>All apps</td>
+                <td><span class="online-pip pip-on"></span>Online</td>
+                <td>Now</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td><div class="member-cell"><div class="member-av av-b">SA</div><div class="member-name-cell"><div class="member-name">Sarah Anderson</div><div class="member-email">sarah@forgelux.io</div></div></div></td>
+                <td><select class="role-select"><option selected>Admin</option><option>Editor</option><option>Viewer</option></select></td>
+                <td>All apps</td>
+                <td><span class="online-pip pip-on"></span>Online</td>
+                <td>2h ago</td>
+                <td><button class="btn btn-danger btn-sm">Remove</button></td>
+              </tr>
+              <tr>
+                <td><div class="member-cell"><div class="member-av av-l">JM</div><div class="member-name-cell"><div class="member-name">James Mitchell</div><div class="member-email">james@forgelux.io</div></div></div></td>
+                <td><select class="role-select"><option>Admin</option><option selected>Editor</option><option>Viewer</option></select></td>
+                <td>8 apps</td>
+                <td><span class="online-pip pip-on"></span>Online</td>
+                <td>30m ago</td>
+                <td><button class="btn btn-danger btn-sm">Remove</button></td>
+              </tr>
+              <tr>
+                <td><div class="member-cell"><div class="member-av av-o">PN</div><div class="member-name-cell"><div class="member-name">Priya Nair</div><div class="member-email">priya@forgelux.io</div></div></div></td>
+                <td><select class="role-select"><option>Admin</option><option selected>Editor</option><option>Viewer</option></select></td>
+                <td>5 apps</td>
+                <td><span class="online-pip pip-off"></span>Offline</td>
+                <td>1d ago</td>
+                <td><button class="btn btn-danger btn-sm">Remove</button></td>
+              </tr>
+              <tr>
+                <td><div class="member-cell"><div class="member-av av-r">TK</div><div class="member-name-cell"><div class="member-name">Tom Kelly</div><div class="member-email">tom@forgelux.io</div></div></div></td>
+                <td><select class="role-select"><option>Admin</option><option>Editor</option><option selected>Viewer</option></select></td>
+                <td>3 apps</td>
+                <td><span class="online-pip pip-off"></span>Offline</td>
+                <td>3d ago</td>
+                <td><button class="btn btn-danger btn-sm">Remove</button></td>
+              </tr>
+              <tr>
+                <td><div class="member-cell"><div class="member-av av-p">EC</div><div class="member-name-cell"><div class="member-name">Emma Clarke</div><div class="member-email">emma@forgelux.io</div></div></div></td>
+                <td><select class="role-select"><option>Admin</option><option selected>Editor</option><option>Viewer</option></select></td>
+                <td>6 apps</td>
+                <td><span class="online-pip pip-off"></span>Offline</td>
+                <td>5d ago</td>
+                <td><button class="btn btn-danger btn-sm">Remove</button></td>
+              </tr>
+              <tr>
+                <td><div class="member-cell"><div class="member-av av-t">RB</div><div class="member-name-cell"><div class="member-name">Ryan Brooks</div><div class="member-email">ryan@forgelux.io</div></div></div></td>
+                <td><select class="role-select"><option>Admin</option><option>Editor</option><option selected>Viewer</option></select></td>
+                <td>2 apps</td>
+                <td>⏳ Invite pending</td>
+                <td>Never</td>
+                <td><button class="btn btn-ghost btn-sm">Resend</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL: ROLES -->
+    <div class="fade d3">
+      <div class="section-header"><span class="section-title">Roles & permissions</span></div>
+
+      <div class="role-card">
+        <div class="role-card-name"><span class="badge badge-violet">Owner</span></div>
+        <div class="role-card-desc">Full control. Manage billing, delete workspace, manage all members.</div>
+      </div>
+      <div class="role-card">
+        <div class="role-card-name"><span class="badge badge-blue">Admin</span></div>
+        <div class="role-card-desc">Can manage members, create/delete apps, edit all automations.</div>
+      </div>
+      <div class="role-card">
+        <div class="role-card-name"><span class="badge badge-green">Editor</span></div>
+        <div class="role-card-desc">Can build and edit apps they have access to. Cannot manage team.</div>
+      </div>
+      <div class="role-card" style="margin-bottom:1.5rem">
+        <div class="role-card-name"><span class="badge badge-muted">Viewer</span></div>
+        <div class="role-card-desc">Read-only access to assigned apps. Cannot edit or publish.</div>
+      </div>
+
+      <div class="section-header"><span class="section-title">Permission matrix</span></div>
+      <div class="card" style="padding: 0.75rem 1rem;">
+        <div class="perm-row"><span class="perm-label">Create apps</span><span>Owner · Admin · Editor</span></div>
+        <div class="perm-row"><span class="perm-label">Publish apps</span><span>Owner · Admin · Editor</span></div>
+        <div class="perm-row"><span class="perm-label">Delete apps</span><span>Owner · Admin</span></div>
+        <div class="perm-row"><span class="perm-label">Manage automations</span><span>Owner · Admin · Editor</span></div>
+        <div class="perm-row"><span class="perm-label">Invite members</span><span>Owner · Admin</span></div>
+        <div class="perm-row"><span class="perm-label">Manage billing</span><span>Owner only</span></div>
+        <div class="perm-row"><span class="perm-label">View analytics</span><span>All roles</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- INVITE MODAL -->
+<div class="modal-overlay" id="invite-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Invite team members</span>
+      <button class="modal-close" onclick="closeInviteModal()">✕</button>
+    </div>
+    <div class="invite-method-row">
+      <div class="invite-method selected" onclick="selectMethod(this)">📧 Email invite</div>
+      <div class="invite-method" onclick="selectMethod(this)">🔗 Share link</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email addresses</label>
+      <div class="tag-row" id="email-tags">
+        <span class="email-tag">sarah@company.com <span class="email-tag-x" onclick="this.parentElement.remove()">✕</span></span>
+        <input type="email" placeholder="Add email and press Enter…" style="border:none;background:transparent;color:var(--text);font-size:0.82rem;outline:none;flex:1;min-width:180px;font-family:'DM Sans',sans-serif;" onkeydown="addEmailTag(event,this)">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Role</label>
+      <select class="form-select">
+        <option>Editor — can build and edit apps</option>
+        <option>Viewer — read-only access</option>
+        <option>Admin — full access except billing</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">App access</label>
+      <select class="form-select">
+        <option>All apps (current and future)</option>
+        <option>Specific apps only…</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeInviteModal()">Cancel</button>
+      <button class="btn btn-primary">Send invites →</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/auth.js"></script>
+<script src="js/nav.js"></script>
+<script>
+Nav.init({ title: 'Team', actions: `<button class="topbar-btn topbar-btn-primary" onclick="openInviteModal()">＋ Invite member</button>` });
+function openInviteModal() { document.getElementById('invite-modal').classList.add('open'); }
+function closeInviteModal() { document.getElementById('invite-modal').classList.remove('open'); }
+function selectMethod(el) { document.querySelectorAll('.invite-method').forEach(m => m.classList.remove('selected')); el.classList.add('selected'); }
+function addEmailTag(e, input) {
+  if (e.key === 'Enter' && input.value.trim()) {
+    const tag = document.createElement('span');
+    tag.className = 'email-tag';
+    tag.innerHTML = `${input.value.trim()} <span class="email-tag-x" onclick="this.parentElement.remove()">✕</span>`;
+    input.parentElement.insertBefore(tag, input);
+    input.value = '';
+  }
+}
+document.getElementById('invite-modal').addEventListener('click', e => { if(e.target===e.currentTarget) closeInviteModal(); });
+</script>
+</body>
+</html>

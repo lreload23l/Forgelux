@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forgelux — Automations</title>
+<link rel="stylesheet" href="js/theme.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+/* ── LAYOUT ── */
+.auto-layout { display:flex; height:calc(100vh - 56px); overflow:hidden; }
+
+/* ── LEFT: FLOW LIST ── */
+.flow-list { width:280px; border-right:1px solid var(--border); display:flex; flex-direction:column; flex-shrink:0; background:var(--surface); }
+.fl-header { padding:1rem 1rem 0.75rem; border-bottom:1px solid var(--border); }
+.fl-search { display:flex; align-items:center; gap:6px; background:var(--surface2); border:1px solid var(--border-bright); border-radius:8px; padding:6px 10px; font-size:11px; color:var(--muted); margin-bottom:8px; }
+.fl-search input { background:transparent; border:none; outline:none; color:var(--text); font-size:11px; flex:1; }
+.fl-filters { display:flex; gap:4px; }
+.fl-filter { padding:3px 9px; border-radius:100px; font-size:10px; border:1px solid var(--border-bright); background:transparent; color:var(--muted); cursor:pointer; transition:all .15s; }
+.fl-filter.act { background:rgba(123,47,255,.14); border-color:rgba(123,47,255,.4); color:#C4A3FF; }
+.fl-scroll { flex:1; overflow-y:auto; padding:8px; }
+.flow-item { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:10px 12px; margin-bottom:6px; cursor:pointer; transition:all .15s; }
+.flow-item:hover { border-color:var(--border-bright); transform:translateY(-1px); }
+.flow-item.act { border-color:rgba(123,47,255,.5); background:rgba(123,47,255,.06); }
+.fi-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:5px; }
+.fi-name { font-size:12px; font-weight:500; color:var(--text); }
+.fi-toggle { position:relative; width:30px; height:17px; cursor:pointer; flex-shrink:0; }
+.fi-toggle input { opacity:0; width:0; height:0; }
+.fit-track { position:absolute; inset:0; background:var(--surface3); border:1px solid var(--border-bright); border-radius:100px; transition:background .2s; }
+.fit-thumb { position:absolute; top:2px; left:2px; width:11px; height:11px; background:var(--muted); border-radius:50%; transition:all .2s; }
+.fi-toggle input:checked + .fit-track { background:rgba(163,255,71,.25); border-color:rgba(163,255,71,.5); }
+.fi-toggle input:checked ~ .fit-thumb { transform:translateX(13px); background:var(--lime); }
+.fi-meta { display:flex; align-items:center; gap:8px; font-size:10px; color:var(--muted); }
+.fi-steps { display:flex; align-items:center; gap:3px; }
+.fi-step-dot { width:20px; height:4px; border-radius:2px; }
+.new-flow-btn { margin:8px; padding:9px; border-radius:9px; border:1px dashed var(--border-bright); background:transparent; color:var(--muted); font-size:11px; cursor:pointer; width:calc(100% - 16px); transition:all .15s; font-family:'DM Sans',sans-serif; display:flex; align-items:center; justify-content:center; gap:6px; }
+.new-flow-btn:hover { border-color:rgba(123,47,255,.4); color:#C4A3FF; background:rgba(123,47,255,.04); }
+
+/* ── CENTRE: FLOW CANVAS ── */
+.flow-canvas { flex:1; background:var(--bg); position:relative; overflow:hidden; background-image:radial-gradient(rgba(255,255,255,.04) 1px, transparent 1px); background-size:28px 28px; }
+.flow-toolbar { position:absolute; top:14px; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--border-bright); border-radius:10px; padding:6px 10px; z-index:20; box-shadow:0 4px 20px rgba(0,0,0,.4); }
+.ft-btn { display:flex; align-items:center; gap:5px; padding:5px 10px; border-radius:6px; border:1px solid var(--border-bright); background:transparent; color:var(--subtle); font-size:11px; cursor:pointer; transition:all .15s; font-family:'DM Sans',sans-serif; white-space:nowrap; }
+.ft-btn:hover { border-color:rgba(255,255,255,.22); color:var(--text); }
+.ft-btn.run { background:var(--lime); color:#080A0F; border-color:var(--lime); font-weight:600; }
+.ft-btn.run:hover { box-shadow:0 3px 14px rgba(163,255,71,.3); }
+.ft-sep { width:1px; height:18px; background:var(--border); }
+.flow-vp { position:absolute; transform-origin:top left; }
+
+/* ── FLOW NODES ── */
+.fn { position:absolute; border-radius:12px; border:1.5px solid; cursor:move; user-select:none; width:220px; transition:box-shadow .15s; }
+.fn:hover { box-shadow:0 0 0 3px rgba(123,47,255,.2); }
+.fn.sel { box-shadow:0 0 0 3px rgba(123,47,255,.5); }
+.fn-head { padding:10px 12px 8px; border-bottom:1px solid rgba(255,255,255,.06); display:flex; align-items:center; gap:8px; }
+.fn-icon { width:28px; height:28px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0; }
+.fn-label { font-size:11px; font-weight:600; flex:1; line-height:1.2; }
+.fn-type-badge { font-size:8px; text-transform:uppercase; letter-spacing:.08em; font-weight:700; padding:2px 6px; border-radius:100px; }
+.fn-body { padding:8px 12px 10px; }
+.fn-desc { font-size:10px; color:rgba(255,255,255,.45); line-height:1.5; margin-bottom:6px; }
+.fn-config { font-size:10px; padding:5px 8px; border-radius:6px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.03); color:rgba(255,255,255,.5); display:flex; align-items:center; gap:5px; cursor:pointer; transition:all .15s; }
+.fn-config:hover { border-color:rgba(123,47,255,.4); color:#C4A3FF; background:rgba(123,47,255,.06); }
+/* port */
+.fn-port { position:absolute; width:12px; height:12px; border-radius:50%; border:2px solid; background:var(--bg); cursor:crosshair; transition:transform .15s; z-index:5; }
+.fn-port:hover { transform:scale(1.5); }
+.fn-port-in  { left:-6px; top:50%; transform:translateY(-50%); }
+.fn-port-in:hover  { transform:translateY(-50%) scale(1.4); }
+.fn-port-out { right:-6px; top:50%; transform:translateY(-50%); }
+.fn-port-out:hover { transform:translateY(-50%) scale(1.4); }
+.fn-port-branch { bottom:-6px; left:50%; transform:translateX(-50%); }
+
+/* node themes */
+.nt-trigger { background:rgba(123,47,255,.1); border-color:rgba(123,47,255,.4); }
+.nt-trigger .fn-icon { background:rgba(123,47,255,.2); }
+.nt-trigger .fn-type-badge { background:rgba(123,47,255,.2); color:#C4A3FF; }
+.nt-trigger .fn-port { border-color:var(--violet); }
+.nt-action { background:rgba(14,165,233,.08); border-color:rgba(14,165,233,.35); }
+.nt-action .fn-icon { background:rgba(14,165,233,.15); }
+.nt-action .fn-type-badge { background:rgba(14,165,233,.15); color:#7DD3FC; }
+.nt-action .fn-port { border-color:var(--blue); }
+.nt-condition { background:rgba(245,158,11,.08); border-color:rgba(245,158,11,.35); }
+.nt-condition .fn-icon { background:rgba(245,158,11,.15); }
+.nt-condition .fn-type-badge { background:rgba(245,158,11,.15); color:#FCD34D; }
+.nt-condition .fn-port { border-color:var(--warning); }
+.nt-ai { background:rgba(204,120,72,.08); border-color:rgba(204,120,72,.35); }
+.nt-ai .fn-icon { background:rgba(204,120,72,.15); }
+.nt-ai .fn-type-badge { background:rgba(204,120,72,.15); color:#FDBA74; }
+.nt-ai .fn-port { border-color:#CC7848; }
+.nt-end { background:rgba(74,222,128,.07); border-color:rgba(74,222,128,.3); }
+.nt-end .fn-icon { background:rgba(74,222,128,.15); }
+.nt-end .fn-type-badge { background:rgba(74,222,128,.12); color:#4ADE80; }
+.nt-end .fn-port { border-color:var(--success); }
+
+/* edges */
+#edge-svg { position:absolute; top:0; left:0; pointer-events:none; overflow:visible; }
+.edge { fill:none; stroke-width:2; opacity:.7; }
+.edge-drawing { fill:none; stroke:rgba(163,255,71,.5); stroke-width:1.5; stroke-dasharray:6 4; }
+@keyframes flowDash { from{stroke-dashoffset:52} to{stroke-dashoffset:0} }
+
+/* ── RIGHT: NODE INSPECTOR ── */
+.node-inspector { width:268px; border-left:1px solid var(--border); display:flex; flex-direction:column; flex-shrink:0; background:var(--surface); }
+.ni-header { padding:11px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.ni-title { font-family:'Syne',sans-serif; font-weight:600; font-size:.85rem; }
+.ni-badge { font-size:9px; padding:2px 7px; border-radius:100px; }
+.ni-scroll { flex:1; overflow-y:auto; padding:12px 14px; }
+.ni-section { margin-bottom:14px; }
+.ni-sec-title { font-size:9px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); font-weight:600; margin-bottom:7px; }
+.ni-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:5px; gap:6px; }
+.ni-label { font-size:10px; color:var(--subtle); flex-shrink:0; min-width:70px; }
+.ni-input { flex:1; background:var(--surface2); border:1px solid var(--border-bright); border-radius:5px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:10px; padding:4px 7px; outline:none; transition:border-color .15s; }
+.ni-input:focus { border-color:rgba(123,47,255,.5); }
+.ni-select { flex:1; background:var(--surface2); border:1px solid var(--border-bright); border-radius:5px; color:var(--subtle); font-size:10px; padding:4px 7px; outline:none; font-family:'DM Sans',sans-serif; }
+.ni-divider { height:1px; background:var(--border); margin:10px 0; }
+
+/* run log */
+.run-log { flex-shrink:0; border-top:1px solid var(--border); max-height:200px; overflow-y:auto; }
+.rl-header { padding:8px 14px; font-size:9px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); font-weight:600; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.rl-clear { font-size:9px; color:var(--muted); cursor:pointer; }
+.rl-clear:hover { color:var(--subtle); }
+.rl-item { display:flex; align-items:flex-start; gap:7px; padding:6px 14px; border-bottom:1px solid var(--border); font-size:10px; }
+.rl-item:last-child { border-bottom:none; }
+.rl-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; margin-top:2px; }
+.rld-ok { background:var(--success); }
+.rld-err { background:var(--danger); }
+.rld-info { background:var(--blue); }
+.rl-msg { flex:1; color:var(--subtle); line-height:1.4; }
+.rl-time { font-size:9px; color:var(--muted); flex-shrink:0; }
+
+/* node palette drawer */
+.node-palette { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); background:var(--surface); border:1px solid var(--border-bright); border-radius:12px; padding:10px 12px; display:flex; align-items:center; gap:6px; z-index:20; box-shadow:0 8px 32px rgba(0,0,0,.5); }
+.np-label { font-size:9px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); font-weight:600; margin-right:4px; }
+.np-node { display:flex; flex-direction:column; align-items:center; gap:4px; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); cursor:grab; transition:all .15s; min-width:62px; text-align:center; user-select:none; }
+.np-node:hover { transform:translateY(-2px); }
+.np-node:active { cursor:grabbing; transform:scale(.95); }
+.np-icon { font-size:16px; line-height:1; }
+.np-lbl { font-size:9px; color:var(--subtle); }
+
+/* no-selection state */
+.no-sel-flow { padding:40px 20px; text-align:center; }
+.nsf-icon { font-size:2.5rem; opacity:.15; margin-bottom:12px; }
+.nsf-text { font-size:11px; color:var(--muted); line-height:1.6; font-weight:300; }
+
+/* test run modal */
+.run-modal { max-width:500px; }
+.run-steps { display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+.rs-item { display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:9px; }
+.rs-icon { width:28px; height:28px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:.95rem; flex-shrink:0; }
+.rs-info { flex:1; }
+.rs-name { font-size:11px; font-weight:500; color:var(--text); }
+.rs-status { font-size:9px; margin-top:2px; }
+.rs-spinner { width:14px; height:14px; border:2px solid var(--border-bright); border-top-color:var(--violet); border-radius:50%; animation:spin .7s linear infinite; flex-shrink:0; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.rs-check { color:var(--success); font-size:14px; flex-shrink:0; }
+.rs-err { color:var(--danger); font-size:14px; flex-shrink:0; }
+</style>
+</head>
+<body>
+<div id="app">
+<div class="auto-layout">
+
+  <!-- ── FLOW LIST ── -->
+  <div class="flow-list">
+    <div class="fl-header">
+      <div class="fl-search">
+        <i class="ti ti-search" style="font-size:13px"></i>
+        <input type="text" placeholder="Search automations…">
+      </div>
+      <div class="fl-filters">
+        <div class="fl-filter act">All</div>
+        <div class="fl-filter">Active</div>
+        <div class="fl-filter">Draft</div>
+        <div class="fl-filter">Errors</div>
+      </div>
+    </div>
+    <div class="fl-scroll">
+
+      <div class="flow-item act" onclick="loadFlow('onboarding')">
+        <div class="fi-top">
+          <span class="fi-name">Client Onboarding</span>
+          <label class="fi-toggle"><input type="checkbox" checked><span class="fit-track"></span><span class="fit-thumb"></span></label>
+        </div>
+        <div class="fi-meta">
+          <div class="fi-steps">
+            <div class="fi-step-dot" style="background:rgba(123,47,255,.6)"></div>
+            <div class="fi-step-dot" style="background:rgba(14,165,233,.6)"></div>
+            <div class="fi-step-dot" style="background:rgba(14,165,233,.6)"></div>
+            <div class="fi-step-dot" style="background:rgba(74,222,128,.6)"></div>
+          </div>
+          <span>4 steps</span>
+          <span style="color:var(--success)">● 312 runs/mo</span>
+        </div>
+      </div>
+
+      <div class="flow-item" onclick="loadFlow('report')">
+        <div class="fi-top">
+          <span class="fi-name">Daily Sales Report</span>
+          <label class="fi-toggle"><input type="checkbox" checked><span class="fit-track"></span><span class="fit-thumb"></span></label>
+        </div>
+        <div class="fi-meta">
+          <div class="fi-steps">
+            <div class="fi-step-dot" style="background:rgba(123,47,255,.6)"></div>
+            <div class="fi-step-dot" style="background:rgba(204,120,72,.6)"></div>
+            <div class="fi-step-dot" style="background:rgba(74,222,128,.6)"></div>
+          </div>
+          <span>3 steps</span>
+          <span style="color:var(--success)">● 30 runs/mo</span>
+        </div>
+      </div>
+
+      <div class="flow-item" onclick="loadFlow('slack')">
+        <div class="fi-top">
+          <span class="fi-name">Slack Error Alerts</span>
+          <label class="fi-toggle"><input type="checkbox" checked><span class="fit-track"></span><span class="fit-thumb"></span></label>
+        </div>
+        <div class="fi-meta">
+          <div class="fi-steps">
+            <div class="fi-step-dot" style="background:rgba(123,47,255,.6)"></div>
+            <div class="fi-step-dot" style="background:rgba(245,158,11,.6)"></div>
+            <div class="fi-step-dot" style="background:rgba(14,165,233,.6)"></div>
+          </div>
+          <span>3 steps</span>
+          <span style="color:var(--danger)">● 2 errors</span>
+        </div>
+      </div>
+
+      <div class="flow-item" onclick="loadFlow('invoice')">
+        <div class="fi-top">
+          <span class="fi-name">Invoice → Xero Sync</span>
+          <label class="fi-toggle"><input type="checkbox"><span class="fit-track"></span><span class="fit-thumb"></span></label>
+        </div>
+        <div class="fi-meta">
+          <div class="fi-steps">
+            <div class="fi-step-dot" style="background:rgba(123,47,255,.6)"></div>
+            <div class="fi-step-dot" style="background:rgba(14,165,233,.6)"></div>
+            <div class="fi-step-dot" style="background:rgba(14,165,233,.6)"></div>
+            <div class="fi-step-dot" style="background:rgba(74,222,128,.6)"></div>
+          </div>
+          <span>4 steps</span>
+          <span style="color:var(--muted)">● Paused</span>
+        </div>
+      </div>
+
+      <div class="flow-item" onclick="loadFlow('weekly')">
+        <div class="fi-top">
+          <span class="fi-name">Weekly Digest Email</span>
+          <label class="fi-toggle"><input type="checkbox" checked><span class="fit-track"></span><span class="fit-thumb"></span></label>
+        </div>
+        <div class="fi-meta">
+          <div class="fi-steps">
+            <div class="fi-step-dot" style="background:rgba(123,47,255,.6)"></div>
+            <div class="fi-step-dot" style="background:rgba(204,120,72,.6)"></div>
+            <div class="fi-step-dot" style="background:rgba(14,165,233,.6)"></div>
+            <div class="fi-step-dot" style="background:rgba(74,222,128,.6)"></div>
+          </div>
+          <span>4 steps</span>
+          <span style="color:var(--success)">● 4 runs/mo</span>
+        </div>
+      </div>
+
+    </div>
+    <button class="new-flow-btn" onclick="openNewFlow()">
+      <i class="ti ti-plus" style="font-size:14px"></i> New automation
+    </button>
+  </div>
+
+  <!-- ── FLOW CANVAS ── -->
+  <div class="flow-canvas" id="flow-canvas"
+    onmousedown="canvasDown(event)"
+    onmousemove="canvasMove(event)"
+    onmouseup="canvasUp(event)"
+    ondragover="event.preventDefault()"
+    ondrop="dropNode(event)">
+
+    <div class="flow-toolbar">
+      <span style="font-size:11px;font-weight:500;color:var(--text)" id="flow-name">Client Onboarding</span>
+      <div class="ft-sep"></div>
+      <button class="ft-btn" onclick="undoFlow()"><i class="ti ti-arrow-back-up" style="font-size:13px"></i></button>
+      <button class="ft-btn" onclick="redoFlow()"><i class="ti ti-arrow-forward-up" style="font-size:13px"></i></button>
+      <div class="ft-sep"></div>
+      <button class="ft-btn" onclick="autoLayout()"><i class="ti ti-layout-distribute-horizontal" style="font-size:13px"></i> Auto-layout</button>
+      <button class="ft-btn" onclick="openTestRun()"><i class="ti ti-player-play" style="font-size:13px"></i> Test run</button>
+      <button class="ft-btn run" onclick="publishFlow()"><i class="ti ti-rocket" style="font-size:13px"></i> Activate</button>
+    </div>
+
+    <div class="flow-vp" id="flow-vp">
+      <svg id="edge-svg" style="width:4000px;height:3000px"></svg>
+    </div>
+
+    <!-- NODE PALETTE -->
+    <div class="node-palette">
+      <span class="np-label">Add step</span>
+      <div class="np-node" draggable="true" data-ntype="trigger" ondragstart="startNodeDrag(event,'trigger')">
+        <span class="np-icon">⚡</span><span class="np-lbl">Trigger</span>
+      </div>
+      <div class="np-node" draggable="true" data-ntype="action" ondragstart="startNodeDrag(event,'action')">
+        <span class="np-icon">⚙</span><span class="np-lbl">Action</span>
+      </div>
+      <div class="np-node" draggable="true" data-ntype="condition" ondragstart="startNodeDrag(event,'condition')">
+        <span class="np-icon">◈</span><span class="np-lbl">Condition</span>
+      </div>
+      <div class="np-node" draggable="true" data-ntype="ai" ondragstart="startNodeDrag(event,'ai')">
+        <span class="np-icon">✦</span><span class="np-lbl">AI step</span>
+      </div>
+      <div class="np-node" draggable="true" data-ntype="end" ondragstart="startNodeDrag(event,'end')">
+        <span class="np-icon">⬛</span><span class="np-lbl">End</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── NODE INSPECTOR ── -->
+  <div class="node-inspector">
+    <div class="ni-header">
+      <span class="ni-title" id="ni-title">Node properties</span>
+      <span class="ni-badge badge badge-violet" id="ni-badge">Trigger</span>
+    </div>
+    <div class="ni-scroll" id="ni-scroll">
+      <div class="no-sel-flow">
+        <div class="nsf-icon"><i class="ti ti-pointer"></i></div>
+        <div class="nsf-text">Click a node on the canvas to configure it, or drag a new step from the palette below.</div>
+      </div>
+    </div>
+    <div class="run-log">
+      <div class="rl-header">
+        Run log <span class="rl-clear" onclick="clearLog()">Clear</span>
+      </div>
+      <div id="run-log-list">
+        <div class="rl-item"><div class="rl-dot rld-ok"></div><div class="rl-msg">Flow triggered via form submit</div><div class="rl-time">2m ago</div></div>
+        <div class="rl-item"><div class="rl-dot rld-ok"></div><div class="rl-msg">CRM record updated</div><div class="rl-time">2m ago</div></div>
+        <div class="rl-item"><div class="rl-dot rld-ok"></div><div class="rl-msg">Welcome email sent</div><div class="rl-time">2m ago</div></div>
+        <div class="rl-item"><div class="rl-dot rld-info"></div><div class="rl-msg">Flow triggered via form submit</div><div class="rl-time">14m ago</div></div>
+        <div class="rl-item"><div class="rl-dot rld-err"></div><div class="rl-msg">Slack webhook timeout — retrying</div><div class="rl-time">1h ago</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- NEW FLOW MODAL -->
+<div class="modal-overlay" id="new-flow-modal">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <span class="modal-title">New automation</span>
+      <button class="modal-close" onclick="closeModal('new-flow-modal')">✕</button>
+    </div>
+    <div class="form-group"><label class="form-label">Automation name</label><input type="text" class="form-input" placeholder="e.g. Lead → CRM + Email"></div>
+    <div class="form-group">
+      <label class="form-label">Start from</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="tpl-opt sel" onclick="pickTpl(this)" style="padding:10px;border-radius:9px;border:1px solid var(--border-bright);background:var(--surface2);cursor:pointer;transition:all .15s">
+          <div style="font-size:1.2rem;margin-bottom:4px">⬜</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text)">Blank canvas</div>
+        </div>
+        <div class="tpl-opt" onclick="pickTpl(this)" style="padding:10px;border-radius:9px;border:1px solid var(--border-bright);background:var(--surface2);cursor:pointer;transition:all .15s">
+          <div style="font-size:1.2rem;margin-bottom:4px">📋</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text)">Form → CRM → Email</div>
+        </div>
+        <div class="tpl-opt" onclick="pickTpl(this)" style="padding:10px;border-radius:9px;border:1px solid var(--border-bright);background:var(--surface2);cursor:pointer;transition:all .15s">
+          <div style="font-size:1.2rem;margin-bottom:4px">📅</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text)">Scheduled report</div>
+        </div>
+        <div class="tpl-opt" onclick="pickTpl(this)" style="padding:10px;border-radius:9px;border:1px solid var(--border-bright);background:var(--surface2);cursor:pointer;transition:all .15s">
+          <div style="font-size:1.2rem;margin-bottom:4px">🔔</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text)">Webhook → Slack alert</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('new-flow-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('new-flow-modal');showToast('✓ New automation created')">Create →</button>
+    </div>
+  </div>
+</div>
+
+<!-- TEST RUN MODAL -->
+<div class="modal-overlay" id="test-modal">
+  <div class="modal run-modal">
+    <div class="modal-header">
+      <span class="modal-title">Test run — Client Onboarding</span>
+      <button class="modal-close" onclick="closeModal('test-modal')">✕</button>
+    </div>
+    <div style="font-size:11px;color:var(--subtle);margin-bottom:12px;font-weight:300">Running each step with sample data. This will not affect live records.</div>
+    <div class="run-steps" id="run-steps">
+      <div class="rs-item">
+        <div class="rs-icon" style="background:rgba(123,47,255,.15)">⚡</div>
+        <div class="rs-info"><div class="rs-name">Form submitted trigger</div><div class="rs-status" style="color:var(--muted)">Waiting…</div></div>
+        <div class="rs-spinner" id="rs0-spin" style="display:none"></div>
+        <i class="ti ti-check rs-check" id="rs0-ok" style="display:none"></i>
+      </div>
+      <div class="rs-item">
+        <div class="rs-icon" style="background:rgba(14,165,233,.12)">⚙</div>
+        <div class="rs-info"><div class="rs-name">Update HubSpot CRM</div><div class="rs-status" style="color:var(--muted)">Waiting…</div></div>
+        <div class="rs-spinner" id="rs1-spin" style="display:none"></div>
+        <i class="ti ti-check rs-check" id="rs1-ok" style="display:none"></i>
+      </div>
+      <div class="rs-item">
+        <div class="rs-icon" style="background:rgba(204,120,72,.12)">✦</div>
+        <div class="rs-info"><div class="rs-name">Claude — Generate welcome copy</div><div class="rs-status" style="color:var(--muted)">Waiting…</div></div>
+        <div class="rs-spinner" id="rs2-spin" style="display:none"></div>
+        <i class="ti ti-check rs-check" id="rs2-ok" style="display:none"></i>
+      </div>
+      <div class="rs-item">
+        <div class="rs-icon" style="background:rgba(74,222,128,.1)">✉</div>
+        <div class="rs-info"><div class="rs-name">Send welcome email</div><div class="rs-status" style="color:var(--muted)">Waiting…</div></div>
+        <div class="rs-spinner" id="rs3-spin" style="display:none"></div>
+        <i class="ti ti-check rs-check" id="rs3-ok" style="display:none"></i>
+      </div>
+    </div>
+    <div id="run-result" style="display:none;padding:10px 12px;background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.2);border-radius:8px;font-size:11px;color:var(--success)">✓ All steps passed. Automation is ready to activate.</div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('test-modal')">Close</button>
+      <button class="btn btn-primary" id="run-btn" onclick="runTest()"><i class="ti ti-player-play" style="font-size:13px"></i> Run test</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/auth.js"></script>
+<script src="js/nav.js"></script>
+<script>
+Nav.init({ title:'Automations', actions:`<button class="topbar-btn topbar-btn-primary" onclick="openNewFlow()"><i class="ti ti-plus" style="font-size:14px;margin-right:4px"></i> New automation</button>` });
+
+// ── STATE ──
+let fnodes=[], edges=[], selFId=null;
+let fnid=0, panX=60, panY=60, zoom=1;
+let draggingFN=null, fDragOff={x:0,y:0};
+let dragNodeType=null;
+let edgeDrawing=null;
+
+// ── FLOW DEFINITIONS ──
+const FLOWS = {
+  onboarding: {
+    name:'Client Onboarding',
+    nodes:[
+      {id:1,type:'trigger',x:60,y:180,label:'Form submitted',icon:'⚡',desc:'Triggered when a new lead submits the contact form',service:'Forgelux Form'},
+      {id:2,type:'action',x:340,y:180,label:'Update HubSpot CRM',icon:'⚙',desc:'Create or update contact record with form data',service:'HubSpot'},
+      {id:3,type:'ai',x:620,y:180,label:'Generate welcome copy',icon:'✦',desc:'Claude writes a personalised welcome message using lead data',service:'Claude AI'},
+      {id:4,type:'end',x:900,y:180,label:'Send welcome email',icon:'✉',desc:'Dispatch personalised email via Mailchimp',service:'Mailchimp'},
+    ],
+    edges:[{from:1,out:'out',to:2,in:'in'},{from:2,out:'out',to:3,in:'in'},{from:3,out:'out',to:4,in:'in'}]
+  },
+  report: {
+    name:'Daily Sales Report',
+    nodes:[
+      {id:1,type:'trigger',x:60,y:180,label:'Daily schedule',icon:'📅',desc:'Runs every weekday at 8:00 AM',service:'Scheduler'},
+      {id:2,type:'ai',x:340,y:180,label:'Summarise sales data',icon:'✦',desc:'Claude pulls Salesforce data and writes an executive summary',service:'Claude + Salesforce'},
+      {id:3,type:'end',x:620,y:180,label:'Post to Slack #sales',icon:'💬',desc:'Send the report to the #sales channel',service:'Slack'},
+    ],
+    edges:[{from:1,out:'out',to:2,in:'in'},{from:2,out:'out',to:3,in:'in'}]
+  },
+  slack: {
+    name:'Slack Error Alerts',
+    nodes:[
+      {id:1,type:'trigger',x:60,y:180,label:'Automation error webhook',icon:'🔴',desc:'Fires when any automation logs an error',service:'Forgelux Webhook'},
+      {id:2,type:'condition',x:340,y:100,label:'Severity check',icon:'◈',desc:'Branch: is it critical (3+ failures)?',service:'Condition'},
+      {id:3,type:'action',x:620,y:60,label:'Page on-call engineer',icon:'📟',desc:'Send PagerDuty alert for critical errors',service:'PagerDuty'},
+      {id:4,type:'end',x:620,y:220,label:'Post to #alerts Slack',icon:'💬',desc:'Post warning to #alerts channel',service:'Slack'},
+    ],
+    edges:[{from:1,out:'out',to:2,in:'in'},{from:2,out:'out',to:3,in:'in'},{from:2,out:'branch',to:4,in:'in'}]
+  },
+};
+
+// ── BOOT ──
+window.addEventListener('DOMContentLoaded', ()=>{
+  loadFlow('onboarding');
+});
+
+function loadFlow(key){
+  const f=FLOWS[key]; if(!f) return;
+  document.getElementById('flow-name').textContent=f.name;
+  fnodes=JSON.parse(JSON.stringify(f.nodes));
+  edges=JSON.parse(JSON.stringify(f.edges));
+  fnid=Math.max(...fnodes.map(n=>n.id),0);
+  renderFlow();
+  deselectFN();
+  document.querySelectorAll('.flow-item').forEach((el,i)=>{
+    el.classList.toggle('act', Object.keys(FLOWS)[i]===key);
+  });
+}
+
+// ── RENDER ──
+function renderFlow(){
+  const vp=document.getElementById('flow-vp');
+  vp.querySelectorAll('.fn').forEach(el=>el.remove());
+  fnodes.forEach(n=>renderFNode(n));
+  renderEdges();
+}
+
+function renderFNode(n){
+  let el=document.getElementById('fn-'+n.id);
+  const theme={trigger:'nt-trigger',action:'nt-action',condition:'nt-condition',ai:'nt-ai',end:'nt-end'}[n.type]||'nt-action';
+  const typeName={trigger:'Trigger',action:'Action',condition:'Condition',ai:'AI step',end:'End'}[n.type]||n.type;
+  const badgeCls={trigger:'badge-violet',action:'badge-blue',condition:'badge-yellow',ai:'badge-muted',end:'badge-green'}[n.type]||'badge-muted';
+  if(!el){
+    el=document.createElement('div');
+    el.id='fn-'+n.id; el.className=`fn ${theme}`;
+    el.addEventListener('mousedown',fnDown);
+    document.getElementById('flow-vp').appendChild(el);
+  }
+  el.innerHTML=`
+    <div class="fn-port fn-port-in" data-fid="${n.id}" data-port="in" onmouseup="portUp(event,${n.id},'in')"></div>
+    <div class="fn-head">
+      <div class="fn-icon">${n.icon}</div>
+      <div class="fn-label">${n.label}</div>
+      <span class="fn-type-badge badge ${badgeCls}">${typeName}</span>
+    </div>
+    <div class="fn-body">
+      <div class="fn-desc">${n.desc}</div>
+      <div class="fn-config" onclick="selectFN(${n.id})">
+        <i class="ti ti-settings" style="font-size:11px"></i> ${n.service}
+      </div>
+    </div>
+    <div class="fn-port fn-port-out" data-fid="${n.id}" data-port="out"
+      onmousedown="portDown(event,${n.id},'out')"></div>
+    ${n.type==='condition'?`<div class="fn-port fn-port-branch" data-fid="${n.id}" data-port="branch" onmousedown="portDown(event,${n.id},'branch')"></div>`:''}`;
+  el.style.cssText=`left:${n.x}px;top:${n.y}px`;
+  el.classList.toggle('sel', selFId===n.id);
+}
+
+function renderEdges(){
+  const svg=document.getElementById('edge-svg');
+  svg.querySelectorAll('.edge,.edge-dot,.edge-grp').forEach(el=>el.remove());
+  const edgeColors={trigger:'#7B2FFF',action:'#0EA5E9',condition:'#F59E0B',ai:'#CC7848',end:'#4ADE80'};
+  edges.forEach((e,i)=>{
+    const fn=fnodes.find(n=>n.id===e.from);
+    const tn=fnodes.find(n=>n.id===e.to);
+    if(!fn||!tn) return;
+    const x1=fn.x+220, y1=fn.y+60;
+    let x2=tn.x, y2=tn.y+60;
+    if(e.out==='branch') y1+= fn.type==='condition'?40:0;
+    const color=edgeColors[fn.type]||'#7B2FFF';
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.className.baseVal='edge';
+    const cx=(x1+x2)/2;
+    path.setAttribute('d',`M ${x1} ${y1} C ${cx} ${y1}, ${cx} ${y2}, ${x2} ${y2}`);
+    path.setAttribute('stroke',color); path.setAttribute('stroke-dasharray','8 5');
+    path.style.animation='flowDash 1.4s linear infinite';
+    svg.appendChild(path);
+    // flowing dot
+    const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    dot.setAttribute('r','4'); dot.setAttribute('fill',color);
+    dot.style.filter=`drop-shadow(0 0 3px ${color})`;
+    const anim=document.createElementNS('http://www.w3.org/2000/svg','animateMotion');
+    anim.setAttribute('dur','1.4s'); anim.setAttribute('repeatCount','indefinite');
+    const mp=document.createElementNS('http://www.w3.org/2000/svg','mpath');
+    mp.setAttribute('href',''); // inline path
+    // Use path data directly
+    const apath=document.createElementNS('http://www.w3.org/2000/svg','path');
+    apath.setAttribute('d',`M ${x1} ${y1} C ${cx} ${y1}, ${cx} ${y2}, ${x2} ${y2}`);
+    apath.style.display='none';
+    const pid='ep'+i; apath.id=pid; svg.appendChild(apath);
+    mp.setAttributeNS('http://www.w3.org/1999/xlink','href','#'+pid);
+    anim.appendChild(mp); dot.appendChild(anim);
+    svg.appendChild(dot);
+  });
+}
+
+// ── DRAG NODES ──
+function fnDown(e){
+  if(e.target.classList.contains('fn-port')||e.target.closest('.fn-config')) return;
+  e.stopPropagation(); e.preventDefault();
+  const id=parseInt(e.currentTarget.id.replace('fn-',''));
+  selectFN(id);
+  const n=fnodes.find(n=>n.id===id);
+  const vp=document.getElementById('flow-vp').getBoundingClientRect();
+  fDragOff={x:(e.clientX-vp.left)/zoom-n.x, y:(e.clientY-vp.top)/zoom-n.y};
+  draggingFN=id;
+}
+
+function canvasDown(e){
+  if(e.target===document.getElementById('flow-canvas')||e.target===document.getElementById('flow-vp')){
+    deselectFN();
+  }
+}
+
+function canvasMove(e){
+  if(!draggingFN) return;
+  const n=fnodes.find(n=>n.id===draggingFN); if(!n) return;
+  const vp=document.getElementById('flow-vp').getBoundingClientRect();
+  n.x=Math.max(0,(e.clientX-vp.left)/zoom-fDragOff.x);
+  n.y=Math.max(0,(e.clientY-vp.top)/zoom-fDragOff.y);
+  const el=document.getElementById('fn-'+draggingFN);
+  if(el){el.style.left=n.x+'px';el.style.top=n.y+'px';}
+  renderEdges();
+}
+
+function canvasUp(){ draggingFN=null; }
+
+// ── DROP NEW NODE ──
+function startNodeDrag(e,type){ dragNodeType=type; e.dataTransfer.setData('text/plain',type); }
+
+function dropNode(e){
+  e.preventDefault();
+  const type=dragNodeType||e.dataTransfer.getData('text/plain');
+  if(!type) return;
+  const vp=document.getElementById('flow-vp').getBoundingClientRect();
+  const x=Math.round((e.clientX-vp.left)/zoom/20)*20;
+  const y=Math.round((e.clientY-vp.top)/zoom/20)*20;
+  const defaults={
+    trigger:{label:'New trigger',icon:'⚡',desc:'Click to configure this trigger',service:'Choose trigger…'},
+    action:{label:'New action',icon:'⚙',desc:'Click to configure this action',service:'Choose service…'},
+    condition:{label:'Condition',icon:'◈',desc:'Define your branching logic',service:'Condition'},
+    ai:{label:'AI step',icon:'✦',desc:'Use AI to process or generate data',service:'Choose AI model…'},
+    end:{label:'End step',icon:'⬛',desc:'Final step in this flow',service:'Choose output…'},
+  };
+  const n={id:++fnid,type,...(defaults[type]||defaults.action),x,y};
+  fnodes.push(n);
+  renderFNode(n);
+  selectFN(n.id);
+  dragNodeType=null;
+  showToast('Step added — click to configure');
+}
+
+// ── PORT WIRING ──
+function portDown(e,fid,port){
+  e.stopPropagation(); e.preventDefault();
+  const pEl=e.target;
+  const svgEl=document.getElementById('edge-svg');
+  const vp=document.getElementById('flow-vp').getBoundingClientRect();
+  const pr=pEl.getBoundingClientRect();
+  const x1=(pr.left+pr.width/2-vp.left)/zoom;
+  const y1=(pr.top+pr.height/2-vp.top)/zoom;
+  const dPath=document.createElementNS('http://www.w3.org/2000/svg','path');
+  dPath.id='drawing-edge'; dPath.className.baseVal='edge-drawing';
+  svgEl.appendChild(dPath);
+  edgeDrawing={fid,port,x1,y1};
+  function move(ev){
+    const cx=(ev.clientX-vp.left)/zoom, cy=(ev.clientY-vp.top)/zoom;
+    const mx=(x1+cx)/2;
+    dPath.setAttribute('d',`M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${cy}, ${cx} ${cy}`);
+  }
+  function up(ev){
+    dPath.remove(); edgeDrawing=null;
+    document.removeEventListener('mousemove',move);
+    document.removeEventListener('mouseup',up);
+  }
+  document.addEventListener('mousemove',move);
+  document.addEventListener('mouseup',up);
+}
+
+function portUp(e,tid,port){
+  if(!edgeDrawing||edgeDrawing.fid===tid) return;
+  edges.push({from:edgeDrawing.fid,out:edgeDrawing.port,to:tid,in:port});
+  renderEdges();
+  showToast('Steps connected');
+}
+
+// ── SELECTION & INSPECTOR ──
+function selectFN(id){
+  selFId=id;
+  document.querySelectorAll('.fn').forEach(el=>el.classList.remove('sel'));
+  document.getElementById('fn-'+id)?.classList.add('sel');
+  const n=fnodes.find(n=>n.id===id); if(!n) return;
+  renderInspector(n);
+}
+
+function deselectFN(){
+  selFId=null;
+  document.querySelectorAll('.fn').forEach(el=>el.classList.remove('sel'));
+  document.getElementById('ni-scroll').innerHTML=`<div class="no-sel-flow"><div class="nsf-icon"><i class="ti ti-pointer"></i></div><div class="nsf-text">Click a node on the canvas to configure it, or drag a new step from the palette below.</div></div>`;
+  document.getElementById('ni-title').textContent='Node properties';
+  document.getElementById('ni-badge').textContent='—';
+  document.getElementById('ni-badge').className='ni-badge badge badge-muted';
+}
+
+const SERVICES = {
+  trigger:['Forgelux Form','Webhook','Scheduler','Database change','App event','Email received','Stripe payment'],
+  action:['Send email','Update CRM','Post to Slack','Write to database','Update spreadsheet','Send SMS','Call webhook','Create Canva design'],
+  ai:['Claude — Generate text','Claude — Summarise','Claude — Classify','GPT-4o — Generate','Gemini — Analyse image','Stability — Generate image'],
+  condition:['Field equals value','Field contains','Number comparison','Date comparison','List contains','Custom expression'],
+  end:['Send email','Post to Slack','Update record','Trigger another flow','Write to database','End flow'],
+};
+
+function renderInspector(n){
+  const typeName={trigger:'Trigger',action:'Action',condition:'Condition',ai:'AI step',end:'End step'}[n.type]||n.type;
+  const badgeCls={trigger:'badge-violet',action:'badge-blue',condition:'badge-yellow',ai:'badge-muted',end:'badge-green'}[n.type]||'badge-muted';
+  document.getElementById('ni-title').textContent=n.label;
+  document.getElementById('ni-badge').textContent=typeName;
+  document.getElementById('ni-badge').className=`ni-badge badge ${badgeCls}`;
+  const services=SERVICES[n.type]||[];
+  document.getElementById('ni-scroll').innerHTML=`
+    <div class="ni-section">
+      <div class="ni-sec-title">Step name</div>
+      <div class="ni-row"><input class="ni-input" value="${n.label}" oninput="updateFNode(${n.id},'label',this.value)" style="flex:1"></div>
+    </div>
+    <div class="ni-divider"></div>
+    <div class="ni-section">
+      <div class="ni-sec-title">Service</div>
+      <select class="ni-select" style="width:100%;margin-bottom:8px" onchange="updateFNode(${n.id},'service',this.value)">
+        ${services.map(s=>`<option ${s===n.service?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </div>
+    <div class="ni-divider"></div>
+    <div class="ni-section">
+      <div class="ni-sec-title">Description</div>
+      <textarea class="ni-input" rows="3" style="width:100%;resize:vertical" oninput="updateFNode(${n.id},'desc',this.value)">${n.desc}</textarea>
+    </div>
+    <div class="ni-divider"></div>
+    ${n.type==='trigger'?`
+    <div class="ni-section">
+      <div class="ni-sec-title">Trigger settings</div>
+      <div class="ni-row"><span class="ni-label">Event</span><select class="ni-select"><option>On submit</option><option>On load</option><option>On change</option></select></div>
+      <div class="ni-row"><span class="ni-label">Filter</span><input class="ni-input" placeholder="e.g. status = active"></div>
+    </div>`:''}
+    ${n.type==='action'?`
+    <div class="ni-section">
+      <div class="ni-sec-title">Action config</div>
+      <div class="ni-row"><span class="ni-label">To</span><input class="ni-input" placeholder="Recipient / destination"></div>
+      <div class="ni-row"><span class="ni-label">Template</span><select class="ni-select"><option>Default</option><option>Welcome email</option><option>Follow-up</option></select></div>
+      <div class="ni-row"><span class="ni-label">Retry</span><select class="ni-select"><option>3 times</option><option>Once</option><option>Never</option></select></div>
+    </div>`:''}
+    ${n.type==='condition'?`
+    <div class="ni-section">
+      <div class="ni-sec-title">Condition logic</div>
+      <div class="ni-row"><span class="ni-label">Field</span><input class="ni-input" placeholder="e.g. lead.score"></div>
+      <div class="ni-row"><span class="ni-label">Operator</span><select class="ni-select"><option>equals</option><option>greater than</option><option>less than</option><option>contains</option></select></div>
+      <div class="ni-row"><span class="ni-label">Value</span><input class="ni-input" placeholder="e.g. 80"></div>
+    </div>`:''}
+    ${n.type==='ai'?`
+    <div class="ni-section">
+      <div class="ni-sec-title">AI configuration</div>
+      <div class="ni-row"><span class="ni-label">Model</span><select class="ni-select"><option>claude-sonnet-4-6</option><option>claude-opus-4-6</option><option>gpt-4o</option><option>gemini-1.5-pro</option></select></div>
+      <div class="ni-row"><span class="ni-label">Prompt</span></div>
+      <textarea class="ni-input" rows="4" style="width:100%;resize:vertical" placeholder="Write a personalised welcome message for {{lead.name}} who works at {{lead.company}}…"></textarea>
+      <div class="ni-row" style="margin-top:6px"><span class="ni-label">Output</span><select class="ni-select"><option>Text</option><option>JSON</option><option>Markdown</option></select></div>
+    </div>`:''}
+    <div class="ni-divider"></div>
+    <div class="ni-section">
+      <div class="ni-sec-title">On error</div>
+      <div class="ni-row"><span class="ni-label">Action</span><select class="ni-select"><option>Retry 3×</option><option>Skip step</option><option>Stop flow</option><option>Alert via Slack</option></select></div>
+    </div>
+    <div style="margin-top:8px">
+      <button class="btn btn-danger" style="width:100%;font-size:11px" onclick="deleteFNode(${n.id})">
+        <i class="ti ti-trash" style="font-size:13px"></i> Delete step
+      </button>
+    </div>`;
+}
+
+function updateFNode(id,key,val){
+  const n=fnodes.find(n=>n.id===id); if(!n) return;
+  n[key]=val; renderFNode(n);
+}
+
+function deleteFNode(id){
+  fnodes=fnodes.filter(n=>n.id!==id);
+  edges=edges.filter(e=>e.from!==id&&e.to!==id);
+  document.getElementById('fn-'+id)?.remove();
+  renderEdges(); deselectFN();
+  showToast('Step deleted');
+}
+
+// ── MISC ──
+function autoLayout(){
+  fnodes.forEach((n,i)=>{ n.x=60+(i*280); n.y=180; });
+  renderFlow();
+  showToast('Layout applied');
+}
+function undoFlow(){ showToast('Undo — coming in v2'); }
+function redoFlow(){ showToast('Redo — coming in v2'); }
+function publishFlow(){ showToast('✓ Automation activated'); }
+function clearLog(){ document.getElementById('run-log-list').innerHTML='<div style="font-size:11px;color:var(--muted);padding:10px 14px">No runs yet.</div>'; }
+function openNewFlow(){ document.getElementById('new-flow-modal').classList.add('open'); }
+function openTestRun(){ document.getElementById('test-modal').classList.add('open'); resetTest(); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function pickTpl(el){ document.querySelectorAll('.tpl-opt').forEach(e=>e.style.borderColor='var(--border-bright)'); el.style.borderColor='rgba(123,47,255,.5)'; }
+
+function showToast(msg){
+  let t=document.getElementById('flx-toast');
+  if(!t){ t=document.createElement('div'); t.id='flx-toast'; t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--surface);border:1px solid var(--border-bright);border-radius:8px;padding:8px 16px;font-size:12px;color:var(--text);box-shadow:0 8px 30px rgba(0,0,0,.4);transition:transform .3s;z-index:999;white-space:nowrap'; document.body.appendChild(t); }
+  t.textContent=msg; t.style.transform='translateX(-50%) translateY(0)';
+  clearTimeout(window._tt);
+  window._tt=setTimeout(()=>t.style.transform='translateX(-50%) translateY(70px)',2400);
+}
+
+// TEST RUN
+function resetTest(){
+  [0,1,2,3].forEach(i=>{
+    document.getElementById('rs'+i+'-spin').style.display='none';
+    document.getElementById('rs'+i+'-ok').style.display='none';
+    document.querySelectorAll('.rs-item')[i].querySelector('.rs-status').textContent='Waiting…';
+    document.querySelectorAll('.rs-item')[i].querySelector('.rs-status').style.color='var(--muted)';
+  });
+  document.getElementById('run-result').style.display='none';
+  document.getElementById('run-btn').disabled=false;
+}
+
+function runTest(){
+  document.getElementById('run-btn').disabled=true;
+  let i=0;
+  function step(){
+    if(i>3){ document.getElementById('run-result').style.display='block'; return; }
+    if(i>0){ document.getElementById('rs'+(i-1)+'-spin').style.display='none'; document.getElementById('rs'+(i-1)+'-ok').style.display='inline'; document.querySelectorAll('.rs-item')[i-1].querySelector('.rs-status').textContent='✓ Success'; document.querySelectorAll('.rs-item')[i-1].querySelector('.rs-status').style.color='var(--success)'; }
+    if(i<4){ document.getElementById('rs'+i+'-spin').style.display='block'; document.querySelectorAll('.rs-item')[i].querySelector('.rs-status').textContent='Running…'; document.querySelectorAll('.rs-item')[i].querySelector('.rs-status').style.color='var(--subtle)'; }
+    i++; setTimeout(step, 800);
+  }
+  step();
+}
+
+// close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); }));
+</script>
+</body>
+</html>
