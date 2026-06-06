@@ -603,69 +603,6 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
             <div class="feed-tab" onclick="setTab(this,'running')">Running</div>
           </div>
           <div class="feed-list" id="feed-list">
-            <div class="feed-item">
-              <div class="feed-dot-wrap"><div class="feed-dot fd-green"></div></div>
-              <div class="feed-body">
-                <div class="feed-name">New lead → CRM + Email notify</div>
-                <div class="feed-detail">Client Onboarding · 3 steps completed</div>
-              </div>
-              <div class="feed-time">2m ago</div>
-            </div>
-            <div class="feed-item">
-              <div class="feed-dot-wrap"><div class="feed-dot fd-red"></div></div>
-              <div class="feed-body">
-                <div class="feed-name">Daily report → Slack #sales</div>
-                <div class="feed-detail">Error: Slack webhook timeout · Retry?</div>
-              </div>
-              <div class="feed-time">14m ago</div>
-            </div>
-            <div class="feed-item">
-              <div class="feed-dot-wrap"><div class="feed-dot fd-green"></div></div>
-              <div class="feed-body">
-                <div class="feed-name">Form submit → Update database</div>
-                <div class="feed-detail">Sales Dashboard · Row #1847 updated</div>
-              </div>
-              <div class="feed-time">31m ago</div>
-            </div>
-            <div class="feed-item">
-              <div class="feed-dot-wrap"><div class="feed-dot fd-yellow"></div></div>
-              <div class="feed-body">
-                <div class="feed-name">Invoice sync → Xero</div>
-                <div class="feed-detail">Running… step 2 of 4</div>
-              </div>
-              <div class="feed-time">45m ago</div>
-            </div>
-            <div class="feed-item">
-              <div class="feed-dot-wrap"><div class="feed-dot fd-green"></div></div>
-              <div class="feed-body">
-                <div class="feed-name">Shipment update → SMS alert</div>
-                <div class="feed-detail">Logistics Tracker · 24 recipients</div>
-              </div>
-              <div class="feed-time">1h ago</div>
-            </div>
-            <div class="feed-item">
-              <div class="feed-dot-wrap"><div class="feed-dot fd-red"></div></div>
-              <div class="feed-body">
-                <div class="feed-name">Weekly summary → Google Sheets</div>
-                <div class="feed-detail">Error: Auth token expired · Fix →</div>
-              </div>
-              <div class="feed-time">2h ago</div>
-            </div>
-            <div class="feed-item">
-              <div class="feed-dot-wrap"><div class="feed-dot fd-green"></div></div>
-              <div class="feed-body">
-                <div class="feed-name">New user signup → Welcome email</div>
-                <div class="feed-detail">Client Onboarding · Sent to 3 users</div>
-              </div>
-              <div class="feed-time">3h ago</div>
-            </div>
-            <div class="feed-item">
-              <div class="feed-dot-wrap"><div class="feed-dot fd-blue"></div></div>
-              <div class="feed-body">
-                <div class="feed-name">Scheduled pull → Refresh dashboard</div>
-                <div class="feed-detail">Sales Dashboard · Next run in 4h</div>
-              </div>
-              <div class="feed-time">4h ago</div>
             </div>
           </div>
         </div>
@@ -677,6 +614,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
 
       <!-- RUN CHART -->
       <div class="card fade d6" id="runs-chart-card">
+        <div id="runs-chart-inner">
         <div class="section-header" style="margin-bottom:0.5rem">
           <span class="section-title">Automation runs — last 7 days</span>
         </div>
@@ -783,6 +721,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
             <span class="quick-label">Billing</span>
             <span class="quick-sub">Pro · renews Jul 4</span>
           </button>
+        </div>
         </div>
       </div>
 
@@ -1055,6 +994,31 @@ function showEmptyTeam(su) {
     <div style="text-align:center;padding:1rem;font-size:11px;color:var(--muted)">
       <a href="/team" style="color:var(--violet)">Invite team members →</a>
     </div>`;
+}
+
+function renderRunsChart(runs) {
+  const chartInner = document.getElementById('runs-chart-inner');
+  if (!chartInner) return;
+
+  // Group runs by day for last 7 days
+  const days = [];
+  const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const now = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const dayStr = d.toISOString().split('T')[0];
+    const count = runs.filter(r => r.started_at?.startsWith(dayStr)).length;
+    days.push({ label: labels[d.getDay() === 0 ? 6 : d.getDay() - 1], count, isToday: i === 0 });
+  }
+  const maxCount = Math.max(...days.map(d => d.count), 1);
+
+  chartInner.querySelector('.mini-chart') && (chartInner.querySelector('.mini-chart').innerHTML =
+    days.map(d => `<div class="bar-wrap"><div class="bar${d.isToday ? ' today' : ''}" style="height:${Math.max(8, Math.round((d.count / maxCount) * 100))}%"></div></div>`).join(''));
+
+  const labels_el = chartInner.querySelector('.chart-labels');
+  if (labels_el) labels_el.innerHTML = days.map(d =>
+    `<span class="chart-label"${d.isToday ? ' style="color:var(--violet);font-weight:600"' : ''}>${d.isToday ? 'Today' : d.label}</span>`).join('');
 }
 
 loadDashboard();
