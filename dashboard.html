@@ -6,9 +6,9 @@
 <title>Forgelux — Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/js/theme.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -397,33 +397,23 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
   </div>
 
   <nav class="sidebar-nav">
-    <a class="nav-item active" href="/dashboard"><span class="nav-icon">⊞</span> Overview
-    </a>
+    <a class="nav-item active" href="/dashboard"><span class="nav-icon">⊞</span> Overview</a>
 
     <div class="nav-section-label">Build</div>
-    <a class="nav-item" href="/builder"><span class="nav-icon">🏗</span> App Builder
-    </a>
-    <a class="nav-item" href="/automations"><span class="nav-icon">⚡</span> Automations
-      <span class="nav-badge">3</span></a>
-    <a class="nav-item" href="#"><span class="nav-icon">🗄</span> Database
-    </a>
-    <a class="nav-item" href="#"><span class="nav-icon">🔌</span> Integrations
-    </a>
+    <a class="nav-item" href="/builder"><span class="nav-icon">🏗</span> App Builder</a>
+    <a class="nav-item" href="/automations"><span class="nav-icon">⚡</span> Automations <span class="nav-badge">3</span></a>
+    <a class="nav-item" href="#"><span class="nav-icon">🗄</span> Database</a>
+    <a class="nav-item" href="#"><span class="nav-icon">🔌</span> Integrations</a>
 
     <div class="nav-section-label">Manage</div>
-    <a class="nav-item" href="/apps"><span class="nav-icon">📱</span> My Apps
-      <span class="nav-badge green">12</span></a>
-    <a class="nav-item" href="/team"><span class="nav-icon">👥</span> Team
-    </a>
-    <a class="nav-item" href="/analytics"><span class="nav-icon">📊</span> Analytics
-    </a>
+    <a class="nav-item" href="/apps"><span class="nav-icon">📱</span> My Apps <span class="nav-badge green">12</span></a>
+    <a class="nav-item" href="/team"><span class="nav-icon">👥</span> Team</a>
+    <a class="nav-item" href="/analytics"><span class="nav-icon">📊</span> Analytics</a>
     <a class="nav-item" href="/dashboard"><span class="nav-icon">🔔</span> Alerts <span class="nav-badge">2</span></a>
 
     <div class="nav-section-label">Account</div>
-    <a class="nav-item" href="/billing"><span class="nav-icon">💳</span> Billing
-    </a>
-    <a class="nav-item" href="/settings"><span class="nav-icon">⚙</span> Settings
-    </a>
+    <a class="nav-item" href="/billing"><span class="nav-icon">💳</span> Billing</a>
+    <a class="nav-item" href="/settings"><span class="nav-icon">⚙</span> Settings</a>
     <a class="nav-item" href="https://docs.forgelux.co.uk" target="_blank"><span class="nav-icon">📖</span> Docs</a>
   </nav>
 
@@ -434,7 +424,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
         <div class="user-name" id="sidebar-name">Luke Ryan</div>
         <div class="user-plan" id="sidebar-plan">Pro Plan</div>
       </div>
-      <span class="user-chevron" onclick="sessionStorage.removeItem('flx_user');window.location.href='/login'" title="Sign out" style="cursor:pointer">⏻</span>
+      <span class="user-chevron" onclick="event.stopPropagation();sessionStorage.removeItem('flx_user');window.location.href='/login'" title="Sign out" style="cursor:pointer">⏻</span>
     </div>
   </div>
 </aside>
@@ -454,7 +444,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
   <!-- CONTENT -->
   <div class="content">
 
-    <div id="app-inner"><!-- GREETING -->
+    <!-- GREETING -->
     <div class="greeting fade d1">
       <h1>Good morning, <span id="greeting-name">Luke</span> 👋</h1>
       <p>Thursday, 4 June 2026 · Here's what's happening across your workspace</p>
@@ -503,7 +493,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
           <span class="metric-icon">👤</span>
           <span class="metric-trend trend-up">↑ 18%</span>
         </div>
-        <div class="metric-val" id="stat-users">1,284</div>
+        <div class="metric-val">1,284</div>
         <div class="metric-label">End users served</div>
       </div>
       <div class="metric-card mc-r">
@@ -525,7 +515,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
           <span class="section-title">Your apps</span>
           <span class="section-action">View all →</span>
         </div>
-        <div class="apps-grid">
+        <div class="apps-grid" id="apps-grid">
 
           <div class="app-card">
             <div class="app-card-top">
@@ -765,7 +755,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
           <span class="section-title">Quick actions</span>
         </div>
         <div class="quick-grid">
-          <button class="quick-btn" onclick="window.location.href='/builder'">
+          <button class="quick-btn" onclick="window.location.href='/apps'">
             <span class="quick-icon">🏗</span>
             <span class="quick-label">New app</span>
             <span class="quick-sub">Start from template</span>
@@ -808,18 +798,6 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
     el.classList.add('active');
   }
 </script>
-<script src="/js/auth.js"></script>
-<script src="/js/nav.js"></script>
-<script>
-// Wrap existing content in #app div for nav injection
-// Only init nav if #app exists
-if (document.getElementById('app')) {
-  Nav.init({
-    title: 'Dashboard',
-    actions: \`<button class="topbar-btn topbar-btn-primary" onclick="window.location.href='/apps'">＋ New App</button>\`
-  });
-}
-</script>
 
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
@@ -829,69 +807,77 @@ const sb = createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
 );
 
+// ── Helpers ──
+function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+function setStyle(id, prop, val) { const el = document.getElementById(id); if (el) el.style[prop] = val; }
+function timeAgo(d) {
+  if (!d) return '—';
+  const diff = Date.now() - new Date(d).getTime();
+  const m = Math.floor(diff/60000);
+  if (m < 1) return 'Just now';
+  if (m < 60) return m+'m ago';
+  const h = Math.floor(m/60);
+  if (h < 24) return h+'h ago';
+  return Math.floor(h/24)+'d ago';
+}
+
+// ── Main loader ──
 async function loadDashboard() {
-  // Get current user from session storage
   const raw = sessionStorage.getItem('flx_user');
   const sessionUser = raw ? JSON.parse(raw) : null;
   if (!sessionUser) return;
 
-  // Update sidebar with real user info
-  const name = sessionUser.name || sessionUser.email || 'User';
-  const firstName = name.split(' ')[0];
+  // Update sidebar
+  const name     = sessionUser.name || sessionUser.email || 'User';
   const initials = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2) || '?';
-  const plan = sessionUser.plan || 'Starter';
-  const role = sessionUser.role || 'Member';
-
+  const plan     = sessionUser.plan || 'Starter';
+  const role     = sessionUser.role || 'Member';
   setText('sidebar-name', name);
   setText('sidebar-plan', plan + ' · ' + role);
   setText('sidebar-avatar', initials);
-  setText('greeting-name', firstName);
+  setText('greeting-name', name.split(' ')[0]);
 
   // Update usage banner
-  const runsUsed  = sessionUser.runsUsed  || 0;
-  const runsTotal = sessionUser.runsTotal || 5000;
+  const runsUsed   = sessionUser.runsUsed   || 0;
+  const runsTotal  = sessionUser.runsTotal  || 5000;
   const seatsUsed  = sessionUser.seatsUsed  || 1;
   const seatsTotal = sessionUser.seatsTotal || 5;
-  const runsPct  = Math.min(100, Math.round((runsUsed/runsTotal)*100));
-  const seatsPct = Math.min(100, Math.round((seatsUsed/seatsTotal)*100));
-
   setText('runs-used',  runsUsed.toLocaleString());
   setText('runs-total', runsTotal.toLocaleString());
   setText('seats-used',  seatsUsed);
   setText('seats-total', seatsTotal);
-  setStyle('runs-bar',  'width', runsPct+'%');
-  setStyle('seats-bar', 'width', seatsPct+'%');
+  setStyle('runs-bar',  'width', Math.min(100, Math.round(runsUsed/runsTotal*100))+'%');
+  setStyle('seats-bar', 'width', Math.min(100, Math.round(seatsUsed/seatsTotal*100))+'%');
 
-  // Try Supabase session for real data
+  // Try real Supabase session
   const { data: { session } } = await sb.auth.getSession();
 
   if (session) {
-    // Real Supabase user - load real data
     await loadRealData(session.user);
   } else {
-    // Test account OR no Supabase session
-    // Clear hardcoded content and show empty state
-    const grid = document.getElementById('apps-grid');
-    if (grid) grid.innerHTML = '';
-    const feed = document.getElementById('feed-list');
-    if (feed) feed.innerHTML = '';
-    updateMetrics({ totalApps: 0, liveApps: 0, totalRuns: 0, failedRuns: 0 });
+    // Test account — clear dummy data, show empty state
+    clearDummyContent();
+    updateMetrics(0, 0, 0, 0);
     showEmptyApps();
     showEmptyFeed();
     showEmptyTeam(sessionUser);
   }
 }
 
-async function loadRealData(user) {
-  // Clear hardcoded content immediately
+function clearDummyContent() {
   const grid = document.getElementById('apps-grid');
-  if (grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--muted);font-size:11px">Loading your apps…</div>';
+  if (grid) grid.innerHTML = '';
   const feed = document.getElementById('feed-list');
   if (feed) feed.innerHTML = '';
   const team = document.getElementById('team-list');
   if (team) team.innerHTML = '';
+}
+
+async function loadRealData(user) {
+  // Clear hardcoded content immediately
+  clearDummyContent();
+
   try {
-    // Get user's workspaces
     const { data: memberships } = await sb
       .from('workspace_members')
       .select('workspace_id, role, workspaces(*)')
@@ -900,69 +886,58 @@ async function loadRealData(user) {
       .limit(1);
 
     if (!memberships?.length) {
-      // New user - no workspace yet, show empty state
-      updateMetrics({ totalApps: 0, liveApps: 0, totalRuns: 0, failedRuns: 0 });
-      showEmptyApps();
+      updateMetrics(0, 0, 0, 0);
+      showEmptyApps(); showEmptyFeed();
+      showEmptyTeam(JSON.parse(sessionStorage.getItem('flx_user')||'{}'));
       return;
     }
 
-    const workspace = memberships[0].workspaces;
-    const wsId = workspace.id;
+    const wsId = memberships[0].workspace_id;
 
-    // Load apps, automations and runs in parallel
-    const [appsRes, autoRes, runsRes, membersRes] = await Promise.all([
+    const [appsRes, runsRes, membersRes] = await Promise.all([
       sb.from('apps').select('*').eq('workspace_id', wsId).order('updated_at', { ascending: false }),
-      sb.from('automations').select('*').eq('workspace_id', wsId),
       sb.from('automation_runs').select('*, automations(name)')
         .eq('workspace_id', wsId)
         .gte('started_at', new Date(Date.now() - 30*24*60*60*1000).toISOString())
-        .order('started_at', { ascending: false })
-        .limit(20),
+        .order('started_at', { ascending: false }).limit(20),
       sb.from('workspace_members').select('*, users(full_name, email)')
-        .eq('workspace_id', wsId)
-        .eq('status', 'active')
-        .limit(5)
+        .eq('workspace_id', wsId).eq('status', 'active').limit(5)
     ]);
 
-    const apps    = appsRes.data || [];
-    const autos   = autoRes.data || [];
-    const runs    = runsRes.data || [];
+    const apps    = appsRes.data    || [];
+    const runs    = runsRes.data    || [];
     const members = membersRes.data || [];
 
-    // Update metrics
-    updateMetrics({
-      totalApps:  apps.length,
-      liveApps:   apps.filter(a => a.status === 'live').length,
-      totalRuns:  runs.length,
-      failedRuns: runs.filter(r => r.status === 'failed').length,
-    });
+    updateMetrics(
+      apps.filter(a=>a.status==='live').length,
+      runs.length,
+      1284, // users served — will come from analytics later
+      runs.filter(r=>r.status==='failed').length
+    );
 
-    // Update apps grid
-    renderApps(apps);
-
-    // Update automation feed
-    renderFeed(runs);
-
-    // Update team list
-    renderTeam(members);
+    apps.length    ? renderApps(apps)       : showEmptyApps();
+    runs.length    ? renderFeed(runs)       : showEmptyFeed();
+    members.length ? renderTeam(members)    : showEmptyTeam(JSON.parse(sessionStorage.getItem('flx_user')||'{}'));
 
   } catch(err) {
-    console.warn('Could not load real data:', err.message);
+    console.warn('Supabase error:', err.message);
+    updateMetrics(0,0,0,0);
+    showEmptyApps(); showEmptyFeed();
+    showEmptyTeam(JSON.parse(sessionStorage.getItem('flx_user')||'{}'));
   }
 }
 
-function updateMetrics({ totalApps, liveApps, totalRuns, failedRuns }) {
-  setText('stat-apps',   liveApps || totalApps);
-  setText('stat-runs',   totalRuns > 1000 ? (totalRuns/1000).toFixed(1)+'k' : totalRuns);
-  setText('stat-failed', failedRuns);
+function updateMetrics(liveApps, runs, users, failed) {
+  setText('stat-apps',   liveApps);
+  setText('stat-runs',   runs > 1000 ? (runs/1000).toFixed(1)+'k' : runs);
+  setText('stat-failed', failed);
 }
 
 function renderApps(apps) {
   const grid = document.getElementById('apps-grid');
   if (!grid) return;
-  if (!apps || !apps.length) { showEmptyApps(); return; }
-  const icons = { web:'📊', mobile:'📱', automation:'⚡', form:'📝' };
-  const covers = { web:'cover-v', mobile:'cover-l', automation:'cover-b', form:'cover-o' };
+  const icons   = { web:'📊', mobile:'📱', automation:'⚡', form:'📝' };
+  const covers  = { web:'cover-v', mobile:'cover-l', automation:'cover-b', form:'cover-o' };
   grid.innerHTML = apps.slice(0,4).map(app => `
     <div class="app-card">
       <div class="app-card-cover ${covers[app.type]||'cover-v'}">
@@ -982,8 +957,8 @@ function renderApps(apps) {
           <button class="app-btn" onclick="window.location.href='/analytics'">Analytics</button>
         </div>
       </div>
-    </div>`).join('') + `
-    <div class="new-app-card" onclick="window.location.href='/apps'">
+    </div>`).join('') +
+    `<div class="new-app-card" onclick="window.location.href='/apps'">
       <div class="new-app-icon">＋</div>
       <div class="new-app-label">Create new app</div>
       <div class="new-app-sub">Start from a template</div>
@@ -1005,58 +980,16 @@ function showEmptyApps() {
 function renderFeed(runs) {
   const list = document.getElementById('feed-list');
   if (!list) return;
-  if (!runs || !runs.length) { showEmptyFeed(); return; }
-  const dotClass = { success:'fd-green', failed:'fd-red', running:'fd-yellow', skipped:'fd-blue' };
+  const dot = { success:'fd-green', failed:'fd-red', running:'fd-yellow', skipped:'fd-blue' };
   list.innerHTML = runs.map(r => `
     <div class="feed-item">
-      <div class="feed-dot-wrap"><div class="feed-dot ${dotClass[r.status]||'fd-blue'}"></div></div>
+      <div class="feed-dot-wrap"><div class="feed-dot ${dot[r.status]||'fd-blue'}"></div></div>
       <div class="feed-body">
         <div class="feed-name">${r.automations?.name || 'Automation'}</div>
-        <div class="feed-detail">${r.status === 'failed' ? '⚠ '+( r.error_message||'Failed') : r.status === 'running' ? 'Running…' : '✓ Completed'}</div>
+        <div class="feed-detail">${r.status==='failed'?'⚠ '+(r.error_message||'Failed'):r.status==='running'?'Running…':'✓ Completed'}</div>
       </div>
       <div class="feed-time">${timeAgo(r.started_at)}</div>
     </div>`).join('');
-}
-
-function renderTeam(members) {
-  const list = document.getElementById('team-list');
-  if (!list) return;
-  if (!members || !members.length) { showEmptyTeam(JSON.parse(sessionStorage.getItem('flx_user')||'{}')); return; }
-  const colors = ['ta1','ta2','ta3','ta4','ta5'];
-  list.innerHTML = members.map((m,i) => {
-    const name = m.users?.full_name || m.email?.split('@')[0] || 'Member';
-    const initials = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-    return `
-    <div class="team-item">
-      <div class="team-av ${colors[i%5]}">${initials}</div>
-      <div class="team-info">
-        <div class="team-name">${name}</div>
-        <div class="team-action-label">${m.role}</div>
-      </div>
-      <div class="${m.status==='active'?'online-dot':'offline-dot'}" title="${m.status}"></div>
-    </div>`;
-  }).join('');
-}
-
-function setText(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = val;
-}
-
-function setStyle(id, prop, val) {
-  const el = document.getElementById(id);
-  if (el) el.style[prop] = val;
-}
-
-function timeAgo(dateStr) {
-  if (!dateStr) return '—';
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff/60000);
-  if (mins < 1) return 'Just now';
-  if (mins < 60) return mins+'m ago';
-  const hrs = Math.floor(mins/60);
-  if (hrs < 24) return hrs+'h ago';
-  return Math.floor(hrs/24)+'d ago';
 }
 
 function showEmptyFeed() {
@@ -1070,15 +1003,37 @@ function showEmptyFeed() {
     </div>`;
 }
 
+function renderTeam(members) {
+  const list = document.getElementById('team-list');
+  if (!list) return;
+  const colors = ['ta1','ta2','ta3','ta4','ta5'];
+  const su = JSON.parse(sessionStorage.getItem('flx_user')||'{}');
+  list.innerHTML = members.map((m,i) => {
+    const name = m.users?.full_name || m.email?.split('@')[0] || 'Member';
+    const init = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+    const isYou = m.email === su.email;
+    return `
+    <div class="team-item">
+      <div class="team-av ${colors[i%5]}">${init}</div>
+      <div class="team-info">
+        <div class="team-name">${name}${isYou?' <span style="font-size:0.65rem;color:var(--muted)">(you)</span>':''}</div>
+        <div class="team-action-label">${m.role}</div>
+      </div>
+      <div class="${m.status==='active'?'online-dot':'offline-dot'}"></div>
+    </div>`;
+  }).join('');
+}
+
 function showEmptyTeam(user) {
   const list = document.getElementById('team-list');
   if (!list) return;
-  const initials = (user.name||'U').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  const name = user.name || user.email || 'You';
+  const init = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
   list.innerHTML = `
     <div class="team-item">
-      <div class="team-av ta1">${initials}</div>
+      <div class="team-av ta1">${init}</div>
       <div class="team-info">
-        <div class="team-name">${user.name||user.email||'You'} <span style="font-size:0.65rem;color:var(--muted)">(you)</span></div>
+        <div class="team-name">${name} <span style="font-size:0.65rem;color:var(--muted)">(you)</span></div>
         <div class="team-action-label">${user.role||'Owner'}</div>
       </div>
       <div class="online-dot"></div>
@@ -1091,10 +1046,9 @@ function showEmptyTeam(user) {
 // Set greeting time
 const hour = new Date().getHours();
 const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-const greetH1 = document.querySelector('.greeting h1');
-if (greetH1) greetH1.innerHTML = greetH1.innerHTML.replace('Good morning', greeting);
+const h1 = document.querySelector('.greeting h1');
+if (h1) h1.innerHTML = h1.innerHTML.replace('Good morning', greeting);
 
-// Run on load
 loadDashboard();
 </script>
 </body>
