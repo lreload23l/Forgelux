@@ -80,11 +80,11 @@
   <div class="seats-banner fade d1">
     <div class="seats-info">
       <div class="seats-title">Team seats — Pro Plan</div>
-      <div class="seats-sub">7 of 25 seats used. Upgrade to Enterprise for unlimited members.</div>
+      <div class="seats-sub"><span id="seats-text">7 of 25 seats used.</span> Upgrade to Enterprise for unlimited members.</div>
     </div>
     <div class="seats-bar-wrap">
       <div class="seats-bar-track"><div class="seats-bar-fill"></div></div>
-      <div class="seats-bar-label"><strong>7</strong> / 25 seats used</div>
+      <div class="seats-bar-label"><strong id="seats-used">7</strong> / <span id="seats-total">25</span> seats used</div>
     </div>
     <button class="btn btn-ghost btn-sm">Upgrade plan</button>
   </div>
@@ -94,7 +94,7 @@
     <!-- MEMBERS TABLE -->
     <div class="fade d2">
       <div class="section-header">
-        <span class="section-title">Members (7)</span>
+        <span class="section-title">Members (<span id="member-count">7</span>)</span>
         <div style="display:flex;gap:0.5rem">
           <button class="btn btn-ghost btn-sm">Export CSV</button>
           <button class="btn btn-primary btn-sm" onclick="openInviteModal()">＋ Invite member</button>
@@ -106,7 +106,7 @@
             <thead>
               <tr><th>Member</th><th>Role</th><th>Apps access</th><th>Status</th><th>Last active</th><th></th></tr>
             </thead>
-            <tbody>
+            <tbody id="members-tbody">
               <tr>
                 <td><div class="member-cell"><div class="member-av av-v">LR</div><div class="member-name-cell"><div class="member-name">Luke Ryan <span style="font-size:0.65rem;color:var(--muted)">(you)</span></div><div class="member-email">luke@forgelux.io</div></div></div></td>
                 <td><span class="badge badge-violet">Owner</span></td>
@@ -262,6 +262,139 @@ function addEmailTag(e, input) {
   }
 }
 document.getElementById('invite-modal').addEventListener('click', e => { if(e.target===e.currentTarget) closeInviteModal(); });
+</script>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const sb = createClient(
+  'https://xizckgqxdllbopsmbzis.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
+);
+
+const COLORS = ['av-v','av-b','av-l','av-o','av-r','av-p','av-t'];
+
+async function loadTeam() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return; // Test account — keep demo data
+
+  try {
+    // Get workspace
+    const { data: memberships } = await sb
+      .from('workspace_members')
+      .select('workspace_id, workspaces(plan, seats_total)')
+      .eq('user_id', session.user.id)
+      .eq('status', 'active')
+      .limit(1);
+
+    if (!memberships?.length) return;
+    const wsId = memberships[0].workspace_id;
+
+    // Get all members
+    const { data: members } = await sb
+      .from('workspace_members')
+      .select('*, users(full_name, email, avatar_url)')
+      .eq('workspace_id', wsId)
+      .order('joined_at', { ascending: true });
+
+    if (!members?.length) return;
+
+    // Update count
+    const countEl = document.getElementById('member-count');
+    if (countEl) countEl.textContent = members.length;
+
+    const seatsEl = document.getElementById('seats-used');
+    if (seatsEl) seatsEl.textContent = members.length;
+
+    // Render table
+    const tbody = document.getElementById('members-tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = members.map((m, i) => {
+      const name     = m.users?.full_name || m.email?.split('@')[0] || 'Member';
+      const email    = m.email || m.users?.email || '';
+      const initials = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+      const isYou    = session.user.email === email;
+      const isOwner  = m.role === 'owner';
+      const color    = COLORS[i % COLORS.length];
+      const statusDot = m.status === 'active'
+        ? '<span class="online-pip pip-on"></span>Online'
+        : '⏳ Invite pending';
+      const lastActive = m.joined_at ? timeAgo(m.joined_at) : 'Never';
+
+      return `<tr>
+        <td>
+          <div class="member-cell">
+            <div class="member-av ${color}">${initials}</div>
+            <div class="member-name-cell">
+              <div class="member-name">${name}${isYou?' <span style="font-size:0.65rem;color:var(--muted)">(you)</span>':''}</div>
+              <div class="member-email">${email}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          ${isOwner
+            ? '<span class="badge badge-violet">Owner</span>'
+            : `<select class="role-select" onchange="updateRole('${m.id}', this.value)">
+                <option ${m.role==='admin'?'selected':''}>Admin</option>
+                <option ${m.role==='editor'?'selected':''}>Editor</option>
+                <option ${m.role==='viewer'?'selected':''}>Viewer</option>
+               </select>`
+          }
+        </td>
+        <td>All apps</td>
+        <td>${statusDot}</td>
+        <td>${lastActive}</td>
+        <td>
+          ${!isOwner && !isYou
+            ? `<button class="btn btn-danger btn-sm" onclick="removeMember('${m.id}')">Remove</button>`
+            : ''
+          }
+        </td>
+      </tr>`;
+    }).join('');
+
+  } catch(err) {
+    console.warn('Team load error:', err.message);
+  }
+}
+
+function timeAgo(d) {
+  if (!d) return 'Never';
+  const diff = Date.now() - new Date(d).getTime();
+  const m = Math.floor(diff/60000);
+  if (m < 1) return 'Just now';
+  if (m < 60) return m+'m ago';
+  const h = Math.floor(m/60);
+  if (h < 24) return h+'h ago';
+  const days = Math.floor(h/24);
+  if (days < 30) return days+'d ago';
+  return new Date(d).toLocaleDateString('en-GB');
+}
+
+async function updateRole(memberId, role) {
+  const { error } = await sb
+    .from('workspace_members')
+    .update({ role: role.toLowerCase() })
+    .eq('id', memberId);
+  if (error) alert('Could not update role: ' + error.message);
+}
+
+async function removeMember(memberId) {
+  if (!confirm('Remove this member from the workspace?')) return;
+  const { error } = await sb
+    .from('workspace_members')
+    .delete()
+    .eq('id', memberId);
+  if (error) { alert('Could not remove member: ' + error.message); return; }
+  loadTeam(); // Refresh
+}
+
+// Make functions available globally
+window.updateRole   = updateRole;
+window.removeMember = removeMember;
+
+loadTeam();
 </script>
 </body>
 </html>

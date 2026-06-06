@@ -454,5 +454,100 @@ function confirmDanger(action){
   if(confirmed) showToast('Action cancelled in demo mode');
 }
 </script>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const sb = createClient(
+  'https://xizckgqxdllbopsmbzis.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
+);
+
+async function loadSettings() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+
+  const user = session.user;
+
+  // Profile section
+  const inputs = document.querySelectorAll('#sec-profile .fi');
+  const nameParts = (user.user_metadata?.full_name || '').split(' ');
+  if (inputs[0]) inputs[0].value = nameParts[0] || '';
+  if (inputs[1]) inputs[1].value = nameParts.slice(1).join(' ') || '';
+  if (inputs[2]) inputs[2].value = user.email || '';
+
+  // Avatar initials
+  const av = document.querySelector('#sec-profile .av-circle');
+  if (av) {
+    const name = user.user_metadata?.full_name || user.email || 'U';
+    av.textContent = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  }
+
+  // Workspace section
+  const { data: memberships } = await sb
+    .from('workspace_members')
+    .select('workspace_id, role, workspaces(*)')
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .limit(1);
+
+  if (!memberships?.length) return;
+  const ws = memberships[0].workspaces;
+
+  const wsInputs = document.querySelectorAll('#sec-workspace .fi');
+  if (wsInputs[0]) wsInputs[0].value = ws.name || '';
+  if (wsInputs[1]) wsInputs[1].value = ws.slug || '';
+
+  // API keys section - show workspace ID as reference
+  const apiKeyVal = document.querySelector('.api-key-val');
+  if (apiKeyVal) apiKeyVal.textContent = 'flx_live_' + ws.id.replace(/-/g,'').slice(0,24) + '...';
+
+  // Wire save buttons
+  document.querySelectorAll('#sec-workspace .btn-primary').forEach(btn => {
+    btn.onclick = async () => {
+      const name = wsInputs[0]?.value;
+      const slug = wsInputs[1]?.value;
+      if (!name) return;
+      const { error } = await sb.from('workspaces').update({ name, slug }).eq('id', ws.id);
+      if (error) { showToast('Error: ' + error.message); return; }
+      showToast('✓ Workspace settings saved');
+    };
+  });
+
+  document.querySelectorAll('#sec-profile .btn-primary').forEach(btn => {
+    btn.onclick = async () => {
+      const fullName = (inputs[0]?.value + ' ' + inputs[1]?.value).trim();
+      const { error } = await sb.auth.updateUser({ data: { full_name: fullName } });
+      if (error) { showToast('Error: ' + error.message); return; }
+      // Update local session
+      const raw = sessionStorage.getItem('flx_user');
+      if (raw) {
+        const u = JSON.parse(raw);
+        u.name = fullName;
+        u.initials = fullName.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+        sessionStorage.setItem('flx_user', JSON.stringify(u));
+      }
+      showToast('✓ Profile saved');
+    };
+  });
+
+  // Wire password change
+  const secButtons = document.querySelectorAll('#sec-security .btn-primary');
+  if (secButtons[0]) {
+    secButtons[0].onclick = async () => {
+      const pwInputs = document.querySelectorAll('#sec-security input[type=password]');
+      const newPw = pwInputs[1]?.value;
+      const confirmPw = pwInputs[2]?.value;
+      if (!newPw || newPw.length < 8) { showToast('Password must be at least 8 characters'); return; }
+      if (newPw !== confirmPw) { showToast('Passwords do not match'); return; }
+      const { error } = await sb.auth.updateUser({ password: newPw });
+      if (error) { showToast('Error: ' + error.message); return; }
+      pwInputs.forEach(i => i.value = '');
+      showToast('✓ Password updated');
+    };
+  }
+}
+
+loadSettings();
+</script>
 </body>
 </html>

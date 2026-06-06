@@ -280,5 +280,95 @@ function openCardModal() { document.getElementById('card-modal').classList.add('
 function closeCardModal() { document.getElementById('card-modal').classList.remove('open'); }
 document.getElementById('card-modal').addEventListener('click', e => { if(e.target===e.currentTarget) closeCardModal(); });
 </script>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const sb = createClient(
+  'https://xizckgqxdllbopsmbzis.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
+);
+
+function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+function setStyle(id, prop, val) { const el = document.getElementById(id); if (el) el.style[prop] = val; }
+
+async function loadBilling() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+
+  const { data: memberships } = await sb
+    .from('workspace_members')
+    .select('workspace_id, role, workspaces(*)')
+    .eq('user_id', session.user.id)
+    .eq('status', 'active')
+    .limit(1);
+
+  if (!memberships?.length) return;
+  const ws = memberships[0].workspaces;
+
+  // Update plan hero
+  const planName = ws.plan?.charAt(0).toUpperCase() + ws.plan?.slice(1) || 'Starter';
+  const planStatus = ws.plan_status || 'trialing';
+
+  // Update plan display
+  const planHeroName = document.querySelector('.plan-hero-name');
+  if (planHeroName) {
+    planHeroName.innerHTML = planName + ' <span class="plan-hero-badge">' + 
+      (planStatus === 'trialing' ? 'Trial' : planStatus === 'active' ? 'Active' : planStatus) + '</span>';
+  }
+
+  // Update trial end date
+  if (ws.trial_ends_at) {
+    const trialEnd = new Date(ws.trial_ends_at).toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'});
+    const renewsEl = document.querySelector('.plan-hero-renews');
+    if (renewsEl) renewsEl.textContent = planStatus === 'trialing'
+      ? 'Trial ends ' + trialEnd + ' · No card required'
+      : 'Renews ' + trialEnd;
+  }
+
+  // Update usage bars
+  const runsUsed  = ws.runs_used  || 0;
+  const planLimits = { starter: { runs:5000, seats:5 }, pro: { runs:50000, seats:25 }, enterprise: { runs:999999, seats:999 } };
+  const limits = planLimits[ws.plan] || planLimits.starter;
+
+  // Update runs bar
+  const runsPct = Math.min(100, Math.round(runsUsed/limits.runs*100));
+  const runsBars = document.querySelectorAll('.pug-bar .pug-fill');
+  if (runsBars[0]) runsBars[0].style.width = runsPct + '%';
+
+  const pugs = document.querySelectorAll('.pug-val');
+  if (pugs[0]) pugs[0].innerHTML = `<strong>${runsUsed.toLocaleString()}</strong> / ${limits.runs.toLocaleString()}`;
+
+  // Highlight current plan card
+  const planCards = document.querySelectorAll('.plan-option');
+  planCards.forEach(card => {
+    const cardName = card.querySelector('.po-name')?.textContent?.toLowerCase();
+    card.classList.toggle('current', cardName === ws.plan);
+  });
+
+  // Load billing events as invoice history
+  const { data: events } = await sb
+    .from('billing_events')
+    .select('*')
+    .eq('workspace_id', ws.id)
+    .order('created_at', { ascending: false })
+    .limit(10);
+
+  if (events?.length) {
+    const tbody = document.querySelector('table:last-of-type tbody') || document.querySelector('.table-wrap tbody');
+    if (tbody) {
+      tbody.innerHTML = events.map(e => `
+        <tr>
+          <td>${new Date(e.created_at).toLocaleDateString('en-GB')}</td>
+          <td>${e.event_type}</td>
+          <td class="inv-amount">£${((e.amount_pence||0)/100).toFixed(2)}</td>
+          <td><span class="badge badge-green">Paid</span></td>
+          <td><button class="btn btn-ghost btn-sm">PDF</button></td>
+        </tr>`).join('');
+    }
+  }
+}
+
+loadBilling();
+</script>
 </body>
 </html>

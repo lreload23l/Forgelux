@@ -87,10 +87,10 @@
 
   <!-- STATS -->
   <div class="stats-strip fade d1">
-    <div class="stat-chip"><div class="stat-chip-val">12</div><div class="stat-chip-label">Total apps</div></div>
-    <div class="stat-chip"><div class="stat-chip-val">9</div><div class="stat-chip-label">Live</div></div>
-    <div class="stat-chip"><div class="stat-chip-val">2</div><div class="stat-chip-label">Drafts</div></div>
-    <div class="stat-chip"><div class="stat-chip-val">1</div><div class="stat-chip-label">Paused</div></div>
+    <div class="stat-chip"><div class="stat-chip-val" id="stat-total">12</div><div class="stat-chip-label">Total apps</div></div>
+    <div class="stat-chip"><div class="stat-chip-val" id="stat-live">9</div><div class="stat-chip-label">Live</div></div>
+    <div class="stat-chip"><div class="stat-chip-val" id="stat-draft">2</div><div class="stat-chip-label">Drafts</div></div>
+    <div class="stat-chip"><div class="stat-chip-val" id="stat-paused">1</div><div class="stat-chip-label">Paused</div></div>
   </div>
 
   <!-- FILTER BAR -->
@@ -109,7 +109,7 @@
   </div>
 
   <!-- GRID VIEW -->
-  <div class="apps-grid fade d3" id="grid-view">
+  <div class="apps-grid fade d3" id="grid-view" data-loaded="false">
 
     <div class="app-card" data-type="web" data-status="live">
       <div class="app-card-cover cover-v"><span>📊</span><span class="app-status-badge badge badge-green">Live</span></div>
@@ -328,6 +328,125 @@ function selectTpl(el) {
   el.classList.add('selected');
 }
 document.getElementById('new-app-modal').addEventListener('click', e => { if(e.target === e.currentTarget) closeModal(); });
+</script>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const sb = createClient(
+  'https://xizckgqxdllbopsmbzis.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
+);
+
+const icons  = { web:'📊', mobile:'📱', automation:'⚡', form:'📝' };
+const covers = { web:'cover-v', mobile:'cover-l', automation:'cover-b', form:'cover-o' };
+
+function timeAgo(d) {
+  if (!d) return '—';
+  const diff = Date.now() - new Date(d).getTime();
+  const m = Math.floor(diff/60000);
+  if (m < 1) return 'Just now';
+  if (m < 60) return m+'m ago';
+  const h = Math.floor(m/60);
+  if (h < 24) return h+'h ago';
+  return Math.floor(h/24)+'d ago';
+}
+
+async function loadApps() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+
+  const { data: memberships } = await sb
+    .from('workspace_members')
+    .select('workspace_id')
+    .eq('user_id', session.user.id)
+    .eq('status', 'active')
+    .limit(1);
+
+  if (!memberships?.length) return;
+  const wsId = memberships[0].workspace_id;
+
+  const { data: apps } = await sb
+    .from('apps')
+    .select('*')
+    .eq('workspace_id', wsId)
+    .order('updated_at', { ascending: false });
+
+  const list = apps || [];
+  const live    = list.filter(a => a.status === 'live').length;
+  const draft   = list.filter(a => a.status === 'draft').length;
+  const paused  = list.filter(a => a.status === 'paused').length;
+
+  setText('stat-total', list.length);
+  setText('stat-live',  live);
+  setText('stat-draft', draft);
+  setText('stat-paused', paused);
+
+  const grid = document.getElementById('grid-view');
+  if (!grid) return;
+
+  if (!list.length) {
+    grid.innerHTML = `
+      <div class="new-app-card" onclick="openModal()" style="grid-column:1/-1;min-height:220px">
+        <div class="new-app-icon" style="font-size:2rem">🏗</div>
+        <div class="new-app-label">Build your first app</div>
+        <div class="new-app-sub">Start from a template or blank canvas</div>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map(app => `
+    <div class="app-card" data-type="${app.type}" data-status="${app.status}">
+      <div class="app-card-cover ${covers[app.type]||'cover-v'}">
+        <span>${icons[app.type]||'📊'}</span>
+        <span class="app-status-badge badge ${app.status==='live'?'badge-green':app.status==='paused'?'badge-yellow':'badge-muted'}">${app.status}</span>
+      </div>
+      <div class="app-card-body">
+        <div class="app-card-name">${app.name}</div>
+        <div class="app-type">${app.type} app</div>
+        <div class="app-card-meta">
+          <span class="app-users">${app.status==='live'?'👤 Live':'📝 '+app.status}</span>
+          <span class="app-updated">${timeAgo(app.updated_at)}</span>
+        </div>
+        <div class="app-card-actions">
+          <button class="ac-btn primary" onclick="window.location.href='/builder?app=${app.id}'">Open</button>
+          <button class="ac-btn" onclick="window.location.href='/builder?app=${app.id}'">Edit</button>
+          <button class="ac-btn" onclick="window.location.href='/analytics'">Analytics</button>
+          <button class="ac-btn" onclick="deleteApp('${app.id}')">🗑</button>
+        </div>
+      </div>
+    </div>`).join('') + `
+    <div class="new-app-card" onclick="openModal()">
+      <div class="new-app-icon">＋</div>
+      <div class="new-app-label">Create new app</div>
+      <div class="new-app-sub">Start from a template or blank canvas</div>
+    </div>`;
+
+  // Also update list view
+  const listView = document.getElementById('list-view');
+  if (listView) {
+    const tbody = listView.querySelector('tbody');
+    if (tbody) tbody.innerHTML = list.map(app => `
+      <tr>
+        <td>${icons[app.type]||'📊'} ${app.name}</td>
+        <td><span class="badge badge-blue">${app.type}</span></td>
+        <td><span class="badge ${app.status==='live'?'badge-green':app.status==='paused'?'badge-yellow':'badge-muted'}">${app.status}</span></td>
+        <td>—</td>
+        <td>—</td>
+        <td>${timeAgo(app.updated_at)}</td>
+        <td><a class="btn btn-ghost btn-sm" href="/builder?app=${app.id}">Edit</a></td>
+      </tr>`).join('');
+  }
+}
+
+async function deleteApp(appId) {
+  if (!confirm('Delete this app? This cannot be undone.')) return;
+  const { error } = await sb.from('apps').delete().eq('id', appId);
+  if (error) { alert('Could not delete: ' + error.message); return; }
+  loadApps();
+}
+
+window.deleteApp = deleteApp;
+loadApps();
 </script>
 </body>
 </html>

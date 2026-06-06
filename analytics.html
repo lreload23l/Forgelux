@@ -417,5 +417,83 @@ function setRange(btn){
   }
 })();
 </script>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const sb = createClient(
+  'https://xizckgqxdllbopsmbzis.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
+);
+
+function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+
+async function loadAnalytics() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+
+  const { data: memberships } = await sb
+    .from('workspace_members')
+    .select('workspace_id')
+    .eq('user_id', session.user.id)
+    .eq('status', 'active')
+    .limit(1);
+
+  if (!memberships?.length) return;
+  const wsId = memberships[0].workspace_id;
+
+  const thirtyDaysAgo = new Date(Date.now() - 30*24*60*60*1000).toISOString();
+
+  const [appsRes, runsRes, failedRes] = await Promise.all([
+    sb.from('apps').select('id, status').eq('workspace_id', wsId),
+    sb.from('automation_runs').select('id, status, started_at')
+      .eq('workspace_id', wsId).gte('started_at', thirtyDaysAgo),
+    sb.from('automation_runs').select('id, automation_id, status, started_at, error_message, automations(name)')
+      .eq('workspace_id', wsId).eq('status', 'failed')
+      .order('started_at', { ascending: false }).limit(10)
+  ]);
+
+  const apps   = appsRes.data   || [];
+  const runs   = runsRes.data   || [];
+  const failed = failedRes.data || [];
+
+  // Update metric cards
+  const mcVals = document.querySelectorAll('.mc-val');
+  if (mcVals[0]) mcVals[0].textContent = runs.length.toLocaleString();
+  if (mcVals[1]) mcVals[1].textContent = apps.filter(a=>a.status==='live').length;
+  if (mcVals[3]) mcVals[3].textContent = failed.length;
+
+  // Update error log table
+  const errorTable = document.querySelector('.chart-card:last-child tbody');
+  if (errorTable && failed.length) {
+    errorTable.innerHTML = failed.map(r => `
+      <tr>
+        <td style="color:var(--muted)">${new Date(r.started_at).toLocaleString('en-GB',{dateStyle:'short',timeStyle:'short'})}</td>
+        <td>${r.automations?.name || 'Automation'}</td>
+        <td>—</td>
+        <td style="font-family:'DM Mono',monospace;font-size:11px;color:#F87171">${r.error_message || 'Unknown error'}</td>
+        <td><span class="badge badge-red">Failed</span></td>
+      </tr>`).join('');
+  } else if (errorTable && !failed.length) {
+    errorTable.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">No errors in the last 30 days 🎉</td></tr>`;
+  }
+
+  // Update app performance table with real apps
+  const perfTable = document.querySelector('.chart-card tbody');
+  if (perfTable && apps.length) {
+    const icons = { web:'📊', mobile:'📱', automation:'⚡', form:'📝' };
+    perfTable.innerHTML = apps.map(app => `
+      <tr>
+        <td>${icons[app.type]||'📊'} ${app.name}</td>
+        <td>—<div class="perf-bar"><div class="perf-fill" style="width:0%;background:var(--violet)"></div></div></td>
+        <td><span class="badge ${app.status==='live'?'badge-green':'badge-muted'}">${app.status==='live'?'Live':'—'}</span></td>
+        <td>—</td>
+      </tr>`).join('');
+  } else if (perfTable && !apps.length) {
+    perfTable.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:2rem">No apps yet. <a href="/builder" style="color:var(--violet)">Build your first app →</a></td></tr>`;
+  }
+}
+
+loadAnalytics();
+</script>
 </body>
 </html>

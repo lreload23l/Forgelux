@@ -796,5 +796,136 @@ function runTest(){
 // close modals on overlay click
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); }));
 </script>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const sb = createClient(
+  'https://xizckgqxdllbopsmbzis.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
+);
+
+function timeAgo(d) {
+  if (!d) return '—';
+  const diff = Date.now() - new Date(d).getTime();
+  const m = Math.floor(diff/60000);
+  if (m < 1) return 'Just now';
+  if (m < 60) return m+'m ago';
+  const h = Math.floor(m/60);
+  if (h < 24) return h+'h ago';
+  return Math.floor(h/24)+'d ago';
+}
+
+async function loadAutomations() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+
+  const { data: memberships } = await sb
+    .from('workspace_members')
+    .select('workspace_id')
+    .eq('user_id', session.user.id)
+    .eq('status', 'active')
+    .limit(1);
+
+  if (!memberships?.length) return;
+  const wsId = memberships[0].workspace_id;
+
+  const [autoRes, runsRes] = await Promise.all([
+    sb.from('automations').select('*').eq('workspace_id', wsId).order('updated_at', { ascending: false }),
+    sb.from('automation_runs').select('automation_id, status, started_at')
+      .eq('workspace_id', wsId)
+      .order('started_at', { ascending: false })
+      .limit(100)
+  ]);
+
+  const autos = autoRes.data || [];
+  const runs  = runsRes.data || [];
+
+  if (!autos.length) return; // Keep demo flows for empty workspaces
+
+  // Replace flow list with real automations
+  const flowScroll = document.querySelector('.fl-scroll');
+  if (flowScroll) {
+    flowScroll.innerHTML = autos.map(auto => {
+      const autoRuns  = runs.filter(r => r.automation_id === auto.id);
+      const hasErrors = autoRuns.some(r => r.status === 'failed');
+      const runCount  = autoRuns.length;
+      return `
+      <div class="flow-item" onclick="loadFlowById('${auto.id}','${auto.name.replace(/'/g,"\'")}')">
+        <div class="fi-top">
+          <span class="fi-name">${auto.name}</span>
+          <label class="fi-toggle">
+            <input type="checkbox" ${auto.status==='active'?'checked':''} onchange="toggleAuto('${auto.id}',this.checked)">
+            <span class="fit-track"></span><span class="fit-thumb"></span>
+          </label>
+        </div>
+        <div class="fi-meta">
+          <div class="fi-steps">
+            <div class="fi-step-dot" style="background:rgba(123,47,255,.6)"></div>
+            <div class="fi-step-dot" style="background:rgba(14,165,233,.6)"></div>
+          </div>
+          <span>${runCount} runs</span>
+          <span style="color:${hasErrors?'var(--danger)':'var(--success)'}">
+            ${hasErrors ? '● errors' : runCount ? '● live' : '● no runs'}
+          </span>
+        </div>
+      </div>`;
+    }).join('') +
+    `<button class="new-flow-btn" onclick="openNewFlow()">
+      <i class="ti ti-plus" style="font-size:14px"></i> New automation
+    </button>`;
+
+    // Load first automation into canvas
+    if (autos[0]) loadFlowById(autos[0].id, autos[0].name);
+  }
+
+  // Update run log with real data
+  const logList = document.getElementById('run-log-list');
+  if (logList && runs.length) {
+    const dot = { success:'rld-ok', failed:'rld-err', running:'rld-info', skipped:'rld-info' };
+    logList.innerHTML = runs.slice(0,10).map(r => `
+      <div class="rl-item">
+        <div class="rl-dot ${dot[r.status]||'rld-info'}"></div>
+        <div class="rl-msg">${r.status === 'failed' ? 'Error in automation run' : r.status === 'success' ? 'Run completed successfully' : 'Run started'}</div>
+        <div class="rl-time">${timeAgo(r.started_at)}</div>
+      </div>`).join('');
+  }
+}
+
+async function loadFlowById(id, name) {
+  document.getElementById('flow-name').textContent = name;
+  // Load flow JSON from DB
+  const { data } = await sb.from('automations').select('flow_json').eq('id', id).single();
+  if (data?.flow_json?.nodes?.length) {
+    // Restore saved canvas state
+    window.fnodes = data.flow_json.nodes;
+    window.edges  = data.flow_json.edges || [];
+    window.fnid   = Math.max(...window.fnodes.map(n=>n.id), 0);
+    if (window.renderFlow) window.renderFlow();
+  }
+  window._currentAutoId = id;
+}
+
+async function toggleAuto(id, active) {
+  await sb.from('automations')
+    .update({ status: active ? 'active' : 'paused' })
+    .eq('id', id);
+}
+
+// Auto-save flow to Supabase when published
+const origPublish = window.publishFlow;
+window.publishFlow = async function() {
+  if (window._currentAutoId && window.fnodes) {
+    await sb.from('automations')
+      .update({ flow_json: { nodes: window.fnodes, edges: window.edges || [] }, status: 'active' })
+      .eq('id', window._currentAutoId);
+  }
+  showToast('✓ Automation activated');
+};
+
+window.loadFlowById = loadFlowById;
+window.toggleAuto   = toggleAuto;
+
+loadAutomations();
+</script>
 </body>
 </html>
