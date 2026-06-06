@@ -462,7 +462,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
     <span class="topbar-title">Dashboard</span>
     <div class="topbar-spacer"></div>
     <div class="search-bar">🔍 &nbsp;Search apps, automations…</div>
-    <button class="topbar-btn topbar-btn-primary">＋ New App</button>
+    <button class="topbar-btn topbar-btn-primary" onclick="window.location.href='/apps'">＋ New App</button>
     <div class="topbar-notif">🔔<div class="notif-dot"></div></div>
   </header>
 
@@ -492,7 +492,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
         <div class="usage-bar-track"><div class="usage-bar-fill ub-blue" style="width:28%"></div></div>
         <span class="usage-nums"><strong>7</strong> / 25 used</span>
       </div>
-      <button class="usage-upgrade">⬆ Upgrade to Enterprise</button>
+      <button class="usage-upgrade" onclick="window.location.href='/billing'">⬆ Upgrade to Enterprise</button>
     </div>
 
     <!-- METRICS -->
@@ -554,9 +554,9 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
               <span class="app-updated">Updated 2h ago</span>
             </div>
             <div class="app-actions">
-              <button class="app-btn primary">Open</button>
-              <button class="app-btn">Edit</button>
-              <button class="app-btn">Analytics</button>
+              <button class="app-btn primary" onclick="window.location.href='/builder'">Open</button>
+              <button class="app-btn" onclick="window.location.href='/builder'">Edit</button>
+              <button class="app-btn" onclick="window.location.href='/analytics'">Analytics</button>
             </div>
           </div>
 
@@ -572,9 +572,9 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
               <span class="app-updated">Updated 1d ago</span>
             </div>
             <div class="app-actions">
-              <button class="app-btn primary">Open</button>
-              <button class="app-btn">Edit</button>
-              <button class="app-btn">Analytics</button>
+              <button class="app-btn primary" onclick="window.location.href='/builder'">Open</button>
+              <button class="app-btn" onclick="window.location.href='/builder'">Edit</button>
+              <button class="app-btn" onclick="window.location.href='/analytics'">Analytics</button>
             </div>
           </div>
 
@@ -590,9 +590,9 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
               <span class="app-updated">Updated 3d ago</span>
             </div>
             <div class="app-actions">
-              <button class="app-btn primary">Open</button>
-              <button class="app-btn">Edit</button>
-              <button class="app-btn">Runs</button>
+              <button class="app-btn primary" onclick="window.location.href='/builder'">Open</button>
+              <button class="app-btn" onclick="window.location.href='/builder'">Edit</button>
+              <button class="app-btn" onclick="window.location.href='/automations'">Runs</button>
             </div>
           </div>
 
@@ -608,9 +608,9 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
               <span class="app-updated">Updated today</span>
             </div>
             <div class="app-actions">
-              <button class="app-btn primary">Continue</button>
-              <button class="app-btn">Preview</button>
-              <button class="app-btn">Publish</button>
+              <button class="app-btn primary" onclick="window.location.href='/builder'">Continue</button>
+              <button class="app-btn" onclick="window.location.href='/builder'">Preview</button>
+              <button class="app-btn" onclick="window.location.href='/apps'">Publish</button>
             </div>
           </div>
 
@@ -780,32 +780,32 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
           <span class="section-title">Quick actions</span>
         </div>
         <div class="quick-grid">
-          <button class="quick-btn">
+          <button class="quick-btn" onclick="window.location.href='/builder'">
             <span class="quick-icon">🏗</span>
             <span class="quick-label">New app</span>
             <span class="quick-sub">Start from template</span>
           </button>
-          <button class="quick-btn">
+          <button class="quick-btn" onclick="window.location.href='/automations'">
             <span class="quick-icon">⚡</span>
             <span class="quick-label">New automation</span>
             <span class="quick-sub">Build a workflow</span>
           </button>
-          <button class="quick-btn">
+          <button class="quick-btn" onclick="window.location.href='/builder'">
             <span class="quick-icon">🔌</span>
             <span class="quick-label">Add integration</span>
             <span class="quick-sub">300+ available</span>
           </button>
-          <button class="quick-btn">
+          <button class="quick-btn" onclick="window.location.href='/team'">
             <span class="quick-icon">👥</span>
             <span class="quick-label">Invite teammate</span>
             <span class="quick-sub">18 seats left</span>
           </button>
-          <button class="quick-btn">
+          <button class="quick-btn" onclick="window.location.href='/analytics'">
             <span class="quick-icon">📊</span>
             <span class="quick-label">View analytics</span>
             <span class="quick-sub">Usage & performance</span>
           </button>
-          <button class="quick-btn">
+          <button class="quick-btn" onclick="window.location.href='/billing'">
             <span class="quick-icon">💳</span>
             <span class="quick-label">Billing</span>
             <span class="quick-sub">Pro · renews Jul 4</span>
