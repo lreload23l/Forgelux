@@ -278,6 +278,15 @@ async function loadTeam() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return; // Test account — keep demo data
 
+  // Clear hardcoded demo members immediately
+  const tbody = document.getElementById('members-tbody');
+  if (tbody) tbody.innerHTML = `
+    <tr>
+      <td colspan="6" style="text-align:center;padding:2rem;color:var(--muted);font-size:12px">
+        Loading members…
+      </td>
+    </tr>`;
+
   try {
     // Get workspace
     const { data: memberships } = await sb
@@ -309,6 +318,12 @@ async function loadTeam() {
     // Render table
     const tbody = document.getElementById('members-tbody');
     if (!tbody) return;
+
+    // Update count
+    const countEl = document.getElementById('member-count');
+    if (countEl) countEl.textContent = members.length;
+    const seatsEl = document.getElementById('seats-used');
+    if (seatsEl) seatsEl.textContent = members.length;
 
     tbody.innerHTML = members.map((m, i) => {
       const name     = m.users?.full_name || m.email?.split('@')[0] || 'Member';
