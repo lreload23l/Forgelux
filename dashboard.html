@@ -404,7 +404,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
     <a class="nav-item" href="#"><span class="nav-icon">🔌</span> Integrations</a>
 
     <div class="nav-section-label">Manage</div>
-    <a class="nav-item" href="/apps"><span class="nav-icon">📱</span> My Apps <span class="nav-badge green">12</span></a>
+    <a class="nav-item" href="/apps"><span class="nav-icon">📱</span> My Apps <span class="nav-badge green" id="apps-nav-badge" style="display:none">0</span></a>
     <a class="nav-item" href="/team"><span class="nav-icon">👥</span> Team</a>
     <a class="nav-item" href="/analytics"><span class="nav-icon">📊</span> Analytics</a>
     <a class="nav-item" href="/dashboard"><span class="nav-icon">🔔</span> Alerts <span class="nav-badge">2</span></a>
@@ -473,7 +473,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
       <div class="metric-card mc-v">
         <div class="metric-header">
           <span class="metric-icon">📱</span>
-          <span class="metric-trend trend-up">↑ 3 this month</span>
+          <span class="metric-trend trend-up" id="trend-apps" style="display:none">↑ 0</span>
         </div>
         <div class="metric-val" id="stat-apps">—</div>
         <div class="metric-label">Active apps</div>
@@ -481,7 +481,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
       <div class="metric-card mc-b">
         <div class="metric-header">
           <span class="metric-icon">⚡</span>
-          <span class="metric-trend trend-up">↑ 22%</span>
+          <span class="metric-trend trend-up" id="trend-runs" style="display:none">↑ 0%</span>
         </div>
         <div class="metric-val" id="stat-runs">—</div>
         <div class="metric-label">Automation runs this month</div>
@@ -489,15 +489,15 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
       <div class="metric-card mc-l">
         <div class="metric-header">
           <span class="metric-icon">👤</span>
-          <span class="metric-trend trend-up">↑ 18%</span>
+          <span class="metric-trend trend-up" id="trend-users" style="display:none">↑ 0%</span>
         </div>
-        <div class="metric-val">1,284</div>
+        <div class="metric-val" id="stat-users">—</div>
         <div class="metric-label">End users served</div>
       </div>
       <div class="metric-card mc-r">
         <div class="metric-header">
           <span class="metric-icon">⚠</span>
-          <span class="metric-trend trend-down">2 need attention</span>
+          <span class="metric-trend trend-down" id="trend-failed" style="display:none">0</span>
         </div>
         <div class="metric-val" id="stat-failed">—</div>
         <div class="metric-label">Failed automations</div>
@@ -676,7 +676,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
     <div class="bottom-row">
 
       <!-- RUN CHART -->
-      <div class="card fade d6">
+      <div class="card fade d6" id="runs-chart-card">
         <div class="section-header" style="margin-bottom:0.5rem">
           <span class="section-title">Automation runs — last 7 days</span>
         </div>
@@ -839,7 +839,8 @@ async function loadDashboard() {
   setText('sidebar-name', name);
   setText('sidebar-plan', (su.plan || 'Starter') + ' · ' + (su.role || 'Member'));
   setText('sidebar-avatar', initials);
-  setText('greeting-name', name.split(' ')[0]);
+  const firstName = name.split(' ')[0];
+  setText('greeting-name', firstName.charAt(0).toUpperCase() + firstName.slice(1));
 
   // Update greeting time
   const hour = new Date().getHours();
@@ -910,9 +911,31 @@ async function loadRealData(user, su) {
     const runs    = runsRes.data    || [];
     const members = membersRes.data || [];
 
-    setText('stat-apps',   apps.filter(a => a.status === 'live').length);
-    setText('stat-runs',   runs.length > 1000 ? (runs.length / 1000).toFixed(1) + 'k' : runs.length);
-    setText('stat-failed', runs.filter(r => r.status === 'failed').length);
+    const liveApps = apps.filter(a => a.status === 'live').length;
+    const totalRuns = runs.length;
+    const failedRuns = runs.filter(r => r.status === 'failed').length;
+
+    setText('stat-apps',   liveApps);
+    setText('stat-runs',   totalRuns > 1000 ? (totalRuns / 1000).toFixed(1) + 'k' : totalRuns);
+    setText('stat-failed', failedRuns);
+    setText('stat-users',  0); // Will come from analytics later
+
+    // Show/hide trend badges based on real data
+    if (liveApps > 0) { const el = document.getElementById('trend-apps'); if(el){el.style.display='';el.textContent='↑ '+liveApps+' live';} }
+    if (totalRuns > 0) { const el = document.getElementById('trend-runs'); if(el){el.style.display='';el.textContent='↑ '+totalRuns+' runs';} }
+    if (failedRuns > 0) { const el = document.getElementById('trend-failed'); if(el){el.style.display='';el.textContent=failedRuns+' failed';} }
+
+    // Show/hide apps nav badge
+    if (apps.length > 0) {
+      const badge = document.getElementById('apps-nav-badge');
+      if (badge) { badge.style.display = ''; badge.textContent = apps.length; }
+    }
+
+    // Hide bar chart if no runs
+    if (totalRuns === 0) {
+      const chart = document.getElementById('runs-chart-card');
+      if (chart) chart.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);font-size:11px"><div style="font-size:1.5rem;margin-bottom:8px;opacity:.3">📊</div>No automation runs yet.<br><a href="/automations" style="color:var(--violet)">Create your first automation →</a></div>';
+    }
 
     apps.length    ? renderApps(apps)    : showEmptyApps();
     runs.length    ? renderFeed(runs)    : showEmptyFeed();
@@ -920,7 +943,7 @@ async function loadRealData(user, su) {
 
   } catch (err) {
     console.warn('Dashboard data error:', err.message);
-    setText('stat-apps', 0); setText('stat-runs', 0); setText('stat-failed', 0);
+    setText('stat-apps', 0); setText('stat-runs', 0); setText('stat-failed', 0); setText('stat-users', 0);
     showEmptyApps(); showEmptyFeed(); showEmptyTeam(su);
   }
 }
