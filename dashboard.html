@@ -491,7 +491,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
           <span class="metric-icon">👤</span>
           <span class="metric-trend trend-up" id="trend-users" style="display:none">↑ 0%</span>
         </div>
-        <div class="metric-val" id="stat-users">—</div>
+        <div class="metric-val" id="stat-users">0</div>
         <div class="metric-label">End users served</div>
       </div>
       <div class="metric-card mc-r">
@@ -618,21 +618,8 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
         <div class="section-header" style="margin-bottom:0.5rem">
           <span class="section-title">Automation runs — last 7 days</span>
         </div>
-        <div class="mini-chart" id="run-chart">
-          <div class="bar-wrap"><div class="bar" style="height:55%"></div></div>
-          <div class="bar-wrap"><div class="bar" style="height:70%"></div></div>
-          <div class="bar-wrap"><div class="bar" style="height:48%"></div></div>
-          <div class="bar-wrap"><div class="bar" style="height:82%"></div></div>
-          <div class="bar-wrap"><div class="bar" style="height:63%"></div></div>
-          <div class="bar-wrap"><div class="bar" style="height:91%"></div></div>
-          <div class="bar-wrap"><div class="bar today" style="height:74%"></div></div>
-        </div>
-        <div class="chart-labels">
-          <span class="chart-label">Mon</span><span class="chart-label">Tue</span>
-          <span class="chart-label">Wed</span><span class="chart-label">Thu</span>
-          <span class="chart-label">Fri</span><span class="chart-label">Sat</span>
-          <span class="chart-label" style="color:var(--violet);font-weight:600">Today</span>
-        </div>
+        <div class="mini-chart" id="run-chart"></div>
+          <div class="chart-labels"></div>
       </div>
 
       <!-- TEAM ACTIVITY -->
@@ -1013,13 +1000,16 @@ function renderRunsChart(runs) {
   }
   const maxCount = Math.max(...days.map(d => d.count), 1);
 
-  chartInner.querySelector('.mini-chart') && (chartInner.querySelector('.mini-chart').innerHTML =
-    days.map(d => `<div class="bar-wrap"><div class="bar${d.isToday ? ' today' : ''}" style="height:${Math.max(8, Math.round((d.count / maxCount) * 100))}%"></div></div>`).join(''));
+  const miniChart = document.getElementById('run-chart');
+  if (miniChart) miniChart.innerHTML = days.map(d =>
+    `<div class="bar-wrap"><div class="bar${d.isToday ? ' today' : ''}" style="height:${Math.max(8, Math.round((d.count / maxCount) * 100))}%"></div></div>`).join('');
 
-  const labels_el = chartInner.querySelector('.chart-labels');
-  if (labels_el) labels_el.innerHTML = days.map(d =>
+  const labelsEl = chartInner.querySelector('.chart-labels');
+  if (labelsEl) labelsEl.innerHTML = days.map(d =>
     `<span class="chart-label"${d.isToday ? ' style="color:var(--violet);font-weight:600"' : ''}>${d.isToday ? 'Today' : d.label}</span>`).join('');
 }
 
 loadDashboard();
 </script>
+</body>
+</html>
