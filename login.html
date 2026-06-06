@@ -181,37 +181,95 @@ function switchTab(tab) {
 }
 
 // ── SIGN IN ──
-function doSignIn() {
+async function doSignIn() {
   const email    = document.getElementById('in-email').value.trim();
   const password = document.getElementById('in-password').value;
   const errEl    = document.getElementById('err-in');
+  const btn      = document.querySelector('#wrap-in .btn-submit');
 
   if (!email || !password) { showErr(errEl, 'Please enter your email and password.'); return; }
 
-  const user = ACCOUNTS.find(a => a.email.toLowerCase() === email.toLowerCase() && a.password === password);
+  btn.textContent = 'Signing in…'; btn.disabled = true;
 
+  // Try Supabase first (real accounts)
+  try {
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    const sb = createClient(
+      'https://xizckgqxdllbopsmbzis.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
+    );
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (data?.user) {
+      const user = {
+        id: data.user.id,
+        email: data.user.email,
+        name: data.user.user_metadata?.full_name || email.split('@')[0],
+        initials: (data.user.user_metadata?.full_name || email).split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2),
+        plan: 'Pro', role: 'Owner', workspace: "My Workspace",
+        runsUsed: 0, runsTotal: 50000, seatsUsed: 1, seatsTotal: 25,
+        supabaseSession: data.session
+      };
+      sessionStorage.setItem('flx_user', JSON.stringify(user));
+      window.location.href = '/dashboard';
+      return;
+    }
+  } catch(e) { /* Supabase unavailable, try test accounts */ }
+
+  // Fall back to test accounts
+  const user = ACCOUNTS.find(a => a.email.toLowerCase() === email.toLowerCase() && a.password === password);
   if (user) {
     sessionStorage.setItem('flx_user', JSON.stringify(user));
     window.location.href = '/dashboard';
   } else {
-    showErr(errEl, 'Incorrect email or password. Try luke@forgelux.co.uk / Forgelux123!');
+    showErr(errEl, 'Incorrect email or password.');
+    btn.textContent = 'Sign in to Forgelux'; btn.disabled = false;
   }
 }
 
 // ── SIGN UP (demo — uses owner account) ──
-function doSignUp() {
+async function doSignUp() {
   const fname = document.getElementById('up-fname').value.trim();
+  const lname = document.getElementById('up-lname').value.trim();
   const email = document.getElementById('up-email').value.trim();
   const pass  = document.getElementById('up-password').value;
   const errEl = document.getElementById('err-up');
+  const btn   = document.querySelector('#wrap-up .btn-submit');
 
   if (!fname || !email || !pass) { showErr(errEl, 'Please fill in all fields.'); return; }
-  if (pass.length < 8)            { showErr(errEl, 'Password must be at least 8 characters.'); return; }
+  if (pass.length < 8) { showErr(errEl, 'Password must be at least 8 characters.'); return; }
 
-  // Demo: create a temporary session with their name
-  const user = { ...ACCOUNTS[0], name: fname, initials: fname.charAt(0).toUpperCase() + (document.getElementById('up-lname').value.charAt(0).toUpperCase() || '') };
-  sessionStorage.setItem('flx_user', JSON.stringify(user));
-  window.location.href = '/dashboard';
+  btn.textContent = 'Creating account…'; btn.disabled = true;
+
+  try {
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    const sb = createClient(
+      'https://xizckgqxdllbopsmbzis.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
+    );
+    const fullName = (fname + ' ' + lname).trim();
+    const { data, error } = await sb.auth.signUp({
+      email, password: pass,
+      options: { data: { full_name: fullName } }
+    });
+    if (error) { showErr(errEl, error.message); btn.textContent = 'Create my account →'; btn.disabled = false; return; }
+    if (data?.user) {
+      const initials = (fname[0]+(lname[0]||'')).toUpperCase();
+      const user = {
+        id: data.user.id, email, name: fullName, initials,
+        plan: 'Pro', role: 'Owner', workspace: fname+"'s Workspace",
+        runsUsed: 0, runsTotal: 50000, seatsUsed: 1, seatsTotal: 25
+      };
+      sessionStorage.setItem('flx_user', JSON.stringify(user));
+      window.location.href = '/dashboard';
+      return;
+    }
+  } catch(e) {
+    // Fall back to demo session
+    const initials = (fname[0]+((lname||'')[0]||'')).toUpperCase();
+    const user = { ...ACCOUNTS[0], name: fname+' '+lname, initials };
+    sessionStorage.setItem('flx_user', JSON.stringify(user));
+    window.location.href = '/dashboard';
+  }
 }
 
 // ── SOCIAL LOGIN (demo) ──
