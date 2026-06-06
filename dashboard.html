@@ -489,7 +489,10 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
     </div>
 
     <!-- USAGE BANNER -->
-    <div class="usage-banner fade d2">
+    
+    <div id="dashboard-grid" style="display:flex;flex-direction:column;gap:1.5rem">
+    <div class="usage-banner fade d2 tile" draggable="true" data-tile="usage-banner">
+    <span class="tile-drag-handle" title="Drag to reorder">⠿</span>
       <div class="usage-item">
         <span class="usage-label">Automation runs</span>
         <div class="usage-bar-track"><div class="usage-bar-fill ub-violet" id="runs-bar" style="width:0%"></div></div>
@@ -509,7 +512,8 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
     </div>
 
     <!-- METRICS -->
-    <div class="metrics-row fade d3 tile-grid" id="metrics-grid">
+    <div class="metrics-row fade d3 tile" draggable="true" data-tile="metrics-row" id="metrics-grid">
+    <span class="tile-drag-handle" title="Drag to reorder">⠿</span>
       <div class="metric-card mc-v tile" draggable="true" data-tile="stat-apps" draggable="true" data-tile="active-apps" id="tile-active-apps"><span class="drag-handle">⠿</span>
         <div class="metric-header">
           <span class="metric-icon">📱</span>
@@ -545,7 +549,8 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
     </div>
 
     <!-- TWO COL: APPS + FEED -->
-    <div class="two-col">
+    <div class="two-col tile" draggable="true" data-tile="apps-feed">
+    <span class="tile-drag-handle" title="Drag to reorder">⠿</span>
 
       <!-- APPS -->
       <div class="fade d4">
@@ -650,7 +655,8 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
     </div>
 
     <!-- BOTTOM ROW -->
-    <div class="bottom-row tile-grid" id="bottom-grid">
+    <div class="bottom-row tile" draggable="true" data-tile="bottom-row" id="bottom-grid">
+    <span class="tile-drag-handle" title="Drag to reorder">⠿</span>
 
       <!-- RUN CHART -->
       <div class="card fade d6 tile" draggable="true" data-tile="runs-chart" id="runs-chart-card">
@@ -1127,45 +1133,90 @@ function initDraggableTiles(gridId) {
   const grid = document.getElementById(gridId);
   if (!grid) return;
 
+  let dropIndicator = null;
+
+  function getDropPosition(tile, clientX, clientY) {
+    const rect = tile.getBoundingClientRect();
+    const midX = rect.left + rect.width / 2;
+    const midY = rect.top + rect.height / 2;
+    // For single-row grids use X, for multi-row use Y
+    const isMultiCol = grid.classList.contains('metrics-row');
+    return isMultiCol ? (clientX < midX ? 'before' : 'after') : (clientY < midY ? 'before' : 'after');
+  }
+
   grid.querySelectorAll('.tile').forEach(tile => {
     tile.addEventListener('dragstart', e => {
       dragSrcEl = tile;
-      tile.classList.add('dragging');
+      setTimeout(() => tile.classList.add('dragging'), 0);
       e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData('text/plain', tile.dataset.tile);
     });
 
     tile.addEventListener('dragend', () => {
       tile.classList.remove('dragging');
-      grid.querySelectorAll('.tile').forEach(t => t.classList.remove('drag-over'));
+      grid.querySelectorAll('.tile').forEach(t => {
+        t.classList.remove('drag-over');
+        t.style.borderLeft = '';
+        t.style.borderRight = '';
+        t.style.borderTop = '';
+        t.style.borderBottom = '';
+      });
       saveLayout();
     });
 
     tile.addEventListener('dragover', e => {
       e.preventDefault();
+      if (!dragSrcEl || tile === dragSrcEl) return;
       e.dataTransfer.dropEffect = 'move';
-      grid.querySelectorAll('.tile').forEach(t => t.classList.remove('drag-over'));
-      if (tile !== dragSrcEl) tile.classList.add('drag-over');
+
+      // Clear all indicators
+      grid.querySelectorAll('.tile').forEach(t => {
+        t.style.borderLeft = '';
+        t.style.borderRight = '';
+        t.style.borderTop = '';
+        t.style.borderBottom = '';
+      });
+
+      const pos = getDropPosition(tile, e.clientX, e.clientY);
+      const isMultiCol = grid.classList.contains('metrics-row');
+      const highlightColor = '2px solid var(--violet)';
+
+      if (isMultiCol) {
+        if (pos === 'before') tile.style.borderLeft = highlightColor;
+        else tile.style.borderRight = highlightColor;
+      } else {
+        if (pos === 'before') tile.style.borderTop = highlightColor;
+        else tile.style.borderBottom = highlightColor;
+      }
     });
 
-    tile.addEventListener('dragleave', () => {
-      tile.classList.remove('drag-over');
+    tile.addEventListener('dragleave', e => {
+      // Only clear if leaving the tile entirely
+      if (!tile.contains(e.relatedTarget)) {
+        tile.style.borderLeft = '';
+        tile.style.borderRight = '';
+        tile.style.borderTop = '';
+        tile.style.borderBottom = '';
+      }
     });
 
     tile.addEventListener('drop', e => {
       e.preventDefault();
-      tile.classList.remove('drag-over');
-      if (dragSrcEl && dragSrcEl !== tile) {
-        // Swap positions
-        const grid = tile.parentNode;
-        const tiles = [...grid.querySelectorAll('.tile')];
-        const srcIdx = tiles.indexOf(dragSrcEl);
-        const tgtIdx = tiles.indexOf(tile);
-        if (srcIdx < tgtIdx) {
-          grid.insertBefore(dragSrcEl, tile.nextSibling);
-        } else {
-          grid.insertBefore(dragSrcEl, tile);
-        }
+      // Clear all indicators
+      grid.querySelectorAll('.tile').forEach(t => {
+        t.style.borderLeft = '';
+        t.style.borderRight = '';
+        t.style.borderTop = '';
+        t.style.borderBottom = '';
+      });
+
+      if (!dragSrcEl || dragSrcEl === tile) return;
+
+      const pos = getDropPosition(tile, e.clientX, e.clientY);
+      if (pos === 'before') {
+        grid.insertBefore(dragSrcEl, tile);
+      } else {
+        grid.insertBefore(dragSrcEl, tile.nextSibling);
       }
     });
   });
@@ -1188,8 +1239,8 @@ function applyLayoutOrder(gridId, order) {
 
 async function saveLayout() {
   const layout = {
-    metrics: getLayoutOrder('metrics-grid'),
-    bottom:  getLayoutOrder('bottom-grid'),
+    dashboard: getLayoutOrder('dashboard-grid'),
+    metrics:   getLayoutOrder('metrics-grid'),
   };
 
   // Save to localStorage instantly
@@ -1242,8 +1293,8 @@ async function loadLayout() {
   if (local) {
     try {
       const layout = JSON.parse(local);
-      applyLayoutOrder('metrics-grid', layout.metrics);
-      applyLayoutOrder('bottom-grid',  layout.bottom);
+      if (layout.dashboard) applyLayoutOrder('dashboard-grid', layout.dashboard);
+      if (layout.metrics)   applyLayoutOrder('metrics-grid',   layout.metrics);
     } catch(e) {}
   }
 
@@ -1276,9 +1327,8 @@ async function loadLayout() {
 
     if (layoutData?.layout_json) {
       const layout = layoutData.layout_json;
-      applyLayoutOrder('metrics-grid', layout.metrics);
-      applyLayoutOrder('bottom-grid',  layout.bottom);
-      // Update localStorage with server version
+      if (layout.dashboard) applyLayoutOrder('dashboard-grid', layout.dashboard);
+      if (layout.metrics)   applyLayoutOrder('metrics-grid',   layout.metrics);
       localStorage.setItem('flx_dashboard_layout', JSON.stringify(layout));
     }
   } catch(err) {
@@ -1286,14 +1336,16 @@ async function loadLayout() {
   }
 }
 
-// Initialise drag and drop on both grids
+// Initialise drag and drop on master grid
+initDraggableTiles('dashboard-grid');
+// Also init within metrics and bottom for sub-tile dragging
 initDraggableTiles('metrics-grid');
-initDraggableTiles('bottom-grid');
 
 // Load saved layout
 loadLayout();
 
 </script>
 <div class="layout-saved" id="layout-saved">✓ Layout saved</div>
+    </div>
 </body>
 </html>
