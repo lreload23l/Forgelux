@@ -87,10 +87,10 @@
 
   <!-- STATS -->
   <div class="stats-strip fade d1">
-    <div class="stat-chip"><div class="stat-chip-val" id="stat-total">12</div><div class="stat-chip-label">Total apps</div></div>
-    <div class="stat-chip"><div class="stat-chip-val" id="stat-live">9</div><div class="stat-chip-label">Live</div></div>
-    <div class="stat-chip"><div class="stat-chip-val" id="stat-draft">2</div><div class="stat-chip-label">Drafts</div></div>
-    <div class="stat-chip"><div class="stat-chip-val" id="stat-paused">1</div><div class="stat-chip-label">Paused</div></div>
+    <div class="stat-chip"><div class="stat-chip-val" id="stat-total">—</div><div class="stat-chip-label">Total apps</div></div>
+    <div class="stat-chip"><div class="stat-chip-val" id="stat-live">—</div><div class="stat-chip-label">Live</div></div>
+    <div class="stat-chip"><div class="stat-chip-val" id="stat-draft">—</div><div class="stat-chip-label">Drafts</div></div>
+    <div class="stat-chip"><div class="stat-chip-val" id="stat-paused">—</div><div class="stat-chip-label">Paused</div></div>
   </div>
 
   <!-- FILTER BAR -->
@@ -110,116 +110,7 @@
 
   <!-- GRID VIEW -->
   <div class="apps-grid fade d3" id="grid-view" data-loaded="false">
-
-    <div class="app-card" data-type="web" data-status="live">
-      <div class="app-card-cover cover-v"><span>📊</span><span class="app-status-badge badge badge-green">Live</span></div>
-      <div class="app-card-body">
-        <div class="app-card-name">Sales Dashboard</div>
-        <div class="app-card-desc">Real-time pipeline view connected to Salesforce. Shared with the whole sales team.</div>
-        <div class="app-card-meta">
-          <span>👤 248 users</span><span>⚡ 1.2k runs/mo</span><span>🔗 Salesforce</span>
-        </div>
-        <div class="app-card-actions">
-          <button class="ac-btn open">Open</button>
-          <button class="ac-btn">Edit</button>
-          <button class="ac-btn">Analytics</button>
-          <button class="ac-btn">⋯</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="app-card" data-type="web" data-status="live">
-      <div class="app-card-cover cover-b"><span>🚚</span><span class="app-status-badge badge badge-green">Live</span></div>
-      <div class="app-card-body">
-        <div class="app-card-name">Logistics Tracker</div>
-        <div class="app-card-desc">Live shipment status dashboard for the ops team. Pulls from internal database.</div>
-        <div class="app-card-meta">
-          <span>👤 91 users</span><span>🗄 Custom DB</span>
-        </div>
-        <div class="app-card-actions">
-          <button class="ac-btn open">Open</button>
-          <button class="ac-btn">Edit</button>
-          <button class="ac-btn">Analytics</button>
-          <button class="ac-btn">⋯</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="app-card" data-type="automation" data-status="live">
-      <div class="app-card-cover cover-l"><span>🧾</span><span class="app-status-badge badge badge-green">Live</span></div>
-      <div class="app-card-body">
-        <div class="app-card-name">Client Onboarding</div>
-        <div class="app-card-desc">Multi-step flow: new lead → CRM update → welcome email → Slack notify.</div>
-        <div class="app-card-meta">
-          <span>⚡ 312 runs/mo</span><span>🔗 HubSpot, Slack</span>
-        </div>
-        <div class="app-card-actions">
-          <button class="ac-btn open">Open</button>
-          <button class="ac-btn">Edit</button>
-          <button class="ac-btn">Runs</button>
-          <button class="ac-btn">⋯</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="app-card" data-type="mobile" data-status="draft">
-      <div class="app-card-cover cover-o"><span>📝</span><span class="app-status-badge badge badge-muted">Draft</span></div>
-      <div class="app-card-body">
-        <div class="app-card-name">Expense Reporter</div>
-        <div class="app-card-desc">Mobile app for staff to submit expenses on the go. Syncs with Xero.</div>
-        <div class="app-card-meta">
-          <span>📱 Mobile</span><span>🔗 Xero</span><span>Updated today</span>
-        </div>
-        <div class="app-card-actions">
-          <button class="ac-btn open">Continue</button>
-          <button class="ac-btn">Preview</button>
-          <button class="ac-btn">Publish</button>
-          <button class="ac-btn">⋯</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="app-card" data-type="web" data-status="live">
-      <div class="app-card-cover cover-p"><span>📦</span><span class="app-status-badge badge badge-green">Live</span></div>
-      <div class="app-card-body">
-        <div class="app-card-name">Inventory Manager</div>
-        <div class="app-card-desc">Stock level tracker with low-inventory alerts and reorder automation.</div>
-        <div class="app-card-meta">
-          <span>👤 34 users</span><span>⚡ 88 runs/mo</span>
-        </div>
-        <div class="app-card-actions">
-          <button class="ac-btn open">Open</button>
-          <button class="ac-btn">Edit</button>
-          <button class="ac-btn">Analytics</button>
-          <button class="ac-btn">⋯</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="app-card" data-type="automation" data-status="paused">
-      <div class="app-card-cover cover-t"><span>📧</span><span class="app-status-badge badge badge-yellow">Paused</span></div>
-      <div class="app-card-body">
-        <div class="app-card-name">Weekly Digest</div>
-        <div class="app-card-desc">Sends a curated weekly summary to all subscribers every Monday at 8am.</div>
-        <div class="app-card-meta">
-          <span>⚡ Paused</span><span>🔗 Mailchimp</span>
-        </div>
-        <div class="app-card-actions">
-          <button class="ac-btn open">Resume</button>
-          <button class="ac-btn">Edit</button>
-          <button class="ac-btn">History</button>
-          <button class="ac-btn">⋯</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- NEW APP CARD -->
-    <div class="new-app-card" onclick="openModal()">
-      <div class="new-app-icon">＋</div>
-      <div class="new-app-label">Create new app</div>
-      <div class="new-app-sub">Start from a template or blank canvas</div>
-    </div>
-
+    <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted);font-size:12px">Loading apps…</div>
   </div>
 
   <!-- LIST VIEW -->
@@ -229,14 +120,7 @@
         <thead>
           <tr><th>App name</th><th>Type</th><th>Status</th><th>Users / Runs</th><th>Integrations</th><th>Last updated</th><th></th></tr>
         </thead>
-        <tbody>
-          <tr><td>📊 Sales Dashboard</td><td><span class="badge badge-blue">Web app</span></td><td><span class="badge badge-green">Live</span></td><td>248 users</td><td>Salesforce</td><td>2h ago</td><td><a class="btn btn-ghost btn-sm" href="/builder">Edit</a></td></tr>
-          <tr><td>🚚 Logistics Tracker</td><td><span class="badge badge-blue">Web app</span></td><td><span class="badge badge-green">Live</span></td><td>91 users</td><td>Custom DB</td><td>1d ago</td><td><a class="btn btn-ghost btn-sm" href="/builder">Edit</a></td></tr>
-          <tr><td>🧾 Client Onboarding</td><td><span class="badge badge-violet">Automation</span></td><td><span class="badge badge-green">Live</span></td><td>312 runs/mo</td><td>HubSpot, Slack</td><td>3d ago</td><td><a class="btn btn-ghost btn-sm" href="/automations">Edit</a></td></tr>
-          <tr><td>📝 Expense Reporter</td><td><span class="badge badge-muted">Mobile</span></td><td><span class="badge badge-muted">Draft</span></td><td>—</td><td>Xero</td><td>Today</td><td><a class="btn btn-primary btn-sm" href="/builder">Continue</a></td></tr>
-          <tr><td>📦 Inventory Manager</td><td><span class="badge badge-blue">Web app</span></td><td><span class="badge badge-green">Live</span></td><td>34 users</td><td>—</td><td>5d ago</td><td><a class="btn btn-ghost btn-sm" href="/builder">Edit</a></td></tr>
-          <tr><td>📧 Weekly Digest</td><td><span class="badge badge-violet">Automation</span></td><td><span class="badge badge-yellow">Paused</span></td><td>—</td><td>Mailchimp</td><td>1w ago</td><td><a class="btn btn-ghost btn-sm" href="/automations">Edit</a></td></tr>
-        </tbody>
+        <tbody><tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--muted)">Loading…</td></tr></tbody>
       </table>
     </div>
   </div>

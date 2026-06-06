@@ -80,11 +80,11 @@
   <div class="seats-banner fade d1">
     <div class="seats-info">
       <div class="seats-title">Team seats — Pro Plan</div>
-      <div class="seats-sub"><span id="seats-text">7 of 25 seats used.</span> Upgrade to Enterprise for unlimited members.</div>
+      <div class="seats-sub"><span id="seats-text"><span id="seats-text">— seats used.</span></span> Upgrade to Enterprise for unlimited members.</div>
     </div>
     <div class="seats-bar-wrap">
       <div class="seats-bar-track"><div class="seats-bar-fill"></div></div>
-      <div class="seats-bar-label"><strong id="seats-used">7</strong> / <span id="seats-total">25</span> seats used</div>
+      <div class="seats-bar-label"><strong id="seats-used">—</strong> / <span id="seats-total">—</span> seats used</div>
     </div>
     <button class="btn btn-ghost btn-sm">Upgrade plan</button>
   </div>
@@ -94,7 +94,7 @@
     <!-- MEMBERS TABLE -->
     <div class="fade d2">
       <div class="section-header">
-        <span class="section-title">Members (<span id="member-count">7</span>)</span>
+        <span class="section-title">Members (<span id="member-count">—</span>)</span>
         <div style="display:flex;gap:0.5rem">
           <button class="btn btn-ghost btn-sm">Export CSV</button>
           <button class="btn btn-primary btn-sm" onclick="openInviteModal()">＋ Invite member</button>
@@ -106,64 +106,7 @@
             <thead>
               <tr><th>Member</th><th>Role</th><th>Apps access</th><th>Status</th><th>Last active</th><th></th></tr>
             </thead>
-            <tbody id="members-tbody">
-              <tr>
-                <td><div class="member-cell"><div class="member-av av-v">LR</div><div class="member-name-cell"><div class="member-name">Luke Ryan <span style="font-size:0.65rem;color:var(--muted)">(you)</span></div><div class="member-email">luke@forgelux.io</div></div></div></td>
-                <td><span class="badge badge-violet">Owner</span></td>
-                <td>All apps</td>
-                <td><span class="online-pip pip-on"></span>Online</td>
-                <td>Now</td>
-                <td></td>
-              </tr>
-              <tr>
-                <td><div class="member-cell"><div class="member-av av-b">SA</div><div class="member-name-cell"><div class="member-name">Sarah Anderson</div><div class="member-email">sarah@forgelux.io</div></div></div></td>
-                <td><select class="role-select"><option selected>Admin</option><option>Editor</option><option>Viewer</option></select></td>
-                <td>All apps</td>
-                <td><span class="online-pip pip-on"></span>Online</td>
-                <td>2h ago</td>
-                <td><button class="btn btn-danger btn-sm">Remove</button></td>
-              </tr>
-              <tr>
-                <td><div class="member-cell"><div class="member-av av-l">JM</div><div class="member-name-cell"><div class="member-name">James Mitchell</div><div class="member-email">james@forgelux.io</div></div></div></td>
-                <td><select class="role-select"><option>Admin</option><option selected>Editor</option><option>Viewer</option></select></td>
-                <td>8 apps</td>
-                <td><span class="online-pip pip-on"></span>Online</td>
-                <td>30m ago</td>
-                <td><button class="btn btn-danger btn-sm">Remove</button></td>
-              </tr>
-              <tr>
-                <td><div class="member-cell"><div class="member-av av-o">PN</div><div class="member-name-cell"><div class="member-name">Priya Nair</div><div class="member-email">priya@forgelux.io</div></div></div></td>
-                <td><select class="role-select"><option>Admin</option><option selected>Editor</option><option>Viewer</option></select></td>
-                <td>5 apps</td>
-                <td><span class="online-pip pip-off"></span>Offline</td>
-                <td>1d ago</td>
-                <td><button class="btn btn-danger btn-sm">Remove</button></td>
-              </tr>
-              <tr>
-                <td><div class="member-cell"><div class="member-av av-r">TK</div><div class="member-name-cell"><div class="member-name">Tom Kelly</div><div class="member-email">tom@forgelux.io</div></div></div></td>
-                <td><select class="role-select"><option>Admin</option><option>Editor</option><option selected>Viewer</option></select></td>
-                <td>3 apps</td>
-                <td><span class="online-pip pip-off"></span>Offline</td>
-                <td>3d ago</td>
-                <td><button class="btn btn-danger btn-sm">Remove</button></td>
-              </tr>
-              <tr>
-                <td><div class="member-cell"><div class="member-av av-p">EC</div><div class="member-name-cell"><div class="member-name">Emma Clarke</div><div class="member-email">emma@forgelux.io</div></div></div></td>
-                <td><select class="role-select"><option>Admin</option><option selected>Editor</option><option>Viewer</option></select></td>
-                <td>6 apps</td>
-                <td><span class="online-pip pip-off"></span>Offline</td>
-                <td>5d ago</td>
-                <td><button class="btn btn-danger btn-sm">Remove</button></td>
-              </tr>
-              <tr>
-                <td><div class="member-cell"><div class="member-av av-t">RB</div><div class="member-name-cell"><div class="member-name">Ryan Brooks</div><div class="member-email">ryan@forgelux.io</div></div></div></td>
-                <td><select class="role-select"><option>Admin</option><option>Editor</option><option selected>Viewer</option></select></td>
-                <td>2 apps</td>
-                <td>⏳ Invite pending</td>
-                <td>Never</td>
-                <td><button class="btn btn-ghost btn-sm">Resend</button></td>
-              </tr>
-            </tbody>
+            <tbody id="members-tbody"><tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted);font-size:12px">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
