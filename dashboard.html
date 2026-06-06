@@ -6,8 +6,6 @@
 <title>Forgelux — Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="/js/theme.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -455,7 +453,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
       <div class="usage-item">
         <span class="usage-label">Automation runs</span>
         <div class="usage-bar-track"><div class="usage-bar-fill ub-violet" id="runs-bar" style="width:0%"></div></div>
-        <span class="usage-nums"><strong id="runs-used">—</strong> / <span id="runs-total">50,000</span></span>
+        <span class="usage-nums"><strong id="runs-used">34,012</strong> / <span id="runs-total">50,000</span></span>
       </div>
       <div class="usage-item">
         <span class="usage-label">Published apps</span>
@@ -465,7 +463,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
       <div class="usage-item">
         <span class="usage-label">Team seats</span>
         <div class="usage-bar-track"><div class="usage-bar-fill ub-blue" id="seats-bar" style="width:0%"></div></div>
-        <span class="usage-nums"><strong id="seats-used">—</strong> / <span id="seats-total">25</span> used</span>
+        <span class="usage-nums"><strong id="seats-used">7</strong> / <span id="seats-total">25</span> used</span>
       </div>
       <button class="usage-upgrade" onclick="window.location.href='/billing'">⬆ Upgrade to Enterprise</button>
     </div>
@@ -493,7 +491,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
           <span class="metric-icon">👤</span>
           <span class="metric-trend trend-up">↑ 18%</span>
         </div>
-        <div class="metric-val">—</div>
+        <div class="metric-val">1,284</div>
         <div class="metric-label">End users served</div>
       </div>
       <div class="metric-card mc-r">
@@ -516,7 +514,445 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
           <span class="section-action">View all →</span>
         </div>
         <div class="apps-grid" id="apps-grid">
+
+          <div class="app-card">
+            <div class="app-card-top">
+              <div class="app-icon ai-v">📊</div>
+              <span class="app-status status-live">Live</span>
+            </div>
+            <div class="app-name">Sales Dashboard</div>
+            <div class="app-type">Web app · Salesforce integration</div>
+            <div class="app-meta">
+              <span class="app-users">👤 248 users</span>
+              <span class="app-updated">Updated 2h ago</span>
+            </div>
+            <div class="app-actions">
+              <button onclick="window.location.href='/builder'" class="app-btn primary">Open</button>
+              <button onclick="window.location.href='/builder'" class="app-btn">Edit</button>
+              <button onclick="window.location.href='/analytics'" class="app-btn">Analytics</button>
+            </div>
+          </div>
+
+          <div class="app-card">
+            <div class="app-card-top">
+              <div class="app-icon ai-b">🚚</div>
+              <span class="app-status status-live">Live</span>
+            </div>
+            <div class="app-name">Logistics Tracker</div>
+            <div class="app-type">Web app · Custom database</div>
+            <div class="app-meta">
+              <span class="app-users">👤 91 users</span>
+              <span class="app-updated">Updated 1d ago</span>
+            </div>
+            <div class="app-actions">
+              <button onclick="window.location.href='/builder'" class="app-btn primary">Open</button>
+              <button onclick="window.location.href='/builder'" class="app-btn">Edit</button>
+              <button onclick="window.location.href='/analytics'" class="app-btn">Analytics</button>
+            </div>
+          </div>
+
+          <div class="app-card">
+            <div class="app-card-top">
+              <div class="app-icon ai-l">🧾</div>
+              <span class="app-status status-live">Live</span>
+            </div>
+            <div class="app-name">Client Onboarding</div>
+            <div class="app-type">Automation flow · HubSpot + Slack</div>
+            <div class="app-meta">
+              <span class="app-users">⚡ 312 runs/mo</span>
+              <span class="app-updated">Updated 3d ago</span>
+            </div>
+            <div class="app-actions">
+              <button onclick="window.location.href='/builder'" class="app-btn primary">Open</button>
+              <button onclick="window.location.href='/builder'" class="app-btn">Edit</button>
+              <button onclick="window.location.href='/automations'" class="app-btn">Runs</button>
+            </div>
+          </div>
+
+          <div class="app-card">
+            <div class="app-card-top">
+              <div class="app-icon ai-o">📝</div>
+              <span class="app-status status-draft">Draft</span>
+            </div>
+            <div class="app-name">Expense Reporter</div>
+            <div class="app-type">Mobile app · Xero integration</div>
+            <div class="app-meta">
+              <span class="app-users">👤 Not published</span>
+              <span class="app-updated">Updated today</span>
+            </div>
+            <div class="app-actions">
+              <button onclick="window.location.href='/builder'" class="app-btn primary">Continue</button>
+              <button onclick="window.location.href='/builder'" class="app-btn">Preview</button>
+              <button onclick="window.location.href='/apps'" class="app-btn">Publish</button>
+            </div>
+          </div>
+
         </div>
+      </div>
+
+      <!-- AUTOMATION FEED -->
+      <div class="fade d5">
+        <div class="section-header">
+          <span class="section-title">Automation feed</span>
+          <span class="section-action">View all →</span>
+        </div>
+        <div class="feed-card">
+          <div class="feed-tabs">
+            <div class="feed-tab active" onclick="setTab(this,'all')">All</div>
+            <div class="feed-tab" onclick="setTab(this,'failed')">Failed</div>
+            <div class="feed-tab" onclick="setTab(this,'running')">Running</div>
+          </div>
+          <div class="feed-list" id="feed-list">
+            <div class="feed-item">
+              <div class="feed-dot-wrap"><div class="feed-dot fd-green"></div></div>
+              <div class="feed-body">
+                <div class="feed-name">New lead → CRM + Email notify</div>
+                <div class="feed-detail">Client Onboarding · 3 steps completed</div>
+              </div>
+              <div class="feed-time">2m ago</div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-dot-wrap"><div class="feed-dot fd-red"></div></div>
+              <div class="feed-body">
+                <div class="feed-name">Daily report → Slack #sales</div>
+                <div class="feed-detail">Error: Slack webhook timeout · Retry?</div>
+              </div>
+              <div class="feed-time">14m ago</div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-dot-wrap"><div class="feed-dot fd-green"></div></div>
+              <div class="feed-body">
+                <div class="feed-name">Form submit → Update database</div>
+                <div class="feed-detail">Sales Dashboard · Row #1847 updated</div>
+              </div>
+              <div class="feed-time">31m ago</div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-dot-wrap"><div class="feed-dot fd-yellow"></div></div>
+              <div class="feed-body">
+                <div class="feed-name">Invoice sync → Xero</div>
+                <div class="feed-detail">Running… step 2 of 4</div>
+              </div>
+              <div class="feed-time">45m ago</div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-dot-wrap"><div class="feed-dot fd-green"></div></div>
+              <div class="feed-body">
+                <div class="feed-name">Shipment update → SMS alert</div>
+                <div class="feed-detail">Logistics Tracker · 24 recipients</div>
+              </div>
+              <div class="feed-time">1h ago</div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-dot-wrap"><div class="feed-dot fd-red"></div></div>
+              <div class="feed-body">
+                <div class="feed-name">Weekly summary → Google Sheets</div>
+                <div class="feed-detail">Error: Auth token expired · Fix →</div>
+              </div>
+              <div class="feed-time">2h ago</div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-dot-wrap"><div class="feed-dot fd-green"></div></div>
+              <div class="feed-body">
+                <div class="feed-name">New user signup → Welcome email</div>
+                <div class="feed-detail">Client Onboarding · Sent to 3 users</div>
+              </div>
+              <div class="feed-time">3h ago</div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-dot-wrap"><div class="feed-dot fd-blue"></div></div>
+              <div class="feed-body">
+                <div class="feed-name">Scheduled pull → Refresh dashboard</div>
+                <div class="feed-detail">Sales Dashboard · Next run in 4h</div>
+              </div>
+              <div class="feed-time">4h ago</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM ROW -->
+    <div class="bottom-row">
+
+      <!-- RUN CHART -->
+      <div class="card fade d6">
+        <div class="section-header" style="margin-bottom:0.5rem">
+          <span class="section-title">Automation runs — last 7 days</span>
+        </div>
+        <div class="mini-chart" id="run-chart">
+          <div class="bar-wrap"><div class="bar" style="height:55%"></div></div>
+          <div class="bar-wrap"><div class="bar" style="height:70%"></div></div>
+          <div class="bar-wrap"><div class="bar" style="height:48%"></div></div>
+          <div class="bar-wrap"><div class="bar" style="height:82%"></div></div>
+          <div class="bar-wrap"><div class="bar" style="height:63%"></div></div>
+          <div class="bar-wrap"><div class="bar" style="height:91%"></div></div>
+          <div class="bar-wrap"><div class="bar today" style="height:74%"></div></div>
+        </div>
+        <div class="chart-labels">
+          <span class="chart-label">Mon</span><span class="chart-label">Tue</span>
+          <span class="chart-label">Wed</span><span class="chart-label">Thu</span>
+          <span class="chart-label">Fri</span><span class="chart-label">Sat</span>
+          <span class="chart-label" style="color:var(--violet);font-weight:600">Today</span>
+        </div>
+      </div>
+
+      <!-- TEAM ACTIVITY -->
+      <div class="card fade d7">
+        <div class="section-header">
+          <span class="section-title">Team activity</span>
+          <span class="section-action">Manage →</span>
+        </div>
+        <div class="team-list" id="team-list">
+          <div class="team-item">
+            <div class="team-av ta1">LR</div>
+            <div class="team-info">
+              <div class="team-name">Luke Ryan <span style="font-size:0.65rem;color:var(--muted)">(you)</span></div>
+              <div class="team-action-label">Editing Expense Reporter</div>
+            </div>
+            <div class="online-dot" title="Online"></div>
+          </div>
+          <div class="team-item">
+            <div class="team-av ta2">SA</div>
+            <div class="team-info">
+              <div class="team-name">Sarah A.</div>
+              <div class="team-action-label">Published Sales Dashboard</div>
+            </div>
+            <div class="team-time">2h ago</div>
+          </div>
+          <div class="team-item">
+            <div class="team-av ta3">JM</div>
+            <div class="team-info">
+              <div class="team-name">James M.</div>
+              <div class="team-action-label">Updated CRM automation</div>
+            </div>
+            <div class="online-dot"></div>
+          </div>
+          <div class="team-item">
+            <div class="team-av ta4">PN</div>
+            <div class="team-info">
+              <div class="team-name">Priya N.</div>
+              <div class="team-action-label">Fixed Slack webhook error</div>
+            </div>
+            <div class="team-time">1d ago</div>
+          </div>
+          <div class="team-item">
+            <div class="team-av ta5">TK</div>
+            <div class="team-info">
+              <div class="team-name">Tom K.</div>
+              <div class="team-action-label">Created Logistics Tracker</div>
+            </div>
+            <div class="offline-dot"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUICK ACTIONS -->
+      <div class="card fade d8">
+        <div class="section-header">
+          <span class="section-title">Quick actions</span>
+        </div>
+        <div class="quick-grid">
+          <button class="quick-btn" onclick="window.location.href='/apps'">
+            <span class="quick-icon">🏗</span>
+            <span class="quick-label">New app</span>
+            <span class="quick-sub">Start from template</span>
+          </button>
+          <button class="quick-btn" onclick="window.location.href='/automations'">
+            <span class="quick-icon">⚡</span>
+            <span class="quick-label">New automation</span>
+            <span class="quick-sub">Build a workflow</span>
+          </button>
+          <button class="quick-btn" onclick="window.location.href='/builder'">
+            <span class="quick-icon">🔌</span>
+            <span class="quick-label">Add integration</span>
+            <span class="quick-sub">300+ available</span>
+          </button>
+          <button class="quick-btn" onclick="window.location.href='/team'">
+            <span class="quick-icon">👥</span>
+            <span class="quick-label">Invite teammate</span>
+            <span class="quick-sub">18 seats left</span>
+          </button>
+          <button class="quick-btn" onclick="window.location.href='/analytics'">
+            <span class="quick-icon">📊</span>
+            <span class="quick-label">View analytics</span>
+            <span class="quick-sub">Usage & performance</span>
+          </button>
+          <button class="quick-btn" onclick="window.location.href='/billing'">
+            <span class="quick-icon">💳</span>
+            <span class="quick-label">Billing</span>
+            <span class="quick-sub">Pro · renews Jul 4</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  function setTab(el, type) {
+    document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+  }
+</script>
+</body>
+</html>
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const sb = createClient(
+  'https://xizckgqxdllbopsmbzis.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
+);
+
+function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+function setStyle(id, prop, val) { const el = document.getElementById(id); if (el) el.style[prop] = val; }
+function timeAgo(d) {
+  if (!d) return '—';
+  const diff = Date.now() - new Date(d).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'Just now';
+  if (m < 60) return m + 'm ago';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + 'h ago';
+  return Math.floor(h / 24) + 'd ago';
+}
+
+function clearAll() {
+  const grid = document.getElementById('apps-grid');
+  if (grid) grid.innerHTML = '';
+  const feed = document.getElementById('feed-list');
+  if (feed) feed.innerHTML = '';
+  const team = document.getElementById('team-list');
+  if (team) team.innerHTML = '';
+}
+
+async function loadDashboard() {
+  const raw = sessionStorage.getItem('flx_user');
+  const su = raw ? JSON.parse(raw) : null;
+  if (!su) return;
+
+  // Update sidebar
+  const name = su.name || su.email || 'User';
+  const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
+  setText('sidebar-name', name);
+  setText('sidebar-plan', (su.plan || 'Starter') + ' · ' + (su.role || 'Member'));
+  setText('sidebar-avatar', initials);
+  setText('greeting-name', name.split(' ')[0]);
+
+  // Update greeting time
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const h1 = document.querySelector('.greeting h1');
+  if (h1) h1.innerHTML = h1.innerHTML.replace('Good morning', greeting);
+
+  // Usage from session
+  const runsUsed  = su.runsUsed  || 0;
+  const runsTotal = su.runsTotal || 5000;
+  const seatsUsed  = su.seatsUsed  || 1;
+  const seatsTotal = su.seatsTotal || 5;
+  setText('runs-used',  runsUsed.toLocaleString());
+  setText('runs-total', runsTotal.toLocaleString());
+  setText('seats-used',  seatsUsed);
+  setText('seats-total', seatsTotal);
+  setStyle('runs-bar',  'width', Math.min(100, Math.round(runsUsed / runsTotal * 100)) + '%');
+  setStyle('seats-bar', 'width', Math.min(100, Math.round(seatsUsed / seatsTotal * 100)) + '%');
+
+  // Try real Supabase session
+  const { data: { session } } = await sb.auth.getSession();
+
+  if (session) {
+    clearAll();
+    await loadRealData(session.user, su);
+  } else {
+    // Test account — keep demo HTML but update sidebar
+    setText('runs-used',  su.runsUsed?.toLocaleString() || '0');
+    setText('stat-apps',  su.appsCount || '0');
+  }
+}
+
+async function loadRealData(user, su) {
+  try {
+    const { data: memberships } = await sb
+      .from('workspace_members')
+      .select('workspace_id, role, workspaces(*)')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .limit(1);
+
+    if (!memberships?.length) {
+      setText('stat-apps', 0); setText('stat-runs', 0); setText('stat-failed', 0);
+      showEmptyApps(); showEmptyFeed();
+      showEmptyTeam(su);
+      return;
+    }
+
+    const ws   = memberships[0].workspaces;
+    const wsId = memberships[0].workspace_id;
+
+    // Update session with workspace plan info
+    const updatedUser = { ...su, plan: ws.plan?.charAt(0).toUpperCase() + ws.plan?.slice(1) || su.plan, role: memberships[0].role || su.role, runsUsed: ws.runs_used || 0 };
+    sessionStorage.setItem('flx_user', JSON.stringify(updatedUser));
+    setText('sidebar-plan', updatedUser.plan + ' · ' + updatedUser.role);
+
+    const [appsRes, runsRes, membersRes] = await Promise.all([
+      sb.from('apps').select('*').eq('workspace_id', wsId).order('updated_at', { ascending: false }),
+      sb.from('automation_runs').select('*, automations(name)')
+        .eq('workspace_id', wsId)
+        .gte('started_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+        .order('started_at', { ascending: false }).limit(20),
+      sb.from('workspace_members').select('*, users(full_name, email)')
+        .eq('workspace_id', wsId).eq('status', 'active').limit(5)
+    ]);
+
+    const apps    = appsRes.data    || [];
+    const runs    = runsRes.data    || [];
+    const members = membersRes.data || [];
+
+    setText('stat-apps',   apps.filter(a => a.status === 'live').length);
+    setText('stat-runs',   runs.length > 1000 ? (runs.length / 1000).toFixed(1) + 'k' : runs.length);
+    setText('stat-failed', runs.filter(r => r.status === 'failed').length);
+
+    apps.length    ? renderApps(apps)    : showEmptyApps();
+    runs.length    ? renderFeed(runs)    : showEmptyFeed();
+    members.length ? renderTeam(members, user.email) : showEmptyTeam(su);
+
+  } catch (err) {
+    console.warn('Dashboard data error:', err.message);
+    setText('stat-apps', 0); setText('stat-runs', 0); setText('stat-failed', 0);
+    showEmptyApps(); showEmptyFeed(); showEmptyTeam(su);
+  }
+}
+
+function renderApps(apps) {
+  const grid = document.getElementById('apps-grid');
+  if (!grid) return;
+  const icons  = { web: '📊', mobile: '📱', automation: '⚡', form: '📝' };
+  const covers = { web: 'cover-v', mobile: 'cover-l', automation: 'cover-b', form: 'cover-o' };
+  grid.innerHTML = apps.slice(0, 4).map(app => `
+    <div class="app-card">
+      <div class="app-card-cover ${covers[app.type] || 'cover-v'}">
+        <span>${icons[app.type] || '📊'}</span>
+        <span class="app-status-badge badge ${app.status === 'live' ? 'badge-green' : app.status === 'paused' ? 'badge-yellow' : 'badge-muted'}">${app.status}</span>
+      </div>
+      <div class="app-card-body">
+        <div class="app-card-name">${app.name}</div>
+        <div class="app-type">${app.type} app</div>
+        <div class="app-meta">
+          <span class="app-users">${app.status === 'live' ? '👤 Live' : '📝 Draft'}</span>
+          <span class="app-updated">${timeAgo(app.updated_at)}</span>
+        </div>
+        <div class="app-actions">
+          <button class="app-btn primary" onclick="window.location.href='/builder'">Open</button>
+          <button class="app-btn" onclick="window.location.href='/builder'">Edit</button>
+          <button class="app-btn" onclick="window.location.href='/analytics'">Analytics</button>
+        </div>
+      </div>
+    </div>`).join('') +
+    `<div class="new-app-card" onclick="window.location.href='/apps'">
+      <div class="new-app-icon">＋</div>
+      <div class="new-app-label">Create new app</div>
       <div class="new-app-sub">Start from a template</div>
     </div>`;
 }
@@ -536,13 +972,13 @@ function showEmptyApps() {
 function renderFeed(runs) {
   const list = document.getElementById('feed-list');
   if (!list) return;
-  const dot = { success:'fd-green', failed:'fd-red', running:'fd-yellow', skipped:'fd-blue' };
+  const dot = { success: 'fd-green', failed: 'fd-red', running: 'fd-yellow', skipped: 'fd-blue' };
   list.innerHTML = runs.map(r => `
     <div class="feed-item">
-      <div class="feed-dot-wrap"><div class="feed-dot ${dot[r.status]||'fd-blue'}"></div></div>
+      <div class="feed-dot-wrap"><div class="feed-dot ${dot[r.status] || 'fd-blue'}"></div></div>
       <div class="feed-body">
         <div class="feed-name">${r.automations?.name || 'Automation'}</div>
-        <div class="feed-detail">${r.status==='failed'?'⚠ '+(r.error_message||'Failed'):r.status==='running'?'Running…':'✓ Completed'}</div>
+        <div class="feed-detail">${r.status === 'failed' ? '⚠ ' + (r.error_message || 'Failed') : r.status === 'running' ? 'Running…' : '✓ Completed'}</div>
       </div>
       <div class="feed-time">${timeAgo(r.started_at)}</div>
     </div>`).join('');
@@ -559,38 +995,37 @@ function showEmptyFeed() {
     </div>`;
 }
 
-function renderTeam(members) {
+function renderTeam(members, currentEmail) {
   const list = document.getElementById('team-list');
   if (!list) return;
-  const colors = ['ta1','ta2','ta3','ta4','ta5'];
-  const su = JSON.parse(sessionStorage.getItem('flx_user')||'{}');
-  list.innerHTML = members.map((m,i) => {
-    const name = m.users?.full_name || m.email?.split('@')[0] || 'Member';
-    const init = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-    const isYou = m.email === su.email;
+  const colors = ['ta1', 'ta2', 'ta3', 'ta4', 'ta5'];
+  list.innerHTML = members.map((m, i) => {
+    const name   = m.users?.full_name || m.email?.split('@')[0] || 'Member';
+    const init   = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    const isYou  = m.email === currentEmail || m.users?.email === currentEmail;
     return `
     <div class="team-item">
-      <div class="team-av ${colors[i%5]}">${init}</div>
+      <div class="team-av ${colors[i % 5]}">${init}</div>
       <div class="team-info">
-        <div class="team-name">${name}${isYou?' <span style="font-size:0.65rem;color:var(--muted)">(you)</span>':''}</div>
+        <div class="team-name">${name}${isYou ? ' <span style="font-size:0.65rem;color:var(--muted)">(you)</span>' : ''}</div>
         <div class="team-action-label">${m.role}</div>
       </div>
-      <div class="${m.status==='active'?'online-dot':'offline-dot'}"></div>
+      <div class="${m.status === 'active' ? 'online-dot' : 'offline-dot'}"></div>
     </div>`;
   }).join('');
 }
 
-function showEmptyTeam(user) {
+function showEmptyTeam(su) {
   const list = document.getElementById('team-list');
   if (!list) return;
-  const name = user.name || user.email || 'You';
-  const init = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  const name = su.name || su.email || 'You';
+  const init = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   list.innerHTML = `
     <div class="team-item">
       <div class="team-av ta1">${init}</div>
       <div class="team-info">
         <div class="team-name">${name} <span style="font-size:0.65rem;color:var(--muted)">(you)</span></div>
-        <div class="team-action-label">${user.role||'Owner'}</div>
+        <div class="team-action-label">${su.role || 'Owner'}</div>
       </div>
       <div class="online-dot"></div>
     </div>
@@ -599,13 +1034,5 @@ function showEmptyTeam(user) {
     </div>`;
 }
 
-// Set greeting time
-const hour = new Date().getHours();
-const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-const h1 = document.querySelector('.greeting h1');
-if (h1) h1.innerHTML = h1.innerHTML.replace('Good morning', greeting);
-
 loadDashboard();
 </script>
-</body>
-</html>

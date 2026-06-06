@@ -236,37 +236,49 @@ function timeAgo(d) {
 }
 
 async function loadApps() {
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) return;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+      // Test account - show loading done but empty
+      const grid = document.getElementById('grid-view');
+      if (grid) grid.innerHTML = `<div class="new-app-card" onclick="openModal()" style="grid-column:1/-1;min-height:220px"><div class="new-app-icon" style="font-size:2rem">🏗</div><div class="new-app-label">Build your first app</div><div class="new-app-sub">Sign in with a real account to save apps</div></div>`;
+      ['stat-total','stat-live','stat-draft','stat-paused'].forEach(id => setText(id, 0));
+      return;
+    }
 
-  const { data: memberships } = await sb
-    .from('workspace_members')
-    .select('workspace_id')
-    .eq('user_id', session.user.id)
-    .eq('status', 'active')
-    .limit(1);
+    const { data: memberships, error: mErr } = await sb
+      .from('workspace_members')
+      .select('workspace_id')
+      .eq('user_id', session.user.id)
+      .eq('status', 'active')
+      .limit(1);
 
-  if (!memberships?.length) return;
-  const wsId = memberships[0].workspace_id;
+    if (mErr || !memberships?.length) {
+      const grid = document.getElementById('grid-view');
+      if (grid) grid.innerHTML = `<div class="new-app-card" onclick="openModal()" style="grid-column:1/-1;min-height:220px"><div class="new-app-icon" style="font-size:2rem">🏗</div><div class="new-app-label">Build your first app</div><div class="new-app-sub">Start from a template or blank canvas</div></div>`;
+      ['stat-total','stat-live','stat-draft','stat-paused'].forEach(id => setText(id, 0));
+      return;
+    }
+    const wsId = memberships[0].workspace_id;
 
-  const { data: apps } = await sb
-    .from('apps')
-    .select('*')
-    .eq('workspace_id', wsId)
-    .order('updated_at', { ascending: false });
+    const { data: apps, error: aErr } = await sb
+      .from('apps')
+      .select('*')
+      .eq('workspace_id', wsId)
+      .order('updated_at', { ascending: false });
 
-  const list = apps || [];
-  const live    = list.filter(a => a.status === 'live').length;
-  const draft   = list.filter(a => a.status === 'draft').length;
-  const paused  = list.filter(a => a.status === 'paused').length;
-
-  setText('stat-total', list.length);
-  setText('stat-live',  live);
-  setText('stat-draft', draft);
-  setText('stat-paused', paused);
+    const list = apps || [];
+    const live    = list.filter(a => a.status === 'live').length;
+    const draft   = list.filter(a => a.status === 'draft').length;
+    const paused  = list.filter(a => a.status === 'paused').length;
 
   const grid = document.getElementById('grid-view');
   if (!grid) return;
+
+  setText('stat-total', list.length);
+  setText('stat-live',  list.filter(a=>a.status==='live').length);
+  setText('stat-draft', list.filter(a=>a.status==='draft').length);
+  setText('stat-paused',list.filter(a=>a.status==='paused').length);
 
   if (!list.length) {
     grid.innerHTML = `
@@ -329,6 +341,15 @@ async function deleteApp(appId) {
   loadApps();
 }
 
+  } catch(err) {
+    console.warn('Apps load error:', err.message);
+    const grid = document.getElementById('grid-view');
+    if (grid) grid.innerHTML = `<div class="new-app-card" onclick="openModal()" style="grid-column:1/-1;min-height:220px"><div class="new-app-icon" style="font-size:2rem">🏗</div><div class="new-app-label">Build your first app</div><div class="new-app-sub">Start from a template or blank canvas</div></div>`;
+    ['stat-total','stat-live','stat-draft','stat-paused'].forEach(id => setText(id, 0));
+  }
+}
+
+function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
 window.deleteApp = deleteApp;
 loadApps();
 </script>
