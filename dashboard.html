@@ -384,6 +384,46 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
   .content { padding: 1.25rem; }
 }
 </style>
+
+<style>
+.metric-card { cursor: grab; user-select: none; transition: transform .15s, box-shadow .15s, opacity .15s; }
+.metric-card:active { cursor: grabbing; }
+.metric-card.dragging { opacity: .4; transform: scale(.97); }
+.metric-card.drag-over { box-shadow: 0 0 0 2px var(--violet); transform: scale(1.02); }
+.metrics-row { position: relative; }
+.drag-handle {
+  position: absolute; top: 8px; right: 8px;
+  color: var(--muted); font-size: 12px; opacity: 0;
+  transition: opacity .15s; cursor: grab; line-height: 1;
+}
+.metric-card:hover .drag-handle { opacity: 1; }
+</style>
+
+<style>
+/* ── DRAGGABLE TILES ── */
+.tile { cursor: grab; transition: transform .15s, box-shadow .15s, opacity .15s; position: relative; }
+.tile:active { cursor: grabbing; }
+.tile.dragging { opacity: .4; transform: scale(.97); }
+.tile.drag-over { box-shadow: 0 0 0 2px var(--violet), 0 4px 20px rgba(123,47,255,.3); transform: scale(1.02); }
+.tile-drag-handle {
+  position: absolute; top: 8px; right: 8px;
+  color: rgba(255,255,255,.15); font-size: 14px; cursor: grab;
+  opacity: 0; transition: opacity .2s; line-height: 1;
+  user-select: none;
+}
+.tile:hover .tile-drag-handle { opacity: 1; }
+.tile-grid { transition: none; }
+
+/* Save indicator */
+.layout-saved {
+  position: fixed; bottom: 20px; right: 20px;
+  background: var(--surface); border: 1px solid rgba(163,255,71,.3);
+  color: var(--lime); font-size: 11px; padding: 6px 14px;
+  border-radius: 7px; z-index: 999; opacity: 0;
+  transition: opacity .3s; pointer-events: none;
+}
+.layout-saved.show { opacity: 1; }
+</style>
 </head>
 <body>
 
@@ -469,8 +509,8 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
     </div>
 
     <!-- METRICS -->
-    <div class="metrics-row fade d3">
-      <div class="metric-card mc-v">
+    <div class="metrics-row fade d3 tile-grid" id="metrics-grid">
+      <div class="metric-card mc-v tile" draggable="true" data-tile="stat-apps" draggable="true" data-tile="active-apps" id="tile-active-apps"><span class="drag-handle">⠿</span>
         <div class="metric-header">
           <span class="metric-icon">📱</span>
           <span class="metric-trend trend-up" id="trend-apps" style="display:none">↑ 0</span>
@@ -478,7 +518,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
         <div class="metric-val" id="stat-apps">—</div>
         <div class="metric-label">Active apps</div>
       </div>
-      <div class="metric-card mc-b">
+      <div class="metric-card mc-b tile" draggable="true" data-tile="stat-runs" draggable="true" data-tile="auto-runs" id="tile-auto-runs"><span class="drag-handle">⠿</span>
         <div class="metric-header">
           <span class="metric-icon">⚡</span>
           <span class="metric-trend trend-up" id="trend-runs" style="display:none">↑ 0%</span>
@@ -486,7 +526,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
         <div class="metric-val" id="stat-runs">—</div>
         <div class="metric-label">Automation runs this month</div>
       </div>
-      <div class="metric-card mc-l">
+      <div class="metric-card mc-l tile" draggable="true" data-tile="stat-users" draggable="true" data-tile="end-users" id="tile-end-users"><span class="drag-handle">⠿</span>
         <div class="metric-header">
           <span class="metric-icon">👤</span>
           <span class="metric-trend trend-up" id="trend-users" style="display:none">↑ 0%</span>
@@ -494,7 +534,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
         <div class="metric-val" id="stat-users">0</div>
         <div class="metric-label">End users served</div>
       </div>
-      <div class="metric-card mc-r">
+      <div class="metric-card mc-r tile" draggable="true" data-tile="stat-failed" draggable="true" data-tile="failed-autos" id="tile-failed-autos"><span class="drag-handle">⠿</span>
         <div class="metric-header">
           <span class="metric-icon">⚠</span>
           <span class="metric-trend trend-down" id="trend-failed" style="display:none">0</span>
@@ -610,10 +650,11 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
     </div>
 
     <!-- BOTTOM ROW -->
-    <div class="bottom-row">
+    <div class="bottom-row tile-grid" id="bottom-grid">
 
       <!-- RUN CHART -->
-      <div class="card fade d6" id="runs-chart-card">
+      <div class="card fade d6 tile" draggable="true" data-tile="runs-chart" id="runs-chart-card">
+        <span class="tile-drag-handle" title="Drag to reorder">⠿</span>
         <div id="runs-chart-inner">
         <div class="section-header" style="margin-bottom:0.5rem">
           <span class="section-title">Automation runs — last 7 days</span>
@@ -623,7 +664,8 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
       </div>
 
       <!-- TEAM ACTIVITY -->
-      <div class="card fade d7">
+      <div class="card fade d7 tile" draggable="true" data-tile="team-activity" id="team-activity-card">
+        <span class="tile-drag-handle" title="Drag to reorder">⠿</span>
         <div class="section-header">
           <span class="section-title">Team activity</span>
           <span class="section-action">Manage →</span>
@@ -673,7 +715,8 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
       </div>
 
       <!-- QUICK ACTIONS -->
-      <div class="card fade d8">
+      <div class="card fade d8 tile" draggable="true" data-tile="quick-actions" id="quick-actions-card">
+        <span class="tile-drag-handle" title="Drag to reorder">⠿</span>
         <div class="section-header">
           <span class="section-title">Quick actions</span>
         </div>
@@ -722,6 +765,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
     el.classList.add('active');
   }
 </script>
+<div class="layout-saved" id="layout-saved">✓ Layout saved</div>
 </body>
 </html>
 <script type="module">
@@ -1009,7 +1053,247 @@ function renderRunsChart(runs) {
     `<span class="chart-label"${d.isToday ? ' style="color:var(--violet);font-weight:600"' : ''}>${d.isToday ? 'Today' : d.label}</span>`).join('');
 }
 
+
+// ── TILE DRAG & DROP ──
+(function() {
+  let dragSrc = null;
+
+  function saveTileOrder() {
+    const tiles = [...document.querySelectorAll('.metric-card[data-tile]')];
+    localStorage.setItem('flx_tile_order', JSON.stringify(tiles.map(t => t.dataset.tile)));
+  }
+
+  function restoreTileOrder() {
+    const saved = localStorage.getItem('flx_tile_order');
+    if (!saved) return;
+    try {
+      const order = JSON.parse(saved);
+      const row = document.querySelector('.metrics-row');
+      if (!row) return;
+      order.forEach(tileId => {
+        const el = document.getElementById('tile-' + tileId);
+        if (el) row.appendChild(el);
+      });
+    } catch(e) {}
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    restoreTileOrder();
+
+    document.querySelectorAll('.metric-card[data-tile]').forEach(card => {
+      card.addEventListener('dragstart', e => {
+        dragSrc = card;
+        card.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      card.addEventListener('dragend', () => {
+        card.classList.remove('dragging');
+        document.querySelectorAll('.metric-card').forEach(c => c.classList.remove('drag-over'));
+        saveTileOrder();
+      });
+      card.addEventListener('dragover', e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (card !== dragSrc) card.classList.add('drag-over');
+      });
+      card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+      card.addEventListener('drop', e => {
+        e.preventDefault();
+        card.classList.remove('drag-over');
+        if (!dragSrc || dragSrc === card) return;
+        const row = card.parentNode;
+        const cards = [...row.querySelectorAll('.metric-card[data-tile]')];
+        const srcIdx = cards.indexOf(dragSrc);
+        const dstIdx = cards.indexOf(card);
+        if (srcIdx < dstIdx) row.insertBefore(dragSrc, card.nextSibling);
+        else row.insertBefore(dragSrc, card);
+        saveTileOrder();
+      });
+    });
+  });
+})();
+
 loadDashboard();
+
+
+// ═══════════════════════════════════════════
+// DRAG AND DROP TILE REORDERING
+// ═══════════════════════════════════════════
+
+let dragSrcEl = null;
+let saveLayoutTimer = null;
+
+function initDraggableTiles(gridId) {
+  const grid = document.getElementById(gridId);
+  if (!grid) return;
+
+  grid.querySelectorAll('.tile').forEach(tile => {
+    tile.addEventListener('dragstart', e => {
+      dragSrcEl = tile;
+      tile.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', tile.dataset.tile);
+    });
+
+    tile.addEventListener('dragend', () => {
+      tile.classList.remove('dragging');
+      grid.querySelectorAll('.tile').forEach(t => t.classList.remove('drag-over'));
+      saveLayout();
+    });
+
+    tile.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      grid.querySelectorAll('.tile').forEach(t => t.classList.remove('drag-over'));
+      if (tile !== dragSrcEl) tile.classList.add('drag-over');
+    });
+
+    tile.addEventListener('dragleave', () => {
+      tile.classList.remove('drag-over');
+    });
+
+    tile.addEventListener('drop', e => {
+      e.preventDefault();
+      tile.classList.remove('drag-over');
+      if (dragSrcEl && dragSrcEl !== tile) {
+        // Swap positions
+        const grid = tile.parentNode;
+        const tiles = [...grid.querySelectorAll('.tile')];
+        const srcIdx = tiles.indexOf(dragSrcEl);
+        const tgtIdx = tiles.indexOf(tile);
+        if (srcIdx < tgtIdx) {
+          grid.insertBefore(dragSrcEl, tile.nextSibling);
+        } else {
+          grid.insertBefore(dragSrcEl, tile);
+        }
+      }
+    });
+  });
+}
+
+function getLayoutOrder(gridId) {
+  const grid = document.getElementById(gridId);
+  if (!grid) return [];
+  return [...grid.querySelectorAll('.tile')].map(t => t.dataset.tile);
+}
+
+function applyLayoutOrder(gridId, order) {
+  const grid = document.getElementById(gridId);
+  if (!grid || !order?.length) return;
+  order.forEach(tileId => {
+    const tile = grid.querySelector(`[data-tile="${tileId}"]`);
+    if (tile) grid.appendChild(tile);
+  });
+}
+
+async function saveLayout() {
+  const layout = {
+    metrics: getLayoutOrder('metrics-grid'),
+    bottom:  getLayoutOrder('bottom-grid'),
+  };
+
+  // Save to localStorage instantly
+  localStorage.setItem('flx_dashboard_layout', JSON.stringify(layout));
+
+  // Debounce Supabase save
+  clearTimeout(saveLayoutTimer);
+  saveLayoutTimer = setTimeout(async () => {
+    try {
+      const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+      const sb = createClient(
+        'https://xizckgqxdllbopsmbzis.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
+      );
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) return;
+
+      const { data: memberships } = await sb
+        .from('workspace_members')
+        .select('workspace_id')
+        .eq('user_id', session.user.id)
+        .eq('status', 'active')
+        .limit(1);
+
+      if (!memberships?.length) return;
+
+      await sb.from('user_layouts').upsert({
+        user_id:      session.user.id,
+        workspace_id: memberships[0].workspace_id,
+        page:         'dashboard',
+        layout_json:  layout,
+        updated_at:   new Date().toISOString(),
+      }, { onConflict: 'user_id,workspace_id,page' });
+
+      // Show saved indicator
+      const indicator = document.getElementById('layout-saved');
+      if (indicator) {
+        indicator.classList.add('show');
+        setTimeout(() => indicator.classList.remove('show'), 2000);
+      }
+    } catch(err) {
+      console.warn('Layout save error:', err.message);
+    }
+  }, 1000);
+}
+
+async function loadLayout() {
+  // Try localStorage first (instant)
+  const local = localStorage.getItem('flx_dashboard_layout');
+  if (local) {
+    try {
+      const layout = JSON.parse(local);
+      applyLayoutOrder('metrics-grid', layout.metrics);
+      applyLayoutOrder('bottom-grid',  layout.bottom);
+    } catch(e) {}
+  }
+
+  // Then try Supabase (authoritative)
+  try {
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    const sb = createClient(
+      'https://xizckgqxdllbopsmbzis.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
+    );
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+
+    const { data: memberships } = await sb
+      .from('workspace_members')
+      .select('workspace_id')
+      .eq('user_id', session.user.id)
+      .eq('status', 'active')
+      .limit(1);
+
+    if (!memberships?.length) return;
+
+    const { data: layoutData } = await sb
+      .from('user_layouts')
+      .select('layout_json')
+      .eq('user_id', session.user.id)
+      .eq('workspace_id', memberships[0].workspace_id)
+      .eq('page', 'dashboard')
+      .single();
+
+    if (layoutData?.layout_json) {
+      const layout = layoutData.layout_json;
+      applyLayoutOrder('metrics-grid', layout.metrics);
+      applyLayoutOrder('bottom-grid',  layout.bottom);
+      // Update localStorage with server version
+      localStorage.setItem('flx_dashboard_layout', JSON.stringify(layout));
+    }
+  } catch(err) {
+    // Not logged in or no layout saved yet — use default order
+  }
+}
+
+// Initialise drag and drop on both grids
+initDraggableTiles('metrics-grid');
+initDraggableTiles('bottom-grid');
+
+// Load saved layout
+loadLayout();
+
 </script>
+<div class="layout-saved" id="layout-saved">✓ Layout saved</div>
 </body>
 </html>
