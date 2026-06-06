@@ -16,12 +16,12 @@ const Nav = (() => {
 
         <div class="nav-section-label">Build</div>
         <a class="nav-item" data-page="/builder" href="/builder"><span class="nav-icon">🏗</span> App Builder</a>
-        <a class="nav-item" data-page="/automations" href="/automations"><span class="nav-icon">⚡</span> Automations <span class="nav-badge">3</span></a>
+        <a class="nav-item" data-page="/automations" href="/automations"><span class="nav-icon">⚡</span> Automations <span class="nav-badge" id="nav-auto-badge" style="display:none">0</span></a>
         <a class="nav-item" data-page="database.html" href="#"><span class="nav-icon">🗄</span> Database</a>
         <a class="nav-item" data-page="integrations.html" href="#"><span class="nav-icon">🔌</span> Integrations</a>
 
         <div class="nav-section-label">Manage</div>
-        <a class="nav-item" data-page="/apps" href="/apps"><span class="nav-icon">📱</span> My Apps <span class="nav-badge green">12</span></a>
+        <a class="nav-item" data-page="/apps" href="/apps"><span class="nav-icon">📱</span> My Apps <span class="nav-badge green" id="nav-apps-badge" style="display:none">0</span></a>
         <a class="nav-item" data-page="/team" href="/team"><span class="nav-icon">👥</span> Team</a>
         <a class="nav-item" data-page="/analytics" href="/analytics"><span class="nav-icon">📊</span> Analytics</a>
 
