@@ -9,29 +9,29 @@ const Nav = (() => {
     <aside class="sidebar">
       <div class="sidebar-logo">
         <div class="logo-mark">⬡</div>
-        <span class="logo-text" onclick="window.location='dashboard.html'" style="cursor:pointer">Forgelux</span>
+        <span class="logo-text" onclick="window.location='/dashboard'" style="cursor:pointer">Forgelux</span>
       </div>
       <nav class="sidebar-nav">
-        <a class="nav-item" data-page="dashboard.html" href="dashboard.html"><span class="nav-icon">⊞</span> Overview</a>
+        <a class="nav-item" data-page="/dashboard" href="/dashboard"><span class="nav-icon">⊞</span> Overview</a>
 
         <div class="nav-section-label">Build</div>
-        <a class="nav-item" data-page="builder.html" href="builder.html"><span class="nav-icon">🏗</span> App Builder</a>
-        <a class="nav-item" data-page="automations.html" href="automations.html"><span class="nav-icon">⚡</span> Automations <span class="nav-badge">3</span></a>
+        <a class="nav-item" data-page="/builder" href="/builder"><span class="nav-icon">🏗</span> App Builder</a>
+        <a class="nav-item" data-page="/automations" href="/automations"><span class="nav-icon">⚡</span> Automations <span class="nav-badge">3</span></a>
         <a class="nav-item" data-page="database.html" href="#"><span class="nav-icon">🗄</span> Database</a>
         <a class="nav-item" data-page="integrations.html" href="#"><span class="nav-icon">🔌</span> Integrations</a>
 
         <div class="nav-section-label">Manage</div>
-        <a class="nav-item" data-page="apps.html" href="apps.html"><span class="nav-icon">📱</span> My Apps <span class="nav-badge green">12</span></a>
-        <a class="nav-item" data-page="team.html" href="team.html"><span class="nav-icon">👥</span> Team</a>
-        <a class="nav-item" data-page="analytics.html" href="analytics.html"><span class="nav-icon">📊</span> Analytics</a>
+        <a class="nav-item" data-page="/apps" href="/apps"><span class="nav-icon">📱</span> My Apps <span class="nav-badge green">12</span></a>
+        <a class="nav-item" data-page="/team" href="/team"><span class="nav-icon">👥</span> Team</a>
+        <a class="nav-item" data-page="/analytics" href="/analytics"><span class="nav-icon">📊</span> Analytics</a>
 
         <div class="nav-section-label">Account</div>
-        <a class="nav-item" data-page="billing.html" href="billing.html"><span class="nav-icon">💳</span> Billing</a>
-        <a class="nav-item" data-page="settings.html" href="settings.html"><span class="nav-icon">⚙</span> Settings</a>
+        <a class="nav-item" data-page="/billing" href="/billing"><span class="nav-icon">💳</span> Billing</a>
+        <a class="nav-item" data-page="/settings" href="/settings"><span class="nav-icon">⚙</span> Settings</a>
         <a class="nav-item" href="https://docs.forgelux.co.uk" target="_blank"><span class="nav-icon">📖</span> Docs</a>
       </nav>
       <div class="sidebar-bottom">
-        <div class="user-card" onclick="window.location='settings.html'" style="cursor:pointer">
+        <div class="user-card" onclick="window.location='/settings'" style="cursor:pointer">
           <div class="user-avatar">${user.initials}</div>
           <div>
             <div class="user-name">${user.name}</div>

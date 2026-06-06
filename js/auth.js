@@ -82,7 +82,7 @@ function getUser() {
 
 function logout() {
   sessionStorage.removeItem('flx_user');
-  window.location.href = '/login.html';
+  window.location.href = '/login';
 }
 
 // ── Auth check — call on every protected page ──
@@ -93,7 +93,7 @@ function requireAuth() {
   if (PUBLIC_PAGES.includes(page)) return null;
   const user = getUser();
   if (!user) {
-    window.location.href = '/login.html';
+    window.location.href = '/login';
     return null;
   }
   return user;

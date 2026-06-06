@@ -1,16 +1,15 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
-  "routes": [
-    { "src": "/dashboard", "dest": "/dashboard.html" },
-    { "src": "/apps", "dest": "/apps.html" },
-    { "src": "/builder", "dest": "/builder.html" },
-    { "src": "/automations", "dest": "/automations.html" },
-    { "src": "/analytics", "dest": "/analytics.html" },
-    { "src": "/team", "dest": "/team.html" },
-    { "src": "/billing", "dest": "/billing.html" },
-    { "src": "/settings", "dest": "/settings.html" },
-    { "src": "/login", "dest": "/login.html" },
-    { "src": "/", "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/dashboard", "destination": "/dashboard.html" },
+    { "source": "/apps", "destination": "/apps.html" },
+    { "source": "/builder", "destination": "/builder.html" },
+    { "source": "/automations", "destination": "/automations.html" },
+    { "source": "/analytics", "destination": "/analytics.html" },
+    { "source": "/team", "destination": "/team.html" },
+    { "source": "/billing", "destination": "/billing.html" },
+    { "source": "/settings", "destination": "/settings.html" },
+    { "source": "/login", "destination": "/login.html" }
   ]
 }

@@ -70,7 +70,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 
 <!-- LEFT PANEL -->
 <div class="left">
-  <a class="left-logo" href="index.html">Forgelux</a>
+  <a class="left-logo" href="/index">Forgelux</a>
   <div class="left-body">
     <h2>Your apps.<br><span class="gr">Forged here.</span></h2>
     <p>Join businesses building custom web apps, mobile tools and automations — without writing a single line of code.</p>
@@ -192,7 +192,7 @@ function doSignIn() {
 
   if (user) {
     sessionStorage.setItem('flx_user', JSON.stringify(user));
-    window.location.href = 'dashboard.html';
+    window.location.href = '/dashboard';
   } else {
     showErr(errEl, 'Incorrect email or password. Try luke@forgelux.co.uk / Forgelux123!');
   }
@@ -211,13 +211,13 @@ function doSignUp() {
   // Demo: create a temporary session with their name
   const user = { ...ACCOUNTS[0], name: fname, initials: fname.charAt(0).toUpperCase() + (document.getElementById('up-lname').value.charAt(0).toUpperCase() || '') };
   sessionStorage.setItem('flx_user', JSON.stringify(user));
-  window.location.href = 'dashboard.html';
+  window.location.href = '/dashboard';
 }
 
 // ── SOCIAL LOGIN (demo) ──
 function socialLogin() {
   sessionStorage.setItem('flx_user', JSON.stringify(ACCOUNTS[0]));
-  window.location.href = 'dashboard.html';
+  window.location.href = '/dashboard';
 }
 
 // ── HELPERS ──
