@@ -869,7 +869,12 @@ async function loadDashboard() {
     // Real Supabase user - load real data
     await loadRealData(session.user);
   } else {
-    // Test account - show personalised empty state (no dummy data)
+    // Test account OR no Supabase session
+    // Clear hardcoded content and show empty state
+    const grid = document.getElementById('apps-grid');
+    if (grid) grid.innerHTML = '';
+    const feed = document.getElementById('feed-list');
+    if (feed) feed.innerHTML = '';
     updateMetrics({ totalApps: 0, liveApps: 0, totalRuns: 0, failedRuns: 0 });
     showEmptyApps();
     showEmptyFeed();
@@ -878,6 +883,13 @@ async function loadDashboard() {
 }
 
 async function loadRealData(user) {
+  // Clear hardcoded content immediately
+  const grid = document.getElementById('apps-grid');
+  if (grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--muted);font-size:11px">Loading your apps…</div>';
+  const feed = document.getElementById('feed-list');
+  if (feed) feed.innerHTML = '';
+  const team = document.getElementById('team-list');
+  if (team) team.innerHTML = '';
   try {
     // Get user's workspaces
     const { data: memberships } = await sb
@@ -948,7 +960,7 @@ function updateMetrics({ totalApps, liveApps, totalRuns, failedRuns }) {
 function renderApps(apps) {
   const grid = document.getElementById('apps-grid');
   if (!grid) return;
-  if (!apps.length) { showEmptyApps(); return; }
+  if (!apps || !apps.length) { showEmptyApps(); return; }
   const icons = { web:'📊', mobile:'📱', automation:'⚡', form:'📝' };
   const covers = { web:'cover-v', mobile:'cover-l', automation:'cover-b', form:'cover-o' };
   grid.innerHTML = apps.slice(0,4).map(app => `
@@ -992,7 +1004,8 @@ function showEmptyApps() {
 
 function renderFeed(runs) {
   const list = document.getElementById('feed-list');
-  if (!list || !runs.length) return;
+  if (!list) return;
+  if (!runs || !runs.length) { showEmptyFeed(); return; }
   const dotClass = { success:'fd-green', failed:'fd-red', running:'fd-yellow', skipped:'fd-blue' };
   list.innerHTML = runs.map(r => `
     <div class="feed-item">
@@ -1007,7 +1020,8 @@ function renderFeed(runs) {
 
 function renderTeam(members) {
   const list = document.getElementById('team-list');
-  if (!list || !members.length) return;
+  if (!list) return;
+  if (!members || !members.length) { showEmptyTeam(JSON.parse(sessionStorage.getItem('flx_user')||'{}')); return; }
   const colors = ['ta1','ta2','ta3','ta4','ta5'];
   list.innerHTML = members.map((m,i) => {
     const name = m.users?.full_name || m.email?.split('@')[0] || 'Member';
