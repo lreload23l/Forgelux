@@ -429,10 +429,10 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
 
   <div class="sidebar-bottom">
     <div class="user-card">
-      <div class="user-avatar">LR</div>
+      <div class="user-avatar" id="sidebar-avatar">LR</div>
       <div>
-        <div class="user-name">Luke Ryan</div>
-        <div class="user-plan">Pro Plan</div>
+        <div class="user-name" id="sidebar-name">Luke Ryan</div>
+        <div class="user-plan" id="sidebar-plan">Pro Plan</div>
       </div>
       <span class="user-chevron" onclick="sessionStorage.removeItem('flx_user');window.location.href='/login'" title="Sign out" style="cursor:pointer">⏻</span>
     </div>
@@ -830,40 +830,50 @@ const sb = createClient(
 );
 
 async function loadDashboard() {
-  // Get current user from session
+  // Get current user from session storage
   const raw = sessionStorage.getItem('flx_user');
   const sessionUser = raw ? JSON.parse(raw) : null;
   if (!sessionUser) return;
 
-  // Update greeting
-  const firstName = (sessionUser.name || '').split(' ')[0] || 'there';
-  const greetEl = document.getElementById('greeting-name');
-  if (greetEl) greetEl.textContent = firstName;
+  // Update sidebar with real user info
+  const name = sessionUser.name || sessionUser.email || 'User';
+  const firstName = name.split(' ')[0];
+  const initials = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2) || '?';
+  const plan = sessionUser.plan || 'Starter';
+  const role = sessionUser.role || 'Member';
 
-  // Update usage banner from session
-  const runsUsed = sessionUser.runsUsed || 0;
-  const runsTotal = sessionUser.runsTotal || 50000;
-  const seatsUsed = sessionUser.seatsUsed || 1;
-  const seatsTotal = sessionUser.seatsTotal || 25;
-  const runsPct = Math.min(100, Math.round((runsUsed/runsTotal)*100));
+  setText('sidebar-name', name);
+  setText('sidebar-plan', plan + ' · ' + role);
+  setText('sidebar-avatar', initials);
+  setText('greeting-name', firstName);
+
+  // Update usage banner
+  const runsUsed  = sessionUser.runsUsed  || 0;
+  const runsTotal = sessionUser.runsTotal || 5000;
+  const seatsUsed  = sessionUser.seatsUsed  || 1;
+  const seatsTotal = sessionUser.seatsTotal || 5;
+  const runsPct  = Math.min(100, Math.round((runsUsed/runsTotal)*100));
   const seatsPct = Math.min(100, Math.round((seatsUsed/seatsTotal)*100));
 
-  setText('runs-used', runsUsed.toLocaleString());
+  setText('runs-used',  runsUsed.toLocaleString());
   setText('runs-total', runsTotal.toLocaleString());
-  setText('seats-used', seatsUsed);
+  setText('seats-used',  seatsUsed);
   setText('seats-total', seatsTotal);
-  setStyle('runs-bar', 'width', runsPct+'%');
+  setStyle('runs-bar',  'width', runsPct+'%');
   setStyle('seats-bar', 'width', seatsPct+'%');
 
-  // Try to get Supabase session for real data
+  // Try Supabase session for real data
   const { data: { session } } = await sb.auth.getSession();
 
   if (session) {
+    // Real Supabase user - load real data
     await loadRealData(session.user);
   } else {
-    // No real session - show demo data but personalised
+    // Test account - show personalised empty state (no dummy data)
     updateMetrics({ totalApps: 0, liveApps: 0, totalRuns: 0, failedRuns: 0 });
     showEmptyApps();
+    showEmptyFeed();
+    showEmptyTeam(sessionUser);
   }
 }
 
@@ -1033,6 +1043,35 @@ function timeAgo(dateStr) {
   const hrs = Math.floor(mins/60);
   if (hrs < 24) return hrs+'h ago';
   return Math.floor(hrs/24)+'d ago';
+}
+
+function showEmptyFeed() {
+  const list = document.getElementById('feed-list');
+  if (!list) return;
+  list.innerHTML = `
+    <div style="text-align:center;padding:2rem 1rem;color:var(--muted);font-size:11px;line-height:1.6">
+      <div style="font-size:1.5rem;margin-bottom:8px;opacity:.3">⚡</div>
+      No automation runs yet.<br>
+      <a href="/automations" style="color:var(--violet)">Create your first automation →</a>
+    </div>`;
+}
+
+function showEmptyTeam(user) {
+  const list = document.getElementById('team-list');
+  if (!list) return;
+  const initials = (user.name||'U').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  list.innerHTML = `
+    <div class="team-item">
+      <div class="team-av ta1">${initials}</div>
+      <div class="team-info">
+        <div class="team-name">${user.name||user.email||'You'} <span style="font-size:0.65rem;color:var(--muted)">(you)</span></div>
+        <div class="team-action-label">${user.role||'Owner'}</div>
+      </div>
+      <div class="online-dot"></div>
+    </div>
+    <div style="text-align:center;padding:1rem;font-size:11px;color:var(--muted)">
+      <a href="/team" style="color:var(--violet)">Invite team members →</a>
+    </div>`;
 }
 
 // Set greeting time
