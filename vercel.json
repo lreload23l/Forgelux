@@ -41,6 +41,10 @@
     {
       "source": "/database",
       "destination": "/database.html"
+    },
+    {
+      "source": "/integrations",
+      "destination": "/integrations.html"
     }
   ]
 }
