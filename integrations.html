@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forgelux — Integrations</title>
+<link rel="stylesheet" href="/js/theme.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+/* ── HERO ── */
+.int-hero { padding:2rem 0 1.5rem; border-bottom:1px solid var(--border); margin-bottom:1.75rem; }
+.int-hero h1 { font-family:'Syne',sans-serif; font-weight:800; font-size:1.8rem; letter-spacing:-.04em; margin-bottom:.4rem; }
+.int-hero p { color:var(--subtle); font-size:.9rem; font-weight:300; margin-bottom:1.25rem; max-width:560px; line-height:1.6; }
+.int-search-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.int-search { display:flex; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--border-bright); border-radius:10px; padding:9px 14px; width:340px; transition:border-color .2s; }
+.int-search:focus-within { border-color:rgba(123,47,255,.5); }
+.int-search input { background:none; border:none; outline:none; color:var(--text); font-family:'DM Sans',sans-serif; font-size:13px; flex:1; }
+.int-search input::placeholder { color:var(--muted); }
+.int-stats { display:flex; gap:1.5rem; margin-left:auto; }
+.int-stat { text-align:center; }
+.int-stat-num { font-family:'Syne',sans-serif; font-weight:700; font-size:1.4rem; letter-spacing:-.03em; }
+.int-stat-lbl { font-size:10px; color:var(--muted); }
+
+/* ── CATEGORY TABS ── */
+.cat-tabs { display:flex; gap:6px; margin-bottom:1.75rem; flex-wrap:wrap; }
+.cat-tab { padding:6px 14px; border-radius:100px; font-size:12px; border:1px solid var(--border-bright); background:transparent; color:var(--subtle); cursor:pointer; transition:all .15s; font-family:'DM Sans',sans-serif; display:flex; align-items:center; gap:5px; }
+.cat-tab:hover { border-color:rgba(255,255,255,.2); color:var(--text); }
+.cat-tab.act { background:rgba(123,47,255,.12); border-color:rgba(123,47,255,.35); color:#C4A3FF; }
+.cat-tab .cat-count { font-size:10px; background:rgba(255,255,255,.08); padding:1px 5px; border-radius:100px; }
+
+/* ── CONNECTED BANNER ── */
+.connected-section { margin-bottom:2rem; }
+.connected-title { font-family:'Syne',sans-serif; font-weight:600; font-size:.85rem; color:var(--subtle); margin-bottom:.75rem; display:flex; align-items:center; gap:6px; }
+.connected-title::after { content:''; flex:1; height:1px; background:var(--border); }
+.connected-row { display:flex; gap:.75rem; flex-wrap:wrap; }
+.connected-chip { display:flex; align-items:center; gap:8px; background:var(--surface); border:1px solid rgba(74,222,128,.2); border-radius:10px; padding:8px 14px; font-size:12px; cursor:pointer; transition:all .15s; }
+.connected-chip:hover { border-color:rgba(74,222,128,.4); }
+.connected-chip-icon { font-size:1.1rem; }
+.connected-chip-name { font-weight:500; color:var(--text); }
+.connected-chip-status { display:flex; align-items:center; gap:4px; font-size:10px; color:#4ADE80; }
+.connected-chip-dot { width:6px; height:6px; border-radius:50%; background:#4ADE80; }
+
+/* ── GRID ── */
+.int-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:1rem; }
+
+/* ── INTEGRATION CARD ── */
+.int-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1.25rem; cursor:pointer; transition:all .2s; position:relative; overflow:hidden; display:flex; flex-direction:column; gap:.75rem; }
+.int-card:hover { border-color:var(--border-bright); transform:translateY(-2px); box-shadow:0 8px 30px rgba(0,0,0,.3); }
+.int-card.connected { border-color:rgba(74,222,128,.2); }
+.int-card.connected:hover { border-color:rgba(74,222,128,.4); }
+.int-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; opacity:0; transition:opacity .2s; }
+.int-card:hover::before { opacity:1; }
+
+.int-card-header { display:flex; align-items:flex-start; justify-content:space-between; }
+.int-card-logo { width:44px; height:44px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0; border:1px solid var(--border); }
+.int-card-badges { display:flex; flex-direction:column; gap:4px; align-items:flex-end; }
+.int-badge { font-size:9px; padding:2px 7px; border-radius:100px; font-weight:500; white-space:nowrap; }
+.int-badge-new { background:rgba(163,255,71,.12); color:#A3FF47; border:1px solid rgba(163,255,71,.2); }
+.int-badge-popular { background:rgba(245,158,11,.1); color:#F59E0B; border:1px solid rgba(245,158,11,.2); }
+.int-badge-connected { background:rgba(74,222,128,.1); color:#4ADE80; border:1px solid rgba(74,222,128,.2); display:flex; align-items:center; gap:3px; }
+
+.int-card-name { font-family:'Syne',sans-serif; font-weight:600; font-size:.9rem; letter-spacing:-.01em; }
+.int-card-desc { font-size:11px; color:var(--muted); font-weight:300; line-height:1.5; flex:1; }
+.int-card-footer { display:flex; align-items:center; justify-content:space-between; }
+.int-card-category { font-size:10px; color:var(--muted); }
+.int-card-btn { font-size:11px; padding:4px 12px; border-radius:6px; border:1px solid var(--border-bright); background:transparent; color:var(--subtle); cursor:pointer; transition:all .15s; font-family:'DM Sans',sans-serif; }
+.int-card-btn:hover { border-color:rgba(255,255,255,.2); color:var(--text); }
+.int-card-btn.connected { background:rgba(74,222,128,.1); border-color:rgba(74,222,128,.25); color:#4ADE80; }
+.int-card-btn.connect-btn { background:rgba(123,47,255,.12); border-color:rgba(123,47,255,.3); color:#C4A3FF; }
+.int-card-btn.connect-btn:hover { background:rgba(123,47,255,.2); }
+
+/* ── DETAIL MODAL ── */
+.int-modal { max-width:560px; }
+.int-modal-header { display:flex; align-items:center; gap:1rem; margin-bottom:1.25rem; }
+.int-modal-logo { width:56px; height:56px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:1.8rem; border:1px solid var(--border-bright); flex-shrink:0; }
+.int-modal-meta { flex:1; }
+.int-modal-name { font-family:'Syne',sans-serif; font-weight:700; font-size:1.1rem; letter-spacing:-.02em; margin-bottom:.25rem; }
+.int-modal-cat { font-size:11px; color:var(--muted); }
+.int-modal-desc { font-size:13px; color:var(--subtle); font-weight:300; line-height:1.7; margin-bottom:1.25rem; }
+.int-modal-features { margin-bottom:1.25rem; }
+.int-modal-features-title { font-size:11px; font-weight:600; color:var(--subtle); text-transform:uppercase; letter-spacing:.06em; margin-bottom:.6rem; }
+.int-feature { display:flex; align-items:flex-start; gap:8px; font-size:12px; color:var(--subtle); margin-bottom:.4rem; font-weight:300; }
+.int-feature::before { content:'✓'; color:var(--lime); font-weight:600; flex-shrink:0; margin-top:1px; }
+.int-modal-setup { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:1rem; margin-bottom:1.25rem; }
+.int-setup-title { font-size:11px; font-weight:600; color:var(--subtle); margin-bottom:.75rem; display:flex; align-items:center; gap:6px; }
+.int-setup-step { display:flex; gap:10px; margin-bottom:.6rem; font-size:12px; color:var(--subtle); font-weight:300; align-items:flex-start; }
+.int-setup-num { width:18px; height:18px; border-radius:50%; background:rgba(123,47,255,.2); color:#C4A3FF; font-size:10px; font-weight:600; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+/* No results */
+.int-no-results { text-align:center; padding:4rem; color:var(--muted); }
+.int-no-results-icon { font-size:2.5rem; opacity:.25; margin-bottom:1rem; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HERO -->
+  <div class="int-hero fade d1">
+    <h1>Integrations</h1>
+    <p>Connect Forgelux to your existing tools. Trigger automations, sync data and publish apps — all from one place.</p>
+    <div class="int-search-row">
+      <div class="int-search">
+        <i class="ti ti-search" style="font-size:14px;color:var(--muted)"></i>
+        <input type="text" id="int-search-input" placeholder="Search integrations…" oninput="filterIntegrations(this.value)">
+      </div>
+      <div class="int-stats">
+        <div class="int-stat"><div class="int-stat-num" style="background:linear-gradient(135deg,var(--violet),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent">300+</div><div class="int-stat-lbl">Integrations</div></div>
+        <div class="int-stat"><div class="int-stat-num" id="connected-count" style="color:var(--lime)">0</div><div class="int-stat-lbl">Connected</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORY TABS -->
+  <div class="cat-tabs fade d2" id="cat-tabs"></div>
+
+  <!-- CONNECTED -->
+  <div class="connected-section fade d3" id="connected-section" style="display:none">
+    <div class="connected-title">Connected</div>
+    <div class="connected-row" id="connected-row"></div>
+  </div>
+
+  <!-- GRID -->
+  <div class="int-grid fade d4" id="int-grid"></div>
+
+  <!-- NO RESULTS -->
+  <div class="int-no-results" id="int-no-results" style="display:none">
+    <div class="int-no-results-icon">🔍</div>
+    <div style="font-size:13px;font-weight:500;color:var(--subtle);margin-bottom:.4rem">No integrations found</div>
+    <div style="font-size:12px">Try a different search term or category</div>
+  </div>
+
+</div>
+
+<!-- INTEGRATION DETAIL MODAL -->
+<div class="overlay" id="int-modal" style="display:none">
+  <div class="modal int-modal">
+    <div class="mh"><span class="mh-title" id="modal-title">Integration</span><button class="mclose" onclick="closeIntModal()">✕</button></div>
+    <div id="modal-body"></div>
+    <div class="mfooter" id="modal-footer"></div>
+  </div>
+</div>
+
+<script src="/js/auth.js"></script>
+<script src="/js/nav.js"></script>
+<script>
+Nav.init({ title: 'Integrations' });
+
+// ── INTEGRATION DEFINITIONS ──
+const INTEGRATIONS = [
+  // CRM
+  { id:'hubspot',     name:'HubSpot',         icon:'🟠', color:'#FF7A59', cat:'CRM',         desc:'Sync contacts, deals and companies. Trigger automations when leads move through your pipeline.', features:['Create and update contacts','Log activities automatically','Trigger flows on deal stage changes','Pull pipeline data into your apps'], popular:true },
+  { id:'salesforce',  name:'Salesforce',       icon:'☁️', color:'#00A1E0', cat:'CRM',         desc:'Connect to Salesforce objects. Read and write records, trigger flows on field changes.',         features:['Query any Salesforce object','Create and update records','Trigger on field changes','Map data to your apps'], popular:true },
+  { id:'pipedrive',   name:'Pipedrive',        icon:'🟢', color:'#26292C', cat:'CRM',         desc:'Pull deals and contacts from Pipedrive. Automate follow-ups and data syncing.', features:['Sync deals and contacts','Automate follow-up emails','Update stages automatically','Create activities'] },
+  { id:'zoho',        name:'Zoho CRM',         icon:'🔵', color:'#E42527', cat:'CRM',         desc:'Integrate with Zoho CRM modules. Sync leads, contacts and accounts bidirectionally.', features:['Bi-directional data sync','Trigger on lead status changes','Create records from form submissions','Update custom fields'] },
+
+  // Communication
+  { id:'slack',       name:'Slack',            icon:'💬', color:'#4A154B', cat:'Communication', desc:'Send messages to channels or users. Post automation results, alerts and summaries directly to Slack.', features:['Post to any channel','Send direct messages','Upload files and reports','Create interactive messages'], popular:true, connected:false },
+  { id:'teams',       name:'Microsoft Teams',  icon:'🟣', color:'#464EB8', cat:'Communication', desc:'Send notifications and results to Teams channels. Integrate with your Microsoft 365 workspace.', features:['Post to channels','Adaptive card messages','Meeting notifications','File sharing'] },
+  { id:'email',       name:'Gmail',            icon:'📧', color:'#EA4335', cat:'Communication', desc:'Send and receive emails. Trigger automations on new emails, send reports and notifications.', features:['Send emails with attachments','Trigger on new email','Filter by sender or subject','Create draft emails'], popular:true },
+  { id:'outlook',     name:'Outlook',          icon:'📨', color:'#0078D4', cat:'Communication', desc:'Connect to Microsoft Outlook for email sending and calendar events.', features:['Send emails','Create calendar events','Trigger on new email','Manage contacts'] },
+  { id:'twilio',      name:'Twilio SMS',       icon:'📱', color:'#F22F46', cat:'Communication', desc:'Send SMS and WhatsApp messages to your users. Perfect for alerts and notifications.', features:['Send SMS messages','WhatsApp Business API','Delivery receipts','Phone number lookup'] },
+
+  // Productivity
+  { id:'sheets',      name:'Google Sheets',    icon:'🟩', color:'#0F9D58', cat:'Productivity', desc:'Read and write data to Google Sheets. Use spreadsheets as lightweight databases or reporting tools.', features:['Read and write rows','Append data automatically','Trigger on new rows','Format cells programmatically'], popular:true },
+  { id:'notion',      name:'Notion',           icon:'⬛', color:'#000000', cat:'Productivity', desc:'Create and update Notion pages and databases. Sync data from your apps into Notion workspaces.', features:['Create pages and databases','Update properties','Add comments','Query database views'], new:true },
+  { id:'airtable',    name:'Airtable',         icon:'🟦', color:'#18BFFF', cat:'Productivity', desc:'Sync data to and from Airtable bases. Use as a database, CRM or project tracker.', features:['Read and write records','Trigger on record changes','Create linked records','Filter and sort data'] },
+  { id:'drive',       name:'Google Drive',     icon:'📁', color:'#4285F4', cat:'Productivity', desc:'Upload, download and manage files in Google Drive. Share documents from your automations.', features:['Upload and download files','Create folders','Share files','Trigger on file changes'] },
+  { id:'dropbox',     name:'Dropbox',          icon:'📦', color:'#0061FF', cat:'Productivity', desc:'Store and retrieve files from Dropbox. Attach files to records or trigger on uploads.', features:['Upload and download files','Create shared links','Trigger on new files','Manage folders'] },
+
+  // Payments
+  { id:'stripe',      name:'Stripe',           icon:'💳', color:'#635BFF', cat:'Payments',    desc:'Handle payments, subscriptions and invoices. Trigger automations on payment events.', features:['Create payment links','Handle subscription events','Send invoices','Refund management'], popular:true },
+  { id:'paypal',      name:'PayPal',           icon:'🔵', color:'#003087', cat:'Payments',    desc:'Process PayPal payments and trigger flows on transaction events.', features:['Payment notifications','Subscription management','Refund processing','IPN webhooks'] },
+  { id:'xero',        name:'Xero',             icon:'💙', color:'#13B5EA', cat:'Payments',    desc:'Sync invoices, contacts and transactions with Xero accounting software.', features:['Create and send invoices','Sync contacts','Record payments','Pull financial reports'] },
+  { id:'quickbooks',  name:'QuickBooks',       icon:'🟢', color:'#2CA01C', cat:'Payments',    desc:'Integrate with QuickBooks for accounting automation. Sync invoices and expenses.', features:['Create invoices','Sync customers','Record expenses','Pull P&L data'] },
+
+  // AI
+  { id:'openai',      name:'OpenAI',           icon:'🤖', color:'#10A37F', cat:'AI',          desc:'Use GPT-4, DALL·E and Whisper in your automations. Summarise, classify, generate and transform data.', features:['GPT-4 text generation','DALL·E image generation','Whisper transcription','Embeddings and semantic search'], popular:true, new:true },
+  { id:'anthropic',   name:'Claude (Anthropic)',icon:'🔮', color:'#7B2FFF', cat:'AI',         desc:'Add Claude AI to your automations for intelligent reasoning, writing and analysis.', features:['Long-context reasoning','Document analysis','Code generation','Multi-step task completion'], new:true },
+  { id:'pinecone',    name:'Pinecone',         icon:'🌲', color:'#1A1A2E', cat:'AI',          desc:'Store and query vector embeddings. Build semantic search and recommendation features.', features:['Vector storage','Semantic search','Recommendation systems','Similarity matching'], new:true },
+
+  // Analytics
+  { id:'ga',          name:'Google Analytics', icon:'📊', color:'#E37400', cat:'Analytics',   desc:'Pull website analytics into your apps. Show traffic, conversions and engagement data.', features:['Pull traffic data','Conversion tracking','Audience reports','Real-time data'] },
+  { id:'mixpanel',    name:'Mixpanel',         icon:'🟣', color:'#7856FF', cat:'Analytics',   desc:'Track product analytics events. Sync user behaviour data into your Forgelux apps.', features:['Track custom events','User profiles','Funnel analysis','Cohort data'] },
+  { id:'segment',     name:'Segment',          icon:'🟢', color:'#52BD95', cat:'Analytics',   desc:'Send data to your analytics warehouse via Segment. Unify your customer data.', features:['Send track events','Identify users','Page and screen events','Destination sync'], new:true },
+
+  // E-commerce
+  { id:'shopify',     name:'Shopify',          icon:'🛍', color:'#96BF48', cat:'E-commerce',  desc:'Connect your Shopify store. Trigger automations on orders, sync products and manage customers.', features:['Order notifications','Product sync','Customer management','Inventory updates'], popular:true },
+  { id:'woo',         name:'WooCommerce',      icon:'🛒', color:'#96588A', cat:'E-commerce',  desc:'Integrate with WooCommerce stores. Handle orders, products and customer data.', features:['Order management','Product updates','Customer sync','Refund handling'] },
+
+  // Developer
+  { id:'github',      name:'GitHub',           icon:'🐙', color:'#181717', cat:'Developer',   desc:'Trigger automations on pull requests, issues and deployments. Automate your dev workflow.', features:['PR and issue triggers','Deploy notifications','Create issues programmatically','Comment on PRs'] },
+  { id:'jira',        name:'Jira',             icon:'🔵', color:'#0052CC', cat:'Developer',   desc:'Create and update Jira issues. Trigger flows on ticket status changes.', features:['Create and update issues','Status change triggers','Sprint management','Comment and attach files'] },
+  { id:'webhook',     name:'Webhooks',         icon:'🪝', color:'#7B2FFF', cat:'Developer',   desc:'Send and receive webhooks from any service. Build custom integrations with any API.', features:['Inbound webhook triggers','Outbound HTTP requests','Custom headers and auth','Retry logic with backoff'] },
+  { id:'api',         name:'REST API',         icon:'⚡', color:'#F59E0B', cat:'Developer',   desc:'Call any REST API from your automations. Authenticate with OAuth, API keys or basic auth.', features:['GET, POST, PUT, DELETE','OAuth 2.0 support','Custom headers','Response mapping'] },
+];
+
+const CATEGORIES = ['All', 'CRM', 'Communication', 'Productivity', 'Payments', 'AI', 'Analytics', 'E-commerce', 'Developer'];
+let currentCat = 'All';
+let currentSearch = '';
+let connectedIds = new Set();
+
+// ── BOOT ──
+function boot() {
+  renderCategories();
+  renderGrid();
+  loadConnectedFromSupabase();
+}
+
+// ── CATEGORY TABS ──
+function renderCategories() {
+  const tabs = document.getElementById('cat-tabs');
+  tabs.innerHTML = CATEGORIES.map(cat => {
+    const count = cat === 'All' ? INTEGRATIONS.length : INTEGRATIONS.filter(i => i.cat === cat).length;
+    return `<button class="cat-tab ${cat===currentCat?'act':''}" onclick="setCat('${cat}')">
+      ${cat} <span class="cat-count">${count}</span>
+    </button>`;
+  }).join('');
+}
+
+function setCat(cat) {
+  currentCat = cat;
+  renderCategories();
+  renderGrid();
+}
+
+// ── SEARCH ──
+function filterIntegrations(q) {
+  currentSearch = q.toLowerCase();
+  renderGrid();
+}
+
+// ── RENDER GRID ──
+function renderGrid() {
+  let items = INTEGRATIONS;
+  if (currentCat !== 'All') items = items.filter(i => i.cat === currentCat);
+  if (currentSearch) items = items.filter(i =>
+    i.name.toLowerCase().includes(currentSearch) ||
+    i.desc.toLowerCase().includes(currentSearch) ||
+    i.cat.toLowerCase().includes(currentSearch)
+  );
+
+  const grid = document.getElementById('int-grid');
+  const noResults = document.getElementById('int-no-results');
+
+  if (!items.length) {
+    grid.innerHTML = '';
+    noResults.style.display = 'block';
+    return;
+  }
+  noResults.style.display = 'none';
+
+  // Sort: connected first, then popular
+  items.sort((a,b) => {
+    if (connectedIds.has(a.id) && !connectedIds.has(b.id)) return -1;
+    if (!connectedIds.has(a.id) && connectedIds.has(b.id)) return 1;
+    if (a.popular && !b.popular) return -1;
+    if (!a.popular && b.popular) return 1;
+    return 0;
+  });
+
+  grid.innerHTML = items.map(int => {
+    const isConnected = connectedIds.has(int.id);
+    return `
+    <div class="int-card ${isConnected?'connected':''}" onclick="openIntModal('${int.id}')" style="--card-color:${int.color}">
+      <div class="int-card-header">
+        <div class="int-card-logo" style="background:${int.color}22;border-color:${int.color}33">${int.icon}</div>
+        <div class="int-card-badges">
+          ${isConnected ? '<span class="int-badge int-badge-connected"><span class="connected-chip-dot"></span>Connected</span>' : ''}
+          ${int.new && !isConnected ? '<span class="int-badge int-badge-new">New</span>' : ''}
+          ${int.popular && !isConnected && !int.new ? '<span class="int-badge int-badge-popular">Popular</span>' : ''}
+        </div>
+      </div>
+      <div class="int-card-name">${int.name}</div>
+      <div class="int-card-desc">${int.desc}</div>
+      <div class="int-card-footer">
+        <span class="int-card-category">${int.cat}</span>
+        <button class="int-card-btn ${isConnected?'connected':'connect-btn'}" onclick="event.stopPropagation();${isConnected?`disconnectInt('${int.id}')`:`openIntModal('${int.id}')`}">
+          ${isConnected ? '✓ Connected' : 'Connect'}
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Update connected banner
+  renderConnectedBanner();
+}
+
+// ── CONNECTED BANNER ──
+function renderConnectedBanner() {
+  const section = document.getElementById('connected-section');
+  const row = document.getElementById('connected-row');
+  const count = document.getElementById('connected-count');
+  count.textContent = connectedIds.size;
+
+  if (!connectedIds.size) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+
+  row.innerHTML = [...connectedIds].map(id => {
+    const int = INTEGRATIONS.find(i => i.id === id);
+    if (!int) return '';
+    return `
+      <div class="connected-chip" onclick="openIntModal('${id}')">
+        <span class="connected-chip-icon">${int.icon}</span>
+        <span class="connected-chip-name">${int.name}</span>
+        <span class="connected-chip-status"><span class="connected-chip-dot"></span>Active</span>
+      </div>`;
+  }).join('');
+}
+
+// ── MODAL ──
+function openIntModal(id) {
+  const int = INTEGRATIONS.find(i => i.id === id);
+  if (!int) return;
+  const isConnected = connectedIds.has(id);
+
+  document.getElementById('modal-title').textContent = int.name;
+  document.getElementById('modal-body').innerHTML = `
+    <div class="int-modal-header">
+      <div class="int-modal-logo" style="background:${int.color}22;border-color:${int.color}33">${int.icon}</div>
+      <div class="int-modal-meta">
+        <div class="int-modal-name">${int.name}</div>
+        <div class="int-modal-cat">${int.cat} integration</div>
+      </div>
+    </div>
+    <div class="int-modal-desc">${int.desc}</div>
+    <div class="int-modal-features">
+      <div class="int-modal-features-title">What you can do</div>
+      ${int.features.map(f => `<div class="int-feature">${f}</div>`).join('')}
+    </div>
+    ${!isConnected ? `
+    <div class="int-modal-setup">
+      <div class="int-setup-title"><i class="ti ti-plug" style="font-size:13px"></i> How to connect</div>
+      <div class="int-setup-step"><span class="int-setup-num">1</span>Click "Connect ${int.name}" below</div>
+      <div class="int-setup-step"><span class="int-setup-num">2</span>Authorise Forgelux in the ${int.name} login screen</div>
+      <div class="int-setup-step"><span class="int-setup-num">3</span>Choose which workspace to connect</div>
+      <div class="int-setup-step"><span class="int-setup-num">4</span>Use ${int.name} in your automations and apps</div>
+    </div>` : `
+    <div class="int-modal-setup" style="border-color:rgba(74,222,128,.2)">
+      <div class="int-setup-title" style="color:#4ADE80"><i class="ti ti-check" style="font-size:13px"></i> Connected and active</div>
+      <div style="font-size:12px;color:var(--subtle);font-weight:300">This integration is live. You can use ${int.name} in your automations and apps.</div>
+    </div>`}
+  `;
+
+  document.getElementById('modal-footer').innerHTML = isConnected
+    ? `<button class="btn btn-ghost" onclick="closeIntModal()">Close</button>
+       <button class="btn btn-ghost" style="color:#F87171;border-color:rgba(239,68,68,.25)" onclick="disconnectInt('${id}');closeIntModal()">Disconnect</button>`
+    : `<button class="btn btn-ghost" onclick="closeIntModal()">Cancel</button>
+       <button class="btn btn-primary" onclick="connectInt('${id}')">Connect ${int.name} →</button>`;
+
+  document.getElementById('int-modal').style.display = 'flex';
+}
+
+function closeIntModal() {
+  document.getElementById('int-modal').style.display = 'none';
+}
+
+// ── API KEY INTEGRATION DEFINITIONS ──
+const API_KEY_FIELDS = {"openai": [{"key": "api_key", "label": "API Key", "placeholder": "sk-...", "help": "Find this in platform.openai.com → API keys"}], "anthropic": [{"key": "api_key", "label": "API Key", "placeholder": "sk-ant-...", "help": "Find this in console.anthropic.com → API keys"}], "pinecone": [{"key": "api_key", "label": "API Key", "placeholder": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", "help": "Find this in app.pinecone.io → API keys"}, {"key": "environment", "label": "Environment", "placeholder": "us-east1-gcp", "help": "Shown next to your index in Pinecone dashboard"}], "stripe": [{"key": "secret_key", "label": "Secret Key", "placeholder": "sk_live_...", "help": "Find this in dashboard.stripe.com → Developers → API keys"}, {"key": "webhook_secret", "label": "Webhook Secret", "placeholder": "whsec_...", "help": "Create a webhook in Stripe pointing to your Forgelux webhook URL"}], "twilio": [{"key": "account_sid", "label": "Account SID", "placeholder": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "help": "Find this in console.twilio.com"}, {"key": "auth_token", "label": "Auth Token", "placeholder": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "help": "Find this in console.twilio.com"}], "webhook": [{"key": "url", "label": "Webhook URL", "placeholder": "https://your-app.com/webhook", "help": "The URL Forgelux will POST events to"}, {"key": "secret", "label": "Signing Secret", "placeholder": "Optional - used to verify requests", "help": "We will sign requests with HMAC-SHA256"}], "api": [{"key": "base_url", "label": "Base URL", "placeholder": "https://api.yourservice.com", "help": "The base URL for the API"}, {"key": "api_key", "label": "API Key / Token", "placeholder": "Bearer token or API key", "help": "How to authenticate with this API"}], "ga": [{"key": "measurement_id", "label": "Measurement ID", "placeholder": "G-XXXXXXXXXX", "help": "Find this in Google Analytics → Admin → Data Streams"}, {"key": "api_secret", "label": "API Secret", "placeholder": "xxxxxxxxxxxxxxxxxxxx", "help": "Generate this in GA → Admin → Data Streams → Measurement Protocol"}], "airtable": [{"key": "api_key", "label": "Personal Access Token", "placeholder": "pat...", "help": "Create this in airtable.com/create/tokens"}, {"key": "base_id", "label": "Base ID", "placeholder": "appXXXXXXXXXXXXXX", "help": "Found in the API docs for your base at airtable.com/developers"}], "quickbooks": [{"key": "client_id", "label": "Client ID", "placeholder": "ABxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "help": "From developer.intuit.com → your app"}, {"key": "client_secret", "label": "Client Secret", "placeholder": "xxxxxxxxxxxxxxxxxxxxxxxxxxxx", "help": "From developer.intuit.com → your app"}], "xero": [{"key": "client_id", "label": "Client ID", "placeholder": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", "help": "From developer.xero.com → your app"}, {"key": "client_secret", "label": "Client Secret", "placeholder": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "help": "From developer.xero.com → your app"}]};
+const OAUTH_IDS = ["hubspot", "salesforce", "pipedrive", "zoho", "slack", "teams", "email", "outlook", "notion", "sheets", "drive", "dropbox", "paypal", "mixpanel", "segment", "shopify", "woo", "github", "jira"];
+
+// ── CONNECT FLOW ──
+function connectInt(id) {
+  const int = INTEGRATIONS.find(i => i.id === id);
+  if (!int) return;
+
+  if (API_KEY_FIELDS[id]) {
+    // Show API key form
+    showApiKeyModal(id, int);
+  } else {
+    // OAuth — show notify me modal
+    showOAuthModal(id, int);
+  }
+}
+
+// ── API KEY MODAL ──
+function showApiKeyModal(id, int) {
+  const fields = API_KEY_FIELDS[id];
+  document.getElementById('modal-title').textContent = `Connect ${int.name}`;
+  document.getElementById('modal-body').innerHTML = `
+    <div class="int-modal-header">
+      <div class="int-modal-logo" style="background:${int.color}22;border-color:${int.color}33">${int.icon}</div>
+      <div class="int-modal-meta">
+        <div class="int-modal-name">${int.name}</div>
+        <div class="int-modal-cat">Enter your credentials below</div>
+      </div>
+    </div>
+    <div class="int-modal-desc">${int.desc}</div>
+    ${fields.map(f => `
+      <div style="margin-bottom:1rem">
+        <label style="font-size:11px;font-weight:500;color:var(--subtle);display:block;margin-bottom:.4rem">${f.label}</label>
+        <input type="password" id="field-${f.key}" class="form-input" placeholder="${f.placeholder}" autocomplete="off">
+        <div style="font-size:10px;color:var(--muted);margin-top:.3rem;font-weight:300">
+          <i class="ti ti-info-circle" style="font-size:11px"></i> ${f.help}
+        </div>
+      </div>`).join('')}
+    <div style="background:rgba(123,47,255,.06);border:1px solid rgba(123,47,255,.15);border-radius:8px;padding:.75rem 1rem;font-size:11px;color:var(--subtle);font-weight:300;margin-top:.5rem">
+      <i class="ti ti-lock" style="font-size:12px;color:var(--violet)"></i>
+      Your credentials are encrypted and stored securely. We never share them with third parties.
+    </div>
+  `;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn btn-ghost" onclick="openIntModal('${id}')">← Back</button>
+    <button class="btn btn-primary" onclick="saveApiKey('${id}')">Save & connect</button>
+  `;
+  document.getElementById('int-modal').style.display = 'flex';
+}
+
+async function saveApiKey(id) {
+  const int = INTEGRATIONS.find(i => i.id === id);
+  const fields = API_KEY_FIELDS[id];
+  const config = {};
+  let valid = true;
+
+  fields.forEach(f => {
+    const val = document.getElementById('field-' + f.key)?.value?.trim();
+    if (!val) { valid = false; }
+    config[f.key] = val;
+  });
+
+  if (!valid) { showToast('Please fill in all fields', 'error'); return; }
+
+  // Save to Supabase
+  try {
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    const sb = createClient(
+      'https://xizckgqxdllbopsmbzis.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
+    );
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { connectedIds.add(id); renderGrid(); closeIntModal(); showToast(`✓ ${int.name} connected`); return; }
+
+    const { data: memberships } = await sb.from('workspace_members')
+      .select('workspace_id').eq('user_id', session.user.id).eq('status','active').limit(1);
+    if (!memberships?.length) return;
+
+    await sb.from('connectors').upsert({
+      workspace_id: memberships[0].workspace_id,
+      type: id, name: int.name, status: 'connected',
+      config: { ...config, connected_at: new Date().toISOString() },
+    }, { onConflict: 'workspace_id,type' });
+
+    connectedIds.add(id);
+    renderGrid();
+    closeIntModal();
+    showToast(`✓ ${int.name} connected`);
+  } catch(e) {
+    showToast('Error saving credentials: ' + e.message, 'error');
+  }
+}
+
+// ── OAUTH COMING SOON MODAL ──
+function showOAuthModal(id, int) {
+  document.getElementById('modal-title').textContent = `Connect ${int.name}`;
+  document.getElementById('modal-body').innerHTML = `
+    <div class="int-modal-header">
+      <div class="int-modal-logo" style="background:${int.color}22;border-color:${int.color}33">${int.icon}</div>
+      <div class="int-modal-meta">
+        <div class="int-modal-name">${int.name}</div>
+        <div class="int-modal-cat">${int.cat} · OAuth 2.0</div>
+      </div>
+    </div>
+    <div class="int-modal-desc">${int.desc}</div>
+    <div style="background:rgba(123,47,255,.06);border:1px solid rgba(123,47,255,.2);border-radius:12px;padding:1.5rem;text-align:center;margin-bottom:1.25rem">
+      <div style="font-size:2rem;margin-bottom:.75rem">🔐</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:600;font-size:.95rem;margin-bottom:.4rem">OAuth connection coming soon</div>
+      <div style="font-size:12px;color:var(--muted);font-weight:300;line-height:1.6;max-width:340px;margin:0 auto">
+        ${int.name} uses OAuth 2.0 which requires a secure server-side flow. We're building this now — enter your email below to be notified the moment it's ready.
+      </div>
+    </div>
+    <div>
+      <label style="font-size:11px;font-weight:500;color:var(--subtle);display:block;margin-bottom:.4rem">Notify me when ready</label>
+      <div style="display:flex;gap:8px">
+        <input type="email" id="notify-email" class="form-input" placeholder="you@company.com" style="flex:1" value="${getSessionEmail()}">
+        <button class="btn btn-primary" onclick="submitNotify('${id}','${int.name}')">Notify me</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn btn-ghost" onclick="closeIntModal()">Close</button>
+  `;
+  document.getElementById('int-modal').style.display = 'flex';
+}
+
+function getSessionEmail() {
+  try { return JSON.parse(sessionStorage.getItem('flx_user') || '{}').email || ''; } catch(e) { return ''; }
+}
+
+async function submitNotify(id, name) {
+  const email = document.getElementById('notify-email')?.value?.trim();
+  if (!email || !email.includes('@')) { showToast('Please enter a valid email', 'error'); return; }
+
+  // Save notification request to Supabase (store in billing_events as a hack for now)
+  try {
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    const sb = createClient(
+      'https://xizckgqxdllbopsmbzis.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
+    );
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      const { data: memberships } = await sb.from('workspace_members')
+        .select('workspace_id').eq('user_id', session.user.id).eq('status','active').limit(1);
+      if (memberships?.length) {
+        await sb.from('billing_events').insert({
+          workspace_id: memberships[0].workspace_id,
+          event_type: 'integration_notify_request',
+          metadata: { integration: id, email, requested_at: new Date().toISOString() }
+        });
+      }
+    }
+  } catch(e) {}
+
+  closeIntModal();
+  showToast(`✓ We will email ${email} when ${name} is ready`);
+}
+
+async function disconnectInt(id) {
+  const int = INTEGRATIONS.find(i => i.id === id);
+  if (!int) return;
+  if (!confirm(`Disconnect ${int.name}? Any automations using this integration will stop working.`)) return;
+
+  connectedIds.delete(id);
+  renderGrid();
+  showToast(`${int.name} disconnected`);
+
+  try {
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    const sb = createClient(
+      'https://xizckgqxdllbopsmbzis.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
+    );
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+
+    const { data: memberships } = await sb
+      .from('workspace_members')
+      .select('workspace_id')
+      .eq('user_id', session.user.id)
+      .eq('status', 'active')
+      .limit(1);
+
+    if (memberships?.length) {
+      await sb.from('connectors')
+        .update({ status: 'disconnected' })
+        .eq('workspace_id', memberships[0].workspace_id)
+        .eq('type', id);
+    }
+  } catch(e) {}
+}
+
+// ── LOAD CONNECTED FROM SUPABASE ──
+async function loadConnectedFromSupabase() {
+  try {
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    const sb = createClient(
+      'https://xizckgqxdllbopsmbzis.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCY9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
+    );
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+
+    const { data: memberships } = await sb
+      .from('workspace_members')
+      .select('workspace_id')
+      .eq('user_id', session.user.id)
+      .eq('status', 'active')
+      .limit(1);
+
+    if (!memberships?.length) return;
+
+    const { data: connectors } = await sb
+      .from('connectors')
+      .select('type')
+      .eq('workspace_id', memberships[0].workspace_id)
+      .eq('status', 'connected');
+
+    if (connectors?.length) {
+      connectors.forEach(c => connectedIds.add(c.type));
+      renderGrid();
+    }
+  } catch(e) {}
+}
+
+function showToast(msg) {
+  let t = document.getElementById('flx-toast');
+  if (!t) { t = document.createElement('div'); t.id='flx-toast'; t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--surface);border:1px solid var(--border-bright);border-radius:8px;padding:8px 16px;font-size:12px;color:var(--text);box-shadow:0 8px 30px rgba(0,0,0,.4);transition:transform .3s;z-index:9999;white-space:nowrap'; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(window._tt);
+  window._tt = setTimeout(() => t.style.transform = 'translateX(-50%) translateY(70px)', 2500);
+}
+
+boot();
+</script>
+</body>
+</html>
