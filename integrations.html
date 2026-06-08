@@ -554,37 +554,38 @@ async function showOAuthModal(id, int) {
 // ── START REAL OAUTH ──
 async function startOAuth(id) {
   try {
-    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-    const sb = createClient(
-      'https://xizckgqxdllbopsmbzis.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
-    );
-
     let workspaceId = 'demo';
     let userId = 'demo';
 
-    // Try real Supabase session first
-    const { data: { session } } = await sb.auth.getSession();
+    // Check session storage first (works for both real and test accounts)
+    const raw = sessionStorage.getItem('flx_user');
+    if (raw) {
+      const u = JSON.parse(raw);
+      userId      = u.id    || u.email || 'demo';
+      workspaceId = u.workspaceId || 'demo';
+    }
 
-    if (session?.user) {
-      userId = session.user.id;
-      // Get workspace from DB
-      const { data: memberships } = await sb
-        .from('workspace_members')
-        .select('workspace_id')
-        .eq('user_id', userId)
-        .eq('status', 'active')
-        .limit(1);
-      workspaceId = memberships?.[0]?.workspace_id || 'demo';
-    } else {
-      // Fall back to session storage (test accounts)
-      const raw = sessionStorage.getItem('flx_user');
-      if (raw) {
-        const u = JSON.parse(raw);
-        // Use user email as a stable identifier for demo accounts
-        userId = u.email || 'demo';
-        workspaceId = u.workspaceId || 'demo';
-      }
+    // If we have a real Supabase ID, get the workspace from DB
+    if (userId && userId.includes('-')) {
+      // Looks like a UUID — real Supabase user, get workspace
+      try {
+        const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+        const sb = createClient(
+          'https://xizckgqxdllbopsmbzis.supabase.co',
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
+        );
+        const { data: { session } } = await sb.auth.getSession();
+        if (session?.user) {
+          userId = session.user.id;
+          const { data: memberships } = await sb
+            .from('workspace_members')
+            .select('workspace_id')
+            .eq('user_id', userId)
+            .eq('status', 'active')
+            .limit(1);
+          if (memberships?.[0]) workspaceId = memberships[0].workspace_id;
+        }
+      } catch(e) { /* use fallback IDs */ }
     }
 
     const oauthUrl = `https://xizckgqxdllbopsmbzis.supabase.co/functions/v1/google-oauth-start?workspace_id=${encodeURIComponent(workspaceId)}&user_id=${encodeURIComponent(userId)}`;
