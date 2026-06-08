@@ -618,6 +618,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
         <div class="ch-url" id="canvas-url">app.forgelux.io / dashboard</div>
       </div>
       <div class="canvas-frame" id="canvas-frame">
+        <div id="canvas-hint" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;opacity:.4;z-index:0">
+          <div style="font-size:3rem;margin-bottom:1rem">🏗</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:600;font-size:1rem;color:var(--subtle)">Drag components here</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:.4rem;font-weight:300">Choose from the left panel and drop onto the canvas</div>
+        </div>
         <svg id="wire-svg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:30"></svg>
         <div class="snap-h" id="snap-h"></div>
         <div class="snap-v" id="snap-v"></div>
@@ -765,17 +770,52 @@ let dragType=null;
 // ═══════════════════════════ BOOT ═══════════════════════════
 window.addEventListener('DOMContentLoaded',()=>{
   updateVP();
-  // starter layout
-  addNode('header',  {x:0,  y:0,  w:1280,h:56});
-  addNode('heading', {x:48, y:74, w:360, h:56});
-  addNode('stat',    {x:48, y:148,w:210, h:104});
-  addNode('stat',    {x:276,y:148,w:210, h:104});
-  addNode('stat',    {x:504,y:148,w:210, h:104});
-  addNode('chart',   {x:732,y:148,w:500, h:224});
-  addNode('table',   {x:48, y:270,w:660, h:290});
-  addNode('form',    {x:732,y:390,w:500, h:180});
-  saveHist();
-  renderLayers();
+  
+  // Check URL params for template or app to load
+  const params = new URLSearchParams(window.location.search);
+  const tpl = params.get('template');
+  const appId = params.get('app');
+  
+  if(appId) {
+    // Load saved app from localStorage
+    const saved = window.FLXStorage?.loadBuilderState(appId);
+    if(saved?.nodes?.length) {
+      nodes = JSON.parse(JSON.stringify(saved.nodes));
+      nid = Math.max(...nodes.map(n=>n.id), 0);
+      nodes.forEach(n => renderNode(n));
+      saveHist(); renderLayers();
+      toast('App loaded');
+      return;
+    }
+  }
+  
+  if(tpl === 'sales') {
+    addNode('header',  {x:0,   y:0,   w:1280, h:56});
+    addNode('heading', {x:48,  y:74,  w:360,  h:56});
+    addNode('stat',    {x:48,  y:148, w:210,  h:104});
+    addNode('stat',    {x:276, y:148, w:210,  h:104});
+    addNode('stat',    {x:504, y:148, w:210,  h:104});
+    addNode('chart',   {x:732, y:148, w:500,  h:224});
+    addNode('table',   {x:48,  y:270, w:660,  h:290});
+  } else if(tpl === 'form') {
+    addNode('heading', {x:48,  y:48,  w:300, h:50});
+    addNode('input',   {x:48,  y:116, w:300, h:44});
+    addNode('input',   {x:48,  y:172, w:300, h:44});
+    addNode('dropdown',{x:48,  y:228, w:300, h:44});
+    addNode('button',  {x:48,  y:292, w:300, h:48});
+  } else if(tpl === 'crm') {
+    addNode('header',  {x:0,   y:0,   w:1280, h:56});
+    addNode('sidebar', {x:0,   y:56,  w:210,  h:764});
+    addNode('heading', {x:240, y:74,  w:400,  h:50});
+    addNode('stat',    {x:240, y:140, w:180,  h:90});
+    addNode('stat',    {x:438, y:140, w:180,  h:90});
+    addNode('table',   {x:240, y:250, w:980,  h:340});
+  } else {
+    // BLANK CANVAS - just show empty canvas with a hint
+    deselect();
+  }
+  
+  saveHist(); renderLayers();
 });
 
 window.addEventListener('keydown',e=>{
@@ -854,6 +894,9 @@ function addNode(type,pos){
   nodes.push(n);
   renderNode(n);
   select(n.id);
+  // Hide blank canvas hint
+  const hint = document.getElementById('canvas-hint');
+  if(hint) hint.style.display = 'none';
   return n;
 }
 
@@ -1114,6 +1157,49 @@ function renderProps(n){
     </div>`;
   }
 
+  // Data source binding (for data-driven components)
+  if(['table','chart','stat','list'].includes(n.type)){
+    const src = n.props.dataSource || '';
+    const field = n.props.dataField || '';
+    html+=`<div class="rp-section">
+      <div class="rp-section-title">Data source</div>
+      <div class="rp-field">
+        <label class="rp-label">Source</label>
+        <select class="rp-input rp-full" onchange="setProp(${n.id},'dataSource',this.value)" style="width:100%">
+          <option value="" ${!src?'selected':''}>Static / manual</option>
+          <option value="apps" ${src==='apps'?'selected':''}>apps table</option>
+          <option value="automations" ${src==='automations'?'selected':''}>automations table</option>
+          <option value="automation_runs" ${src==='automation_runs'?'selected':''}>automation_runs</option>
+          <option value="workspace_members" ${src==='workspace_members'?'selected':''}>workspace_members</option>
+          <option value="connectors" ${src==='connectors'?'selected':''}>connectors</option>
+          <option value="api" ${src==='api'?'selected':''}>REST API</option>
+          <option value="sheets" ${src==='sheets'?'selected':''}>Google Sheets</option>
+          <option value="custom" ${src==='custom'?'selected':''}>Custom / connector</option>
+        </select>
+      </div>
+      ${src&&src!=='static'?`
+      <div class="rp-field">
+        <label class="rp-label">Field</label>
+        <input class="rp-input rp-full" placeholder="e.g. name, status, created_at" value="${field}" oninput="setProp(${n.id},'dataField',this.value)">
+      </div>
+      <div class="rp-field">
+        <label class="rp-label">Filter</label>
+        <input class="rp-input rp-full" placeholder="e.g. status = 'live'" value="${n.props.dataFilter||''}" oninput="setProp(${n.id},'dataFilter',this.value)">
+      </div>
+      <div class="rp-field">
+        <label class="rp-label">Limit</label>
+        <input class="rp-input" type="number" min="1" max="1000" placeholder="100" value="${n.props.dataLimit||''}" oninput="setProp(${n.id},'dataLimit',+this.value)" style="width:80px">
+      </div>
+      <div style="background:rgba(123,47,255,.06);border:1px solid rgba(123,47,255,.15);border-radius:6px;padding:7px 9px;font-size:10px;color:var(--muted);line-height:1.5">
+        <i class="ti ti-info-circle" style="font-size:11px;color:var(--violet)"></i>
+        Data binding is live when your app is published. In the builder it shows sample data.
+      </div>`:
+      `<div style="font-size:10px;color:var(--muted);line-height:1.5;font-weight:300">
+        Select a data source to bind live data to this component when your app is published.
+      </div>`}
+    </div>`;
+  }
+
   // Actions
   html+=`<div class="rp-section">
     <div class="rp-section-title">Actions</div>
@@ -1123,7 +1209,7 @@ function renderProps(n){
       <button class="rp-btn" onclick="ctxDo('back')">To back</button>
       <button class="rp-btn rp-btn-danger" onclick="deleteNode(${n.id})">Delete</button>
     </div>
-  </div>`;
+  </div>\`;
 
   document.getElementById('rp-scroll').innerHTML=html;
 }
