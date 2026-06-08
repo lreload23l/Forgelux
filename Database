@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forgelux — Database</title>
+<link rel="stylesheet" href="/js/theme.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── LAYOUT ── */
+.db-layout { display:grid; grid-template-columns:240px 1fr; gap:0; height:calc(100vh - 56px); overflow:hidden; }
+
+/* ── LEFT PANEL ── */
+.db-left { background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+.db-left-header { padding:1rem 1.25rem .75rem; border-bottom:1px solid var(--border); }
+.db-left-title { font-family:'Syne',sans-serif; font-weight:700; font-size:.85rem; letter-spacing:-.01em; margin-bottom:.6rem; }
+.db-search { display:flex; align-items:center; gap:7px; background:var(--surface2); border:1px solid var(--border-bright); border-radius:8px; padding:6px 10px; font-size:11px; color:var(--muted); }
+.db-search input { background:none; border:none; outline:none; color:var(--text); font-family:'DM Sans',sans-serif; font-size:11px; flex:1; }
+.db-search input::placeholder { color:var(--muted); }
+
+.db-section-label { font-size:9px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); font-weight:600; padding:.75rem 1.25rem .3rem; }
+
+.db-table-list { flex:1; overflow-y:auto; padding-bottom:1rem; }
+.db-table-item { display:flex; align-items:center; gap:8px; padding:6px 1.25rem; cursor:pointer; font-size:12px; color:var(--subtle); transition:all .15s; border-left:2px solid transparent; }
+.db-table-item:hover { background:rgba(255,255,255,.04); color:var(--text); }
+.db-table-item.act { background:rgba(123,47,255,.1); color:#C4A3FF; border-left-color:var(--violet); }
+.db-table-icon { width:20px; height:20px; border-radius:5px; display:flex; align-items:center; justify-content:center; font-size:10px; flex-shrink:0; }
+.db-table-name { flex:1; font-weight:400; }
+.db-table-count { font-size:10px; font-family:'DM Mono',monospace; color:var(--muted); }
+
+.db-left-footer { padding:.75rem 1.25rem; border-top:1px solid var(--border); }
+.db-new-table-btn { width:100%; display:flex; align-items:center; justify-content:center; gap:6px; padding:7px; border-radius:8px; border:1px dashed var(--border-bright); background:transparent; color:var(--muted); font-size:11px; cursor:pointer; transition:all .15s; font-family:'DM Sans',sans-serif; }
+.db-new-table-btn:hover { border-color:rgba(123,47,255,.4); color:#C4A3FF; background:rgba(123,47,255,.05); }
+
+/* ── RIGHT PANEL ── */
+.db-right { display:flex; flex-direction:column; overflow:hidden; background:var(--bg); }
+
+/* TOOLBAR */
+.db-toolbar { display:flex; align-items:center; gap:8px; padding:.75rem 1.25rem; border-bottom:1px solid var(--border); background:var(--surface); flex-shrink:0; }
+.db-breadcrumb { font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px; flex:1; }
+.db-breadcrumb span { color:var(--text); font-weight:500; }
+.db-breadcrumb i { font-size:10px; }
+.db-toolbar-btn { display:flex; align-items:center; gap:5px; padding:5px 11px; border-radius:7px; border:1px solid var(--border-bright); background:transparent; color:var(--subtle); font-size:11px; cursor:pointer; transition:all .15s; font-family:'DM Sans',sans-serif; white-space:nowrap; }
+.db-toolbar-btn:hover { border-color:rgba(255,255,255,.2); color:var(--text); }
+.db-toolbar-btn.primary { background:var(--violet); border-color:var(--violet); color:#fff; }
+.db-toolbar-btn.primary:hover { background:#6920e8; }
+.db-view-toggle { display:flex; background:var(--surface2); border:1px solid var(--border); border-radius:7px; overflow:hidden; }
+.db-view-btn { padding:5px 10px; font-size:11px; color:var(--muted); cursor:pointer; border:none; background:transparent; transition:all .15s; font-family:'DM Sans',sans-serif; }
+.db-view-btn.act { background:var(--surface); color:var(--text); }
+
+/* FILTER BAR */
+.db-filter-bar { display:flex; align-items:center; gap:8px; padding:.5rem 1.25rem; border-bottom:1px solid var(--border); background:var(--surface); flex-shrink:0; flex-wrap:wrap; }
+.db-filter-chip { display:flex; align-items:center; gap:5px; padding:3px 9px; border-radius:100px; border:1px solid var(--border-bright); background:var(--surface2); color:var(--subtle); font-size:10px; cursor:pointer; transition:all .15s; }
+.db-filter-chip:hover { border-color:rgba(123,47,255,.4); color:#C4A3FF; }
+.db-filter-chip.active { background:rgba(123,47,255,.12); border-color:rgba(123,47,255,.35); color:#C4A3FF; }
+.db-row-count { font-size:10px; color:var(--muted); margin-left:auto; font-family:'DM Mono',monospace; }
+
+/* TABLE */
+.db-table-wrap { flex:1; overflow:auto; }
+.db-table { width:100%; border-collapse:collapse; font-size:12px; }
+.db-table thead th { 
+  position:sticky; top:0; z-index:10;
+  background:var(--surface); border-bottom:1px solid var(--border);
+  padding:8px 12px; text-align:left; font-weight:500; color:var(--subtle);
+  font-size:11px; white-space:nowrap; cursor:pointer; user-select:none;
+  transition:color .15s;
+}
+.db-table thead th:hover { color:var(--text); }
+.db-table thead th .th-inner { display:flex; align-items:center; gap:5px; }
+.db-table thead th .col-type { font-size:9px; color:var(--muted); font-family:'DM Mono',monospace; font-weight:400; }
+.db-table thead th .sort-icon { font-size:9px; color:var(--muted); opacity:0; transition:opacity .15s; }
+.db-table thead th:hover .sort-icon { opacity:1; }
+.db-table thead th.sorted .sort-icon { opacity:1; color:var(--violet); }
+.db-table td { padding:8px 12px; border-bottom:1px solid rgba(255,255,255,.04); vertical-align:middle; max-width:280px; }
+.db-table tr { cursor:pointer; transition:background .1s; }
+.db-table tr:hover td { background:rgba(255,255,255,.03); }
+.db-table tr.selected td { background:rgba(123,47,255,.08); }
+
+/* Cell types */
+.cell-uuid { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); }
+.cell-text { color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cell-num { font-family:'DM Mono',monospace; color:#7DD3FC; }
+.cell-bool-true { color:#4ADE80; font-family:'DM Mono',monospace; font-size:10px; }
+.cell-bool-false { color:#F87171; font-family:'DM Mono',monospace; font-size:10px; }
+.cell-date { font-family:'DM Mono',monospace; font-size:10px; color:var(--subtle); }
+.cell-json { font-family:'DM Mono',monospace; font-size:10px; color:#FCD34D; background:rgba(252,211,77,.08); padding:2px 6px; border-radius:4px; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cell-null { color:var(--muted); font-style:italic; font-size:10px; }
+.cell-badge { display:inline-flex; align-items:center; padding:2px 7px; border-radius:100px; font-size:10px; font-weight:500; }
+
+/* Row number */
+.row-num { color:var(--muted); font-family:'DM Mono',monospace; font-size:10px; text-align:right; width:36px; padding-right:8px; }
+.row-check { width:28px; padding:0 4px 0 12px; }
+.row-check input { cursor:pointer; accent-color:var(--violet); }
+
+/* Add row */
+.db-add-row { display:flex; align-items:center; gap:8px; padding:7px 12px 7px 56px; border-top:1px solid var(--border); color:var(--muted); font-size:11px; cursor:pointer; transition:all .15s; background:var(--surface); flex-shrink:0; }
+.db-add-row:hover { color:var(--text); background:rgba(255,255,255,.03); }
+
+/* RIGHT DRAWER - row detail */
+.db-drawer { position:absolute; right:0; top:56px; bottom:0; width:380px; background:var(--surface); border-left:1px solid var(--border); transform:translateX(100%); transition:transform .25s; z-index:50; display:flex; flex-direction:column; overflow:hidden; }
+.db-drawer.open { transform:translateX(0); }
+.db-drawer-header { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.25rem; border-bottom:1px solid var(--border); flex-shrink:0; }
+.db-drawer-title { font-family:'Syne',sans-serif; font-weight:600; font-size:.85rem; }
+.db-drawer-close { width:28px; height:28px; border-radius:7px; border:1px solid var(--border-bright); background:transparent; color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; font-size:14px; }
+.db-drawer-close:hover { color:var(--text); border-color:rgba(255,255,255,.2); }
+.db-drawer-body { flex:1; overflow-y:auto; padding:1rem 1.25rem; }
+.db-field { margin-bottom:1.1rem; }
+.db-field-label { font-size:10px; font-weight:500; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:.4rem; display:flex; align-items:center; gap:5px; }
+.db-field-type { font-size:9px; background:var(--surface2); border:1px solid var(--border); padding:1px 5px; border-radius:4px; text-transform:none; letter-spacing:0; font-family:'DM Mono',monospace; }
+.db-field-val { background:var(--surface2); border:1px solid var(--border-bright); border-radius:8px; padding:8px 11px; font-size:12px; color:var(--text); font-family:'DM Sans',sans-serif; width:100%; outline:none; transition:border-color .2s; }
+.db-field-val:focus { border-color:rgba(123,47,255,.5); }
+.db-field-textarea { resize:vertical; min-height:80px; font-family:'DM Mono',monospace; font-size:11px; }
+.db-drawer-footer { padding:1rem 1.25rem; border-top:1px solid var(--border); display:flex; gap:8px; flex-shrink:0; }
+
+/* EMPTY STATE */
+.db-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:1rem; color:var(--muted); text-align:center; padding:3rem; }
+.db-empty-icon { font-size:3rem; opacity:.25; }
+.db-empty-title { font-family:'Syne',sans-serif; font-weight:600; font-size:1rem; color:var(--subtle); }
+.db-empty-sub { font-size:12px; font-weight:300; max-width:320px; line-height:1.6; }
+
+/* SCHEMA VIEW */
+.schema-view { padding:1.5rem; }
+.schema-table { width:100%; border-collapse:collapse; font-size:12px; }
+.schema-table th { text-align:left; padding:8px 12px; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); border-bottom:1px solid var(--border); }
+.schema-table td { padding:8px 12px; border-bottom:1px solid rgba(255,255,255,.04); font-family:'DM Mono',monospace; font-size:11px; }
+.col-type-badge { display:inline-block; padding:1px 6px; border-radius:4px; font-size:10px; background:var(--surface2); border:1px solid var(--border); }
+.col-pk { color:#F59E0B; }
+.col-fk { color:#7DD3FC; }
+.col-null { color:var(--muted); font-size:10px; }
+
+/* PAGINATION */
+.db-pagination { display:flex; align-items:center; gap:8px; padding:.65rem 1.25rem; border-top:1px solid var(--border); background:var(--surface); flex-shrink:0; font-size:11px; color:var(--muted); }
+.db-pagination button { padding:3px 9px; border-radius:6px; border:1px solid var(--border-bright); background:transparent; color:var(--subtle); font-size:11px; cursor:pointer; transition:all .15s; font-family:'DM Sans',sans-serif; }
+.db-pagination button:hover:not(:disabled) { color:var(--text); border-color:rgba(255,255,255,.2); }
+.db-pagination button:disabled { opacity:.3; cursor:not-allowed; }
+.db-pagination .page-info { font-family:'DM Mono',monospace; font-size:10px; }
+
+/* SQL EDITOR */
+.sql-editor-wrap { padding:1.25rem; display:flex; flex-direction:column; gap:.75rem; flex:1; overflow:hidden; }
+.sql-editor { width:100%; background:var(--surface2); border:1px solid var(--border-bright); border-radius:10px; padding:1rem; font-family:'DM Mono',monospace; font-size:12px; color:var(--text); outline:none; resize:none; height:120px; transition:border-color .2s; line-height:1.6; }
+.sql-editor:focus { border-color:rgba(123,47,255,.5); }
+.sql-results { flex:1; overflow:auto; }
+</style>
+</head>
+<body>
+<div id="app">
+<div class="db-layout">
+
+  <!-- LEFT PANEL -->
+  <div class="db-left">
+    <div class="db-left-header">
+      <div class="db-left-title">Tables</div>
+      <div class="db-search">
+        <i class="ti ti-search" style="font-size:12px;flex-shrink:0"></i>
+        <input type="text" placeholder="Search tables…" oninput="filterTables(this.value)">
+      </div>
+    </div>
+
+    <div class="db-section-label">Your workspace</div>
+    <div class="db-table-list" id="table-list">
+      <!-- Injected by JS -->
+      <div style="padding:2rem;text-align:center;color:var(--muted);font-size:11px">Loading…</div>
+    </div>
+
+    <div class="db-left-footer">
+      <button class="db-new-table-btn" onclick="showNewTableModal()">
+        <i class="ti ti-plus" style="font-size:13px"></i> New table
+      </button>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="db-right" id="db-right">
+
+    <!-- EMPTY STATE (default) -->
+    <div class="db-empty" id="db-empty">
+      <div class="db-empty-icon">🗄</div>
+      <div class="db-empty-title">Select a table</div>
+      <div class="db-empty-sub">Choose a table from the left panel to view and edit its records, or create a new table to start storing data.</div>
+    </div>
+
+    <!-- TABLE VIEW (hidden until table selected) -->
+    <div id="db-table-view" style="display:none;flex-direction:column;height:100%;overflow:hidden">
+
+      <!-- TOOLBAR -->
+      <div class="db-toolbar">
+        <div class="db-breadcrumb">
+          <i class="ti ti-database" style="font-size:13px"></i>
+          <i class="ti ti-chevron-right" style="font-size:10px"></i>
+          <span id="tb-name">table_name</span>
+          <span style="color:var(--muted);font-weight:300;font-size:11px" id="tb-schema">(public)</span>
+        </div>
+        <div class="db-view-toggle">
+          <button class="db-view-btn act" onclick="setView('grid',this)"><i class="ti ti-table" style="font-size:12px"></i></button>
+          <button class="db-view-btn" onclick="setView('schema',this)"><i class="ti ti-sitemap" style="font-size:12px"></i></button>
+          <button class="db-view-btn" onclick="setView('sql',this)"><i class="ti ti-terminal" style="font-size:12px"></i></button>
+        </div>
+        <button class="db-toolbar-btn" onclick="refreshTable()"><i class="ti ti-refresh" style="font-size:12px"></i> Refresh</button>
+        <button class="db-toolbar-btn" onclick="exportCSV()"><i class="ti ti-download" style="font-size:12px"></i> Export</button>
+        <button class="db-toolbar-btn primary" onclick="openNewRow()"><i class="ti ti-plus" style="font-size:12px"></i> Insert row</button>
+      </div>
+
+      <!-- FILTER BAR -->
+      <div class="db-filter-bar" id="filter-bar">
+        <button class="db-filter-chip" onclick="addFilter()"><i class="ti ti-filter" style="font-size:11px"></i> Filter</button>
+        <button class="db-filter-chip" onclick="addSort()"><i class="ti ti-arrows-sort" style="font-size:11px"></i> Sort</button>
+        <button class="db-filter-chip" onclick="toggleSearch()"><i class="ti ti-search" style="font-size:11px"></i> Search</button>
+        <div id="active-filters"></div>
+        <span class="db-row-count" id="row-count">0 rows</span>
+      </div>
+
+      <!-- GRID VIEW -->
+      <div id="view-grid" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+        <div class="db-table-wrap">
+          <table class="db-table">
+            <thead id="db-thead"></thead>
+            <tbody id="db-tbody"></tbody>
+          </table>
+        </div>
+        <div class="db-add-row" onclick="openNewRow()">
+          <i class="ti ti-plus" style="font-size:12px"></i> Add a row
+        </div>
+        <div class="db-pagination" id="db-pagination">
+          <button onclick="prevPage()" id="btn-prev" disabled>← Prev</button>
+          <span class="page-info" id="page-info">Page 1</span>
+          <button onclick="nextPage()" id="btn-next">Next →</button>
+          <div style="flex:1"></div>
+          <span>Rows per page:</span>
+          <select style="background:var(--surface2);border:1px solid var(--border);color:var(--subtle);border-radius:5px;padding:2px 6px;font-size:11px;font-family:'DM Sans',sans-serif" onchange="setPageSize(parseInt(this.value))">
+            <option>25</option><option>50</option><option selected>100</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- SCHEMA VIEW -->
+      <div id="view-schema" style="display:none;flex:1;overflow:auto">
+        <div class="schema-view">
+          <table class="schema-table">
+            <thead><tr><th>Column</th><th>Type</th><th>Nullable</th><th>Default</th><th>Constraints</th></tr></thead>
+            <tbody id="schema-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SQL VIEW -->
+      <div id="view-sql" style="display:none;flex:1;overflow:hidden">
+        <div class="sql-editor-wrap">
+          <div style="font-size:11px;color:var(--muted);font-weight:300">Run a SQL query against your workspace data. Read-only in the current plan.</div>
+          <textarea class="sql-editor" id="sql-input" placeholder="SELECT * FROM apps WHERE status = 'live' LIMIT 10;" spellcheck="false"></textarea>
+          <div style="display:flex;gap:8px">
+            <button class="db-toolbar-btn primary" onclick="runSQL()"><i class="ti ti-player-play" style="font-size:12px"></i> Run query</button>
+            <button class="db-toolbar-btn" onclick="document.getElementById('sql-input').value=''">Clear</button>
+            <span style="font-size:10px;color:var(--muted);align-self:center;margin-left:auto">Ctrl+Enter to run</span>
+          </div>
+          <div class="sql-results" id="sql-results">
+            <div style="color:var(--muted);font-size:11px;text-align:center;padding:2rem">Run a query to see results</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ROW DETAIL DRAWER -->
+  <div class="db-drawer" id="row-drawer">
+    <div class="db-drawer-header">
+      <span class="db-drawer-title" id="drawer-title">Row details</span>
+      <button class="db-drawer-close" onclick="closeDrawer()">✕</button>
+    </div>
+    <div class="db-drawer-body" id="drawer-body"></div>
+    <div class="db-drawer-footer">
+      <button class="db-toolbar-btn primary" style="flex:1" onclick="saveRow()">Save changes</button>
+      <button class="db-toolbar-btn" style="color:#F87171;border-color:rgba(239,68,68,.3)" onclick="deleteRow()">Delete row</button>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- NEW TABLE MODAL -->
+<div class="overlay" id="new-table-modal" style="display:none">
+  <div class="modal" style="max-width:480px">
+    <div class="mh"><span class="mh-title">New table</span><button class="mclose" onclick="document.getElementById('new-table-modal').style.display='none'">✕</button></div>
+    <div style="margin-bottom:1rem">
+      <label style="font-size:11px;color:var(--subtle);display:block;margin-bottom:.4rem">Table name</label>
+      <input type="text" class="form-input" id="new-table-name" placeholder="e.g. leads, orders, products…">
+    </div>
+    <div style="margin-bottom:1.5rem">
+      <label style="font-size:11px;color:var(--subtle);display:block;margin-bottom:.4rem">Description <span style="color:var(--muted)">(optional)</span></label>
+      <input type="text" class="form-input" id="new-table-desc" placeholder="What will this table store?">
+    </div>
+    <div class="mfooter">
+      <button class="btn btn-ghost" onclick="document.getElementById('new-table-modal').style.display='none'">Cancel</button>
+      <button class="btn btn-primary" onclick="createTable()">Create table</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/auth.js"></script>
+<script src="/js/nav.js"></script>
+<script>
+Nav.init({ title: 'Database', actions: `<button class="topbar-btn topbar-btn-primary" onclick="showNewTableModal()"><i class="ti ti-plus" style="font-size:13px;margin-right:4px"></i> New table</button>` });
+
+// ── STATE ──
+let currentTable = null;
+let currentRows = [];
+let currentCols = [];
+let currentPage = 1;
+let pageSize = 100;
+let selectedRow = null;
+let allTables = [];
+
+// ── FORGELUX SYSTEM TABLES ──
+const SYSTEM_TABLES = [
+  { name:'apps',             icon:'📱', color:'rgba(123,47,255,.2)', description:'Apps built in Forgelux' },
+  { name:'automations',      icon:'⚡', color:'rgba(14,165,233,.2)',  description:'Automation flows' },
+  { name:'automation_runs',  icon:'📋', color:'rgba(163,255,71,.15)', description:'Execution history' },
+  { name:'workspace_members',icon:'👥', color:'rgba(245,158,11,.15)', description:'Team members' },
+  { name:'workspaces',       icon:'🏢', color:'rgba(239,68,68,.15)',  description:'Workspace settings' },
+  { name:'connectors',       icon:'🔌', color:'rgba(123,47,255,.15)', description:'Connected services' },
+  { name:'api_keys',         icon:'🔑', color:'rgba(14,165,233,.15)', description:'API keys' },
+  { name:'webhooks',         icon:'🪝', color:'rgba(163,255,71,.1)',  description:'Webhook endpoints' },
+];
+
+// ── LOAD TABLES ──
+async function loadTables() {
+  const list = document.getElementById('table-list');
+  allTables = SYSTEM_TABLES;
+
+  // Try Supabase for row counts
+  try {
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    const sb = createClient(
+      'https://xizckgqxdllbopsmbzis.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
+    );
+    window._sb = sb;
+
+    // Get row counts for each table
+    await Promise.all(SYSTEM_TABLES.map(async t => {
+      try {
+        const { count } = await sb.from(t.name).select('*', { count:'exact', head:true });
+        t.count = count || 0;
+      } catch(e) { t.count = 0; }
+    }));
+  } catch(e) {}
+
+  renderTableList(allTables);
+}
+
+function renderTableList(tables) {
+  const list = document.getElementById('table-list');
+  list.innerHTML = tables.map(t => `
+    <div class="db-table-item ${currentTable===t.name?'act':''}" onclick="selectTable('${t.name}')">
+      <div class="db-table-icon" style="background:${t.color}">${t.icon}</div>
+      <span class="db-table-name">${t.name}</span>
+      ${t.count !== undefined ? `<span class="db-table-count">${t.count}</span>` : ''}
+    </div>`).join('');
+}
+
+function filterTables(q) {
+  const filtered = allTables.filter(t => t.name.includes(q.toLowerCase()));
+  renderTableList(filtered);
+}
+
+// ── SELECT TABLE ──
+async function selectTable(name) {
+  currentTable = name;
+  currentPage = 1;
+  document.getElementById('db-empty').style.display = 'none';
+  const tv = document.getElementById('db-table-view');
+  tv.style.display = 'flex';
+
+  document.getElementById('tb-name').textContent = name;
+  renderTableList(allTables);
+  closeDrawer();
+  setView('grid', document.querySelector('.db-view-btn'));
+
+  await loadTableData();
+}
+
+// ── LOAD DATA ──
+async function loadTableData() {
+  if (!window._sb || !currentTable) return;
+
+  const tbody = document.getElementById('db-tbody');
+  const thead = document.getElementById('db-thead');
+  tbody.innerHTML = '<tr><td colspan="20" style="text-align:center;padding:2rem;color:var(--muted);font-size:11px">Loading…</td></tr>';
+
+  try {
+    const from = (currentPage - 1) * pageSize;
+    const { data, error, count } = await window._sb
+      .from(currentTable)
+      .select('*', { count: 'exact' })
+      .range(from, from + pageSize - 1);
+
+    if (error) throw error;
+
+    currentRows = data || [];
+
+    // Update row count
+    document.getElementById('row-count').textContent = `${count || 0} rows`;
+    document.getElementById('page-info').textContent = `Page ${currentPage} of ${Math.max(1, Math.ceil((count||0)/pageSize))}`;
+    document.getElementById('btn-prev').disabled = currentPage === 1;
+    document.getElementById('btn-next').disabled = from + pageSize >= (count||0);
+
+    if (!currentRows.length) {
+      thead.innerHTML = '';
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:3rem;color:var(--muted);font-size:11px">No rows in this table yet.<br><span style="color:var(--violet);cursor:pointer" onclick="openNewRow()">Insert a row →</span></td></tr>`;
+      return;
+    }
+
+    // Build columns from first row
+    currentCols = Object.keys(currentRows[0]);
+
+    // Render header
+    thead.innerHTML = `<tr>
+      <th class="row-check"><input type="checkbox" onchange="selectAllRows(this.checked)"></th>
+      <th class="row-num">#</th>
+      ${currentCols.map(col => `
+        <th onclick="sortBy('${col}')" class="${col==='id'?'sorted':''}">
+          <div class="th-inner">
+            <span>${col}</span>
+            <span class="col-type">${getColType(col, currentRows[0][col])}</span>
+            <span class="sort-icon">↕</span>
+          </div>
+        </th>`).join('')}
+    </tr>`;
+
+    // Render rows
+    tbody.innerHTML = currentRows.map((row, i) => `
+      <tr onclick="selectRow(${i})" id="row-${i}">
+        <td class="row-check"><input type="checkbox" onclick="e=>e.stopPropagation()"></td>
+        <td class="row-num">${from + i + 1}</td>
+        ${currentCols.map(col => `<td>${formatCell(col, row[col])}</td>`).join('')}
+      </tr>`).join('');
+
+    // Update schema view too
+    renderSchema();
+
+  } catch(err) {
+    tbody.innerHTML = `<tr><td colspan="20" style="text-align:center;padding:2rem;color:#F87171;font-size:11px">Error: ${err.message}</td></tr>`;
+  }
+}
+
+// ── CELL FORMATTING ──
+function getColType(col, val) {
+  if (col === 'id' || col.endsWith('_id')) return 'uuid';
+  if (col.endsWith('_at')) return 'timestamptz';
+  if (typeof val === 'boolean') return 'bool';
+  if (typeof val === 'number') return 'int';
+  if (typeof val === 'object' && val !== null) return 'jsonb';
+  return 'text';
+}
+
+function formatCell(col, val) {
+  if (val === null || val === undefined) return '<span class="cell-null">null</span>';
+  if (col === 'id' || col.endsWith('_id')) {
+    return `<span class="cell-uuid">${String(val).slice(0,8)}…</span>`;
+  }
+  if (col.endsWith('_at')) {
+    const d = new Date(val);
+    return `<span class="cell-date">${d.toLocaleDateString('en-GB')} ${d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</span>`;
+  }
+  if (typeof val === 'boolean') {
+    return val ? '<span class="cell-bool-true">true</span>' : '<span class="cell-bool-false">false</span>';
+  }
+  if (typeof val === 'number') {
+    return `<span class="cell-num">${val.toLocaleString()}</span>`;
+  }
+  if (typeof val === 'object') {
+    const str = JSON.stringify(val);
+    return `<span class="cell-json" title="${str.replace(/"/g,'&quot;')}">{…}</span>`;
+  }
+  // Status badges
+  const badges = {
+    live:       'background:rgba(74,222,128,.1);color:#4ADE80',
+    active:     'background:rgba(74,222,128,.1);color:#4ADE80',
+    draft:      'background:rgba(107,114,128,.15);color:#9CA3AF',
+    paused:     'background:rgba(245,158,11,.1);color:#F59E0B',
+    failed:     'background:rgba(239,68,68,.1);color:#F87171',
+    pending:    'background:rgba(245,158,11,.1);color:#F59E0B',
+    trialing:   'background:rgba(123,47,255,.1);color:#C4A3FF',
+    owner:      'background:rgba(123,47,255,.12);color:#C4A3FF',
+    admin:      'background:rgba(14,165,233,.1);color:#7DD3FC',
+    editor:     'background:rgba(163,255,71,.1);color:#A3FF47',
+    viewer:     'background:rgba(107,114,128,.15);color:#9CA3AF',
+  };
+  if (badges[String(val).toLowerCase()]) {
+    return `<span class="cell-badge" style="${badges[String(val).toLowerCase()]}">${val}</span>`;
+  }
+  const str = String(val);
+  return `<span class="cell-text" title="${str}">${str.length > 40 ? str.slice(0,40)+'…' : str}</span>`;
+}
+
+// ── ROW DETAIL DRAWER ──
+function selectRow(idx) {
+  selectedRow = idx;
+  document.querySelectorAll('.db-table tr').forEach(r => r.classList.remove('selected'));
+  document.getElementById(`row-${idx}`)?.classList.add('selected');
+
+  const row = currentRows[idx];
+  const drawer = document.getElementById('row-drawer');
+  const body = document.getElementById('drawer-body');
+  const title = document.getElementById('drawer-title');
+
+  title.textContent = `Row ${idx + 1} · ${currentTable}`;
+
+  body.innerHTML = currentCols.map(col => {
+    const val = row[col];
+    const type = getColType(col, val);
+    const isReadonly = col === 'id' || col.endsWith('_at');
+    const displayVal = val === null ? '' : typeof val === 'object' ? JSON.stringify(val, null, 2) : String(val);
+
+    return `
+      <div class="db-field">
+        <div class="db-field-label">
+          ${col}
+          <span class="db-field-type">${type}</span>
+          ${isReadonly ? '<span style="color:var(--muted);font-size:9px">readonly</span>' : ''}
+        </div>
+        ${type === 'jsonb' || displayVal.length > 60
+          ? `<textarea class="db-field-val db-field-textarea" data-col="${col}" ${isReadonly?'readonly':''}>${displayVal}</textarea>`
+          : `<input type="text" class="db-field-val" data-col="${col}" value="${displayVal.replace(/"/g,'&quot;')}" ${isReadonly?'readonly':''}>`
+        }
+      </div>`;
+  }).join('');
+
+  drawer.classList.add('open');
+  // Shift table view
+  document.getElementById('db-right').style.paddingRight = '380px';
+}
+
+function closeDrawer() {
+  document.getElementById('row-drawer').classList.remove('open');
+  document.getElementById('db-right').style.paddingRight = '';
+  document.querySelectorAll('.db-table tr').forEach(r => r.classList.remove('selected'));
+  selectedRow = null;
+}
+
+async function saveRow() {
+  if (selectedRow === null || !window._sb) return;
+  const row = currentRows[selectedRow];
+  const inputs = document.querySelectorAll('#drawer-body [data-col]:not([readonly])');
+  const updates = {};
+  inputs.forEach(el => {
+    const col = el.dataset.col;
+    let val = el.value;
+    try { val = JSON.parse(val); } catch(e) {}
+    updates[col] = val;
+  });
+
+  const { error } = await window._sb.from(currentTable).update(updates).eq('id', row.id);
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  showToast('✓ Row saved');
+  closeDrawer();
+  await loadTableData();
+}
+
+async function deleteRow() {
+  if (selectedRow === null || !window._sb) return;
+  if (!confirm('Delete this row? This cannot be undone.')) return;
+  const row = currentRows[selectedRow];
+  const { error } = await window._sb.from(currentTable).delete().eq('id', row.id);
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  showToast('✓ Row deleted');
+  closeDrawer();
+  await loadTableData();
+}
+
+function openNewRow() {
+  selectedRow = null;
+  const drawer = document.getElementById('row-drawer');
+  document.getElementById('drawer-title').textContent = 'Insert row';
+  const body = document.getElementById('drawer-body');
+
+  body.innerHTML = currentCols.filter(c => c !== 'id' && !c.endsWith('_at')).map(col => `
+    <div class="db-field">
+      <div class="db-field-label">${col}<span class="db-field-type">${getColType(col, '')}</span></div>
+      <input type="text" class="db-field-val" data-col="${col}" placeholder="Enter value…">
+    </div>`).join('') ||
+    `<div style="color:var(--muted);font-size:11px;padding:1rem;text-align:center">Select a table first</div>`;
+
+  drawer.classList.add('open');
+  document.getElementById('db-right').style.paddingRight = '380px';
+}
+
+// ── SCHEMA VIEW ──
+function renderSchema() {
+  if (!currentRows.length) return;
+  const tbody = document.getElementById('schema-tbody');
+  const row = currentRows[0];
+  const pkCols = ['id'];
+  const fkCols = Object.keys(row).filter(c => c.endsWith('_id') && c !== 'id');
+
+  tbody.innerHTML = Object.keys(row).map(col => {
+    const type = getColType(col, row[col]);
+    const isPK = pkCols.includes(col);
+    const isFK = fkCols.includes(col);
+    return `<tr>
+      <td>${isPK ? '<span class="col-pk">🔑 </span>' : isFK ? '<span class="col-fk">🔗 </span>' : ''}${col}</td>
+      <td><span class="col-type-badge">${type}</span></td>
+      <td class="col-null">${col === 'id' ? 'NOT NULL' : 'nullable'}</td>
+      <td class="col-null">${col === 'id' ? 'uuid_generate_v4()' : col.endsWith('_at') ? 'now()' : '—'}</td>
+      <td>${isPK ? '<span class="cell-badge" style="background:rgba(245,158,11,.1);color:#F59E0B">PRIMARY KEY</span>' : isFK ? '<span class="cell-badge" style="background:rgba(14,165,233,.1);color:#7DD3FC">FOREIGN KEY</span>' : ''}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── SQL EDITOR ──
+async function runSQL() {
+  const query = document.getElementById('sql-input').value.trim();
+  if (!query) return;
+  const results = document.getElementById('sql-results');
+  results.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:1rem">Running query…</div>';
+
+  // Parse simple SELECT queries
+  const selectMatch = query.match(/^SELECT\s+\*\s+FROM\s+(\w+)(?:\s+WHERE\s+(.+?))?(?:\s+LIMIT\s+(\d+))?/i);
+  if (!selectMatch) {
+    results.innerHTML = '<div style="color:#F59E0B;font-size:11px;padding:1rem">⚠ Only SELECT * FROM table [WHERE ...] [LIMIT n] queries are supported in the current plan.</div>';
+    return;
+  }
+
+  try {
+    let q = window._sb.from(selectMatch[1]).select('*');
+    if (selectMatch[3]) q = q.limit(parseInt(selectMatch[3]));
+    const { data, error } = await q;
+    if (error) throw error;
+    if (!data.length) { results.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:1rem">Query returned 0 rows.</div>'; return; }
+
+    const cols = Object.keys(data[0]);
+    results.innerHTML = `
+      <div style="font-size:10px;color:var(--muted);margin-bottom:.5rem;font-family:'DM Mono',monospace">${data.length} rows returned</div>
+      <div style="overflow:auto">
+        <table class="db-table">
+          <thead><tr>${cols.map(c=>`<th><div class="th-inner">${c}</div></th>`).join('')}</tr></thead>
+          <tbody>${data.map(row=>`<tr>${cols.map(c=>`<td>${formatCell(c,row[c])}</td>`).join('')}</tr>`).join('')}</tbody>
+        </table>
+      </div>`;
+  } catch(err) {
+    results.innerHTML = `<div style="color:#F87171;font-size:11px;padding:1rem">Error: ${err.message}</div>`;
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey||e.metaKey) && e.key==='Enter') {
+    const sql = document.getElementById('view-sql');
+    if (sql && sql.style.display !== 'none') runSQL();
+  }
+});
+
+// ── VIEW SWITCHING ──
+function setView(view, btn) {
+  ['grid','schema','sql'].forEach(v => {
+    document.getElementById('view-'+v).style.display = v===view ? (v==='grid'?'flex':'block') : 'none';
+  });
+  document.querySelectorAll('.db-view-btn').forEach(b => b.classList.remove('act'));
+  if (btn) btn.classList.add('act');
+  if (view==='schema') renderSchema();
+}
+
+// ── PAGINATION ──
+function prevPage() { if(currentPage>1){currentPage--;loadTableData();} }
+function nextPage() { currentPage++;loadTableData(); }
+function setPageSize(n) { pageSize=n;currentPage=1;loadTableData(); }
+
+// ── EXPORT ──
+function exportCSV() {
+  if (!currentRows.length) return;
+  const cols = Object.keys(currentRows[0]);
+  const csv = [cols.join(','), ...currentRows.map(row => cols.map(c => {
+    const v = row[c];
+    if (v === null) return '';
+    const s = typeof v === 'object' ? JSON.stringify(v) : String(v);
+    return s.includes(',') || s.includes('"') ? `"${s.replace(/"/g,'""')}"` : s;
+  }).join(','))].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = currentTable + '.csv';
+  a.click();
+}
+
+function sortBy(col) {
+  currentRows.sort((a,b) => {
+    if (a[col] === null) return 1;
+    if (b[col] === null) return -1;
+    return String(a[col]).localeCompare(String(b[col]));
+  });
+  loadTableData();
+}
+
+function selectAllRows(checked) {
+  document.querySelectorAll('#db-tbody input[type=checkbox]').forEach(cb => cb.checked = checked);
+}
+
+function addFilter() { showToast('Filter builder — coming soon'); }
+function addSort()   { showToast('Sort builder — coming soon'); }
+function toggleSearch() { showToast('Search — coming soon'); }
+
+function showNewTableModal() {
+  document.getElementById('new-table-modal').style.display = 'flex';
+}
+
+function createTable() {
+  const name = document.getElementById('new-table-name').value.trim();
+  if (!name) return;
+  showToast('Custom tables require the Pro API — coming soon');
+  document.getElementById('new-table-modal').style.display = 'none';
+}
+
+function refreshTable() { loadTableData(); }
+
+function showToast(msg, type='success') {
+  let t = document.getElementById('flx-toast');
+  if (!t) { t = document.createElement('div'); t.id='flx-toast'; t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--surface);border:1px solid var(--border-bright);border-radius:8px;padding:8px 16px;font-size:12px;color:var(--text);box-shadow:0 8px 30px rgba(0,0,0,.4);transition:transform .3s;z-index:9999;white-space:nowrap'; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.style.borderColor = type === 'error' ? 'rgba(239,68,68,.4)' : 'var(--border-bright)';
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(window._tt);
+  window._tt = setTimeout(() => t.style.transform = 'translateX(-50%) translateY(70px)', 2500);
+}
+
+// Boot
+loadTables();
+</script>
+</body>
+</html>
