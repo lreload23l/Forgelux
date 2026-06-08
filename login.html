@@ -289,7 +289,7 @@ async function socialLogin(provider) {
     const { error } = await sb.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin + '/auth/callback',
+        redirectTo: 'https://forgelux.co.uk/auth/callback',
       }
     });
 
