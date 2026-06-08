@@ -205,8 +205,8 @@ let connectedIds = new Set();
 function boot() {
   renderCategories();
   renderGrid();
-  loadConnectedFromSupabase();
-  handleOAuthCallback();
+  handleOAuthCallback(); // Run first so URL params are processed
+  loadConnectedFromSupabase(); // Then load from DB (will include newly connected)
 }
 
 function handleOAuthCallback() {
@@ -385,7 +385,7 @@ function closeIntModal() {
 
 // ── API KEY INTEGRATION DEFINITIONS ──
 const API_KEY_FIELDS = {"openai": [{"key": "api_key", "label": "API Key", "placeholder": "sk-...", "help": "Find this in platform.openai.com → API keys"}], "anthropic": [{"key": "api_key", "label": "API Key", "placeholder": "sk-ant-...", "help": "Find this in console.anthropic.com → API keys"}], "pinecone": [{"key": "api_key", "label": "API Key", "placeholder": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", "help": "Find this in app.pinecone.io → API keys"}, {"key": "environment", "label": "Environment", "placeholder": "us-east1-gcp", "help": "Shown next to your index in Pinecone dashboard"}], "stripe": [{"key": "secret_key", "label": "Secret Key", "placeholder": "sk_live_...", "help": "Find this in dashboard.stripe.com → Developers → API keys"}, {"key": "webhook_secret", "label": "Webhook Secret", "placeholder": "whsec_...", "help": "Create a webhook in Stripe pointing to your Forgelux webhook URL"}], "twilio": [{"key": "account_sid", "label": "Account SID", "placeholder": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "help": "Find this in console.twilio.com"}, {"key": "auth_token", "label": "Auth Token", "placeholder": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "help": "Find this in console.twilio.com"}], "webhook": [{"key": "url", "label": "Webhook URL", "placeholder": "https://your-app.com/webhook", "help": "The URL Forgelux will POST events to"}, {"key": "secret", "label": "Signing Secret", "placeholder": "Optional - used to verify requests", "help": "We will sign requests with HMAC-SHA256"}], "api": [{"key": "base_url", "label": "Base URL", "placeholder": "https://api.yourservice.com", "help": "The base URL for the API"}, {"key": "api_key", "label": "API Key / Token", "placeholder": "Bearer token or API key", "help": "How to authenticate with this API"}], "ga": [{"key": "measurement_id", "label": "Measurement ID", "placeholder": "G-XXXXXXXXXX", "help": "Find this in Google Analytics → Admin → Data Streams"}, {"key": "api_secret", "label": "API Secret", "placeholder": "xxxxxxxxxxxxxxxxxxxx", "help": "Generate this in GA → Admin → Data Streams → Measurement Protocol"}], "airtable": [{"key": "api_key", "label": "Personal Access Token", "placeholder": "pat...", "help": "Create this in airtable.com/create/tokens"}, {"key": "base_id", "label": "Base ID", "placeholder": "appXXXXXXXXXXXXXX", "help": "Found in the API docs for your base at airtable.com/developers"}], "quickbooks": [{"key": "client_id", "label": "Client ID", "placeholder": "ABxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "help": "From developer.intuit.com → your app"}, {"key": "client_secret", "label": "Client Secret", "placeholder": "xxxxxxxxxxxxxxxxxxxxxxxxxxxx", "help": "From developer.intuit.com → your app"}], "xero": [{"key": "client_id", "label": "Client ID", "placeholder": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", "help": "From developer.xero.com → your app"}, {"key": "client_secret", "label": "Client Secret", "placeholder": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "help": "From developer.xero.com → your app"}]};
-const OAUTH_IDS = ["hubspot", "salesforce", "pipedrive", "zoho", "slack", "teams", "email", "outlook", "notion", "sheets", "drive", "dropbox", "paypal", "mixpanel", "segment", "shopify", "woo", "github", "jira"];
+const OAUTH_IDS = ["hubspot", "salesforce", "pipedrive", "zoho", "slack", "teams", "email", "outlook", "notion", "dropbox", "paypal", "mixpanel", "segment", "shopify", "woo", "github", "jira"];
 
 // ── CONNECT FLOW ──
 function connectInt(id) {
