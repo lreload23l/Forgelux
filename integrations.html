@@ -206,6 +206,33 @@ function boot() {
   renderCategories();
   renderGrid();
   loadConnectedFromSupabase();
+  handleOAuthCallback();
+}
+
+function handleOAuthCallback() {
+  const params = new URLSearchParams(window.location.search);
+  const connected = params.get('connected');
+  const error     = params.get('error');
+  const email     = params.get('email');
+
+  if (connected) {
+    connectedIds.add(connected);
+    renderGrid();
+    showToast(`✓ Google Sheets connected${email ? ' as ' + email : ''}`);
+    // Clean up URL
+    window.history.replaceState({}, '', '/integrations');
+  }
+
+  if (error) {
+    const msgs = {
+      token_exchange_failed: 'Could not exchange auth code — please try again',
+      db_error:              'Could not save connection — please try again',
+      server_error:          'Server error — please try again',
+      access_denied:         'Access was denied — please authorise Forgelux in Google',
+    };
+    showToast(msgs[error] || 'Connection failed: ' + error, 'error');
+    window.history.replaceState({}, '', '/integrations');
+  }
 }
 
 // ── CATEGORY TABS ──
@@ -450,37 +477,107 @@ async function saveApiKey(id) {
   }
 }
 
-// ── OAUTH COMING SOON MODAL ──
-function showOAuthModal(id, int) {
+// ── OAUTH MODAL — Real for sheets, coming soon for others ──
+const LIVE_OAUTH = ['sheets', 'drive']; // Integrations with real OAuth
+
+async function showOAuthModal(id, int) {
   document.getElementById('modal-title').textContent = `Connect ${int.name}`;
-  document.getElementById('modal-body').innerHTML = `
-    <div class="int-modal-header">
-      <div class="int-modal-logo" style="background:${int.color}22;border-color:${int.color}33">${int.icon}</div>
-      <div class="int-modal-meta">
-        <div class="int-modal-name">${int.name}</div>
-        <div class="int-modal-cat">${int.cat} · OAuth 2.0</div>
+
+  if (LIVE_OAUTH.includes(id)) {
+    // Real OAuth flow
+    document.getElementById('modal-body').innerHTML = `
+      <div class="int-modal-header">
+        <div class="int-modal-logo" style="background:${int.color}22;border-color:${int.color}33">${int.icon}</div>
+        <div class="int-modal-meta">
+          <div class="int-modal-name">${int.name}</div>
+          <div class="int-modal-cat">${int.cat} · OAuth 2.0</div>
+        </div>
       </div>
-    </div>
-    <div class="int-modal-desc">${int.desc}</div>
-    <div style="background:rgba(123,47,255,.06);border:1px solid rgba(123,47,255,.2);border-radius:12px;padding:1.5rem;text-align:center;margin-bottom:1.25rem">
-      <div style="font-size:2rem;margin-bottom:.75rem">🔐</div>
-      <div style="font-family:'Syne',sans-serif;font-weight:600;font-size:.95rem;margin-bottom:.4rem">OAuth connection coming soon</div>
-      <div style="font-size:12px;color:var(--muted);font-weight:300;line-height:1.6;max-width:340px;margin:0 auto">
-        ${int.name} uses OAuth 2.0 which requires a secure server-side flow. We're building this now — enter your email below to be notified the moment it's ready.
+      <div class="int-modal-desc">${int.desc}</div>
+      <div style="background:rgba(74,222,128,.04);border:1px solid rgba(74,222,128,.2);border-radius:12px;padding:1.25rem;margin-bottom:1.25rem">
+        <div style="font-size:12px;color:var(--subtle);font-weight:300;line-height:1.7">
+          <div style="font-weight:500;color:#4ADE80;margin-bottom:.5rem">✓ Ready to connect</div>
+          Clicking the button below will open Google's authorisation screen. Sign in with your Google account and grant Forgelux permission to read your spreadsheets.
+        </div>
       </div>
-    </div>
-    <div>
-      <label style="font-size:11px;font-weight:500;color:var(--subtle);display:block;margin-bottom:.4rem">Notify me when ready</label>
-      <div style="display:flex;gap:8px">
-        <input type="email" id="notify-email" class="form-input" placeholder="you@company.com" style="flex:1" value="${getSessionEmail()}">
-        <button class="btn btn-primary" onclick="submitNotify('${id}','${int.name}')">Notify me</button>
+      <div class="int-modal-features">
+        <div class="int-modal-features-title">Permissions requested</div>
+        <div class="int-feature">Read your Google Sheets spreadsheets</div>
+        <div class="int-feature">List your spreadsheets in Google Drive</div>
+        <div class="int-feature">Read your Google account email (for identification)</div>
       </div>
-    </div>
-  `;
-  document.getElementById('modal-footer').innerHTML = `
-    <button class="btn btn-ghost" onclick="closeIntModal()">Close</button>
-  `;
+      <div style="font-size:10px;color:var(--muted);line-height:1.5;font-weight:300">
+        <i class="ti ti-lock" style="font-size:11px;color:var(--violet)"></i>
+        We never store your Google password. You can disconnect at any time from this page or from your Google account settings.
+      </div>
+    `;
+    document.getElementById('modal-footer').innerHTML = `
+      <button class="btn btn-ghost" onclick="closeIntModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="startOAuth('${id}')">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:16px;height:16px;margin-right:6px;vertical-align:middle">
+        Connect with Google
+      </button>
+    `;
+  } else {
+    // Coming soon with notify me
+    document.getElementById('modal-body').innerHTML = `
+      <div class="int-modal-header">
+        <div class="int-modal-logo" style="background:${int.color}22;border-color:${int.color}33">${int.icon}</div>
+        <div class="int-modal-meta">
+          <div class="int-modal-name">${int.name}</div>
+          <div class="int-modal-cat">${int.cat} · OAuth 2.0</div>
+        </div>
+      </div>
+      <div class="int-modal-desc">${int.desc}</div>
+      <div style="background:rgba(123,47,255,.06);border:1px solid rgba(123,47,255,.2);border-radius:12px;padding:1.5rem;text-align:center;margin-bottom:1.25rem">
+        <div style="font-size:2rem;margin-bottom:.75rem">🔐</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:600;font-size:.95rem;margin-bottom:.4rem">OAuth connection coming soon</div>
+        <div style="font-size:12px;color:var(--muted);font-weight:300;line-height:1.6;max-width:340px;margin:0 auto">
+          ${int.name} uses OAuth 2.0. We're building this now — enter your email to be notified the moment it's ready.
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:500;color:var(--subtle);display:block;margin-bottom:.4rem">Notify me when ready</label>
+        <div style="display:flex;gap:8px">
+          <input type="email" id="notify-email" class="form-input" placeholder="you@company.com" style="flex:1" value="${getSessionEmail()}">
+          <button class="btn btn-primary" onclick="submitNotify('${id}','${int.name}')">Notify me</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('modal-footer').innerHTML = `
+      <button class="btn btn-ghost" onclick="closeIntModal()">Close</button>
+    `;
+  }
   document.getElementById('int-modal').style.display = 'flex';
+}
+
+// ── START REAL OAUTH ──
+async function startOAuth(id) {
+  try {
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    const sb = createClient(
+      'https://xizckgqxdllbopsmbzis.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
+    );
+
+    const { data: { session } } = await sb.auth.getSession();
+    const { data: memberships } = await sb
+      .from('workspace_members')
+      .select('workspace_id')
+      .eq('user_id', session?.user?.id || '')
+      .eq('status', 'active')
+      .limit(1);
+
+    const workspaceId = memberships?.[0]?.workspace_id || 'demo';
+    const userId = session?.user?.id || 'demo';
+
+    // Redirect to Edge Function which starts OAuth
+    const oauthUrl = `https://xizckgqxdllbopsmbzis.supabase.co/functions/v1/google-oauth-start?workspace_id=${workspaceId}&user_id=${userId}`;
+    window.location.href = oauthUrl;
+
+  } catch(e) {
+    showToast('Could not start OAuth: ' + e.message, 'error');
+  }
 }
 
 function getSessionEmail() {
