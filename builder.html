@@ -1153,7 +1153,7 @@ function rgbToHex(c){
 
 // ═══════════════════════════ LAYERS PANEL ═══════════════════════════
 function renderLayers(){
-  const list=document.getElementById('layer-list'); if(!list)return;
+  const list=document.getElementById('layers-list'); if(!list)return;
   const icons={header:'▬',sidebar:'▐',table:'⊞',chart:'📊',stat:'#',form:'⊡',heading:'H',text:'¶',button:'⬜',image:'🖼',divider:'─',input:'▱',dropdown:'▾',list:'≡',badge:'◉',link:'⎋'};
   list.innerHTML=[...nodes].reverse().map(n=>`
     <div class="layer-item ${n.id===selId?'act':''}" data-nid="${n.id}" onclick="select(${n.id})">
@@ -1285,6 +1285,82 @@ rpStyle.textContent=`
 .no-sel-txt{font-size:11px;color:var(--muted);font-weight:300;line-height:1.6;max-width:180px}
 `;
 document.head.appendChild(rpStyle);
+
+
+
+// ═══════════════════════════ LEFT PANEL SWITCHING ═══════════════════════════
+
+function switchIB(panel) {
+  // Switch main left panel (Components / Connectors / Layers)
+  ['components','connectors','layers'].forEach(p => {
+    document.getElementById('lp-'+p).style.display = p===panel ? 'flex' : 'none';
+    document.getElementById('ib-'+p)?.classList.toggle('act', p===panel);
+  });
+  if(panel==='layers') renderLayers();
+}
+
+function switchCompTab(el, tab) {
+  // Switch component sub-tabs (UI / Data / Input)
+  ['ui','data','input'].forEach(t => {
+    const sec = document.getElementById('ct-'+t);
+    if(sec) sec.style.display = t===tab ? 'block' : 'none';
+  });
+  el.closest('.lp-tabs').querySelectorAll('.lp-tab').forEach(b => b.classList.remove('act'));
+  el.classList.add('act');
+}
+
+function switchConnTab(el, tab) {
+  // Switch connector sub-tabs (Design / AI / Data)
+  ['design','ai','data'].forEach(t => {
+    const sec = document.getElementById('cc-'+t);
+    if(sec) sec.style.display = t===tab ? 'block' : 'none';
+  });
+  el.closest('.lp-tabs').querySelectorAll('.lp-tab').forEach(b => b.classList.remove('act'));
+  el.classList.add('act');
+}
+
+function filterComps(q) {
+  const term = q.toLowerCase();
+  document.querySelectorAll('.comp-item').forEach(item => {
+    const name = item.querySelector('.ci-lbl')?.textContent?.toLowerCase() || '';
+    item.style.display = (!term || name.includes(term)) ? '' : 'none';
+  });
+}
+
+function filterConns(q) {
+  const term = q.toLowerCase();
+  document.querySelectorAll('.conn-item').forEach(item => {
+    const name = item.querySelector('.ci-name')?.textContent?.toLowerCase() || '';
+    const desc = item.querySelector('.ci-desc')?.textContent?.toLowerCase() || '';
+    item.style.display = (!term || name.includes(term) || desc.includes(term)) ? '' : 'none';
+  });
+}
+
+// ═══════════════════════════ MODAL HELPERS ═══════════════════════════
+
+function openModal(id) {
+  const el = document.getElementById(id);
+  if(el) el.style.display = 'flex';
+}
+
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if(el) el.style.display = 'none';
+}
+
+// ═══════════════════════════ TEMPLATE PICKER ═══════════════════════════
+
+function pickTpl(el) {
+  document.querySelectorAll('.tpl-opt').forEach(t => t.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function applyTpl() {
+  const sel = document.querySelector('.tpl-opt.sel');
+  if(!sel) return;
+  closeModal('tpl-modal');
+  toast('Template applied');
+}
 
 </script>
 <script src="js/storage.js"></script>
