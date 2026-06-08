@@ -15,20 +15,23 @@ p{color:rgba(255,255,255,.5);font-size:13px;font-weight:300}
 <p>Signing you in…</p>
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
 const sb = createClient(
   'https://xizckgqxdllbopsmbzis.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
 );
 
 function buildUser(user) {
+  const name = user.user_metadata?.full_name || user.user_metadata?.name || user.email.split('@')[0];
   return {
     id:         user.id,
     email:      user.email,
-    name:       user.user_metadata?.full_name || user.email.split('@')[0],
-    initials:   (user.user_metadata?.full_name || user.email).split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2),
+    name:       name,
+    initials:   name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2),
+    avatar:     user.user_metadata?.avatar_url || user.user_metadata?.picture || '',
     plan:       'Pro',
     role:       'Owner',
-    workspace:  'My Workspace',
+    workspace:  name + "'s Workspace",
     runsUsed:   0,
     runsTotal:  50000,
     seatsUsed:  1,
@@ -36,26 +39,30 @@ function buildUser(user) {
   };
 }
 
-// Handle OAuth redirect tokens in URL hash
-sb.auth.onAuthStateChange((event, session) => {
-  if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
-    sessionStorage.setItem('flx_user', JSON.stringify(buildUser(session.user)));
-    window.location.replace('/dashboard');
-  }
-});
-
-// Also check existing session
-const { data: { session } } = await sb.auth.getSession();
-if (session?.user) {
-  sessionStorage.setItem('flx_user', JSON.stringify(buildUser(session.user)));
+function redirectToDashboard(user) {
+  sessionStorage.setItem('flx_user', JSON.stringify(buildUser(user)));
   window.location.replace('/dashboard');
 }
 
-// Fallback timeout
+// Supabase automatically picks up the hash fragment (#access_token=...)
+// and exchanges it for a session via onAuthStateChange
+sb.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN' && session?.user) {
+    redirectToDashboard(session.user);
+  }
+});
+
+// Also check for existing session immediately
+const { data: { session } } = await sb.auth.getSession();
+if (session?.user) {
+  redirectToDashboard(session.user);
+}
+
+// Fallback
 setTimeout(() => {
   document.querySelector('p').textContent = 'Taking longer than expected…';
   setTimeout(() => window.location.replace('/login'), 3000);
-}, 8000);
+}, 10000);
 </script>
 </body>
 </html>
