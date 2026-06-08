@@ -439,7 +439,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
 
     <div class="nav-section-label">Build</div>
     <a class="nav-item" href="/builder"><span class="nav-icon">🏗</span> App Builder</a>
-    <a class="nav-item" href="/automations"><span class="nav-icon">⚡</span> Automations <span class="nav-badge">3</span></a>
+    <a class="nav-item" href="/automations"><span class="nav-icon">⚡</span> Automations <span class="nav-badge" id="nav-auto-badge" style="display:none">0</span></a>
     <a class="nav-item" href="#"><span class="nav-icon">🗄</span> Database</a>
     <a class="nav-item" href="#"><span class="nav-icon">🔌</span> Integrations</a>
 
@@ -447,7 +447,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
     <a class="nav-item" href="/apps"><span class="nav-icon">📱</span> My Apps <span class="nav-badge green" id="apps-nav-badge" style="display:none">0</span></a>
     <a class="nav-item" href="/team"><span class="nav-icon">👥</span> Team</a>
     <a class="nav-item" href="/analytics"><span class="nav-icon">📊</span> Analytics</a>
-    <a class="nav-item" href="/dashboard"><span class="nav-icon">🔔</span> Alerts <span class="nav-badge">2</span></a>
+    <a class="nav-item" href="/dashboard"><span class="nav-icon">🔔</span> Alerts <span class="nav-badge" id="nav-alerts-badge" style="display:none">0</span></a>
 
     <div class="nav-section-label">Account</div>
     <a class="nav-item" href="/billing"><span class="nav-icon">💳</span> Billing</a>
@@ -556,7 +556,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
       <div class="fade d4">
         <div class="section-header">
           <span class="section-title">Your apps</span>
-          <span class="section-action">View all →</span>
+          <span class="section-action" id="apps-view-all" style="display:none" onclick="window.location.href='/apps'">View all →</span>
         </div>
         <div class="apps-grid" id="apps-grid">
 
@@ -659,7 +659,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
     <span class="tile-drag-handle" title="Drag to reorder">⠿</span>
 
       <!-- RUN CHART -->
-      <div class="card fade d6 tile" draggable="true" data-tile="runs-chart" id="runs-chart-card">
+      <div class="card fade d6 tile" draggable="true" data-tile="runs-chart" id="runs-chart-card" style="display:none">
         <span class="tile-drag-handle" title="Drag to reorder">⠿</span>
         <div id="runs-chart-inner">
         <div class="section-header" style="margin-bottom:0.5rem">
@@ -846,6 +846,11 @@ async function loadDashboard() {
     // Test account — keep demo HTML but update sidebar
     setText('runs-used',  su.runsUsed?.toLocaleString() || '0');
     setText('stat-apps',  su.appsCount || '0');
+    // Hide chart for test accounts with no runs
+    if (!su.runsUsed || su.runsUsed === 0) {
+      const cc = document.getElementById('runs-chart-card');
+      if(cc) cc.style.display = 'none';
+    }
   }
 }
 
@@ -894,7 +899,14 @@ async function loadRealData(user, su) {
     setText('stat-apps',   liveApps);
     setText('stat-runs',   totalRuns > 1000 ? (totalRuns / 1000).toFixed(1) + 'k' : totalRuns);
     setText('stat-failed', failedRuns);
-    setText('stat-users',  0); // Will come from analytics later
+    setText('stat-users',  0);
+
+    // Show "0" clearly as real data not placeholder
+    if (liveApps === 0 && totalRuns === 0) {
+      document.querySelectorAll('.metric-card .metric-val').forEach(el => {
+        if (el.textContent === '—') el.textContent = '0';
+      });
+    }
 
     // Show/hide trend badges based on real data
     if (liveApps > 0) { const el = document.getElementById('trend-apps'); if(el){el.style.display='';el.textContent='↑ '+liveApps+' live';} }
@@ -903,14 +915,19 @@ async function loadRealData(user, su) {
 
     // Show/hide apps nav badge
     if (apps.length > 0) {
-      const badge = document.getElementById('apps-nav-badge');
+      const badge = document.getElementById('nav-apps-badge');
       if (badge) { badge.style.display = ''; badge.textContent = apps.length; }
     }
 
-    // Hide bar chart if no runs
-    if (totalRuns === 0) {
-      const chart = document.getElementById('runs-chart-card');
-      if (chart) chart.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);font-size:11px"><div style="font-size:1.5rem;margin-bottom:8px;opacity:.3">📊</div>No automation runs yet.<br><a href="/automations" style="color:var(--violet)">Create your first automation →</a></div>';
+    // Show chart only when there are real runs
+    const chartCard = document.getElementById('runs-chart-card');
+    if (chartCard) {
+      if (totalRuns === 0) {
+        chartCard.style.display = 'none';
+      } else {
+        chartCard.style.display = '';
+        renderRunsChart(runs);
+      }
     }
 
     apps.length    ? renderApps(apps)    : showEmptyApps();
@@ -920,13 +937,16 @@ async function loadRealData(user, su) {
   } catch (err) {
     console.warn('Dashboard data error:', err.message);
     setText('stat-apps', 0); setText('stat-runs', 0); setText('stat-failed', 0); setText('stat-users', 0);
-    showEmptyApps(); showEmptyFeed(); showEmptyTeam(su);
+    const cc = document.getElementById('runs-chart-card'); if(cc) cc.style.display='none';
+        showEmptyApps(); showEmptyFeed(); showEmptyTeam(su);
   }
 }
 
 function renderApps(apps) {
   const grid = document.getElementById('apps-grid');
   if (!grid) return;
+  const viewAll = document.getElementById('apps-view-all');
+  if (viewAll && apps.length > 0) viewAll.style.display = '';
   const icons  = { web: '📊', mobile: '📱', automation: '⚡', form: '📝' };
   const covers = { web: 'cover-v', mobile: 'cover-l', automation: 'cover-b', form: 'cover-o' };
   grid.innerHTML = apps.slice(0, 4).map(app => `
@@ -960,6 +980,7 @@ function showEmptyApps() {
   const grid = document.getElementById('apps-grid');
   if (!grid) return;
   setText('stat-apps', 0);
+  const va = document.getElementById('apps-view-all'); if(va) va.style.display='none';
   grid.innerHTML = `
     <div class="new-app-card" onclick="window.location.href='/builder'" style="grid-column:1/-1;min-height:180px">
       <div class="new-app-icon" style="font-size:2rem">🏗</div>
