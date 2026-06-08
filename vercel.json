@@ -45,6 +45,10 @@
     {
       "source": "/integrations",
       "destination": "/integrations.html"
+    },
+    {
+      "source": "/auth/callback",
+      "destination": "/auth/callback.html"
     }
   ]
 }
