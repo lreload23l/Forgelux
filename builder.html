@@ -963,12 +963,330 @@ function rhDown(e){
 function canvasDown(e){
   if(e.target===document.getElementById('canvas-area')||e.target===document.getElementById('canvas-frame')){
     deselect(); closeCtx();
-    const ar=document.getElementById('canvas-area')
-</script>
-</body>
-</html>
+    // Start pan with middle mouse or space+drag
+    if(e.button===1){
+      const startX=e.clientX-panX, startY=e.clientY-panY;
+      const mv=ev=>{panX=ev.clientX-startX;panY=ev.clientY-startY;updateVP();};
+      const up=()=>{window.removeEventListener('mousemove',mv);window.removeEventListener('mouseup',up);};
+      window.addEventListener('mousemove',mv);
+      window.addEventListener('mouseup',up);
+    }
+  }
+}
 
-<!-- ═══ PART B: SAVE/LOAD + TEMPLATES ═══ -->
+window.addEventListener('mousemove',e=>{
+  if(dragging&&dragging.type==='node'){
+    const n=nodes.find(n=>n.id===dragging.id); if(!n)return;
+    const fr=document.getElementById('canvas-frame').getBoundingClientRect();
+    n.x=snap(Math.max(0,(e.clientX-fr.left)/zoom-dragOff.x));
+    n.y=snap(Math.max(0,(e.clientY-fr.top)/zoom-dragOff.y));
+    applyStyle(n);
+  }
+  if(resizing){
+    const n=nodes.find(n=>n.id===resizing.id); if(!n)return;
+    const fr=document.getElementById('canvas-frame').getBoundingClientRect();
+    const cx=(e.clientX-fr.left)/zoom, cy=(e.clientY-fr.top)/zoom;
+    const dx=cx-rsStart.cx, dy=cy-rsStart.cy;
+    const dir=resizing.dir;
+    if(dir.includes('e')) n.w=snap(Math.max(40,rsStart.w+dx));
+    if(dir.includes('s')) n.h=snap(Math.max(20,rsStart.h+dy));
+    if(dir.includes('w')){n.w=snap(Math.max(40,rsStart.w-dx));n.x=snap(rsStart.x+rsStart.w-n.w);}
+    if(dir.includes('n')){n.h=snap(Math.max(20,rsStart.h-dy));n.y=snap(rsStart.y+rsStart.h-n.h);}
+    applyStyle(n);
+    syncProps(n);
+  }
+});
+
+window.addEventListener('mouseup',e=>{
+  if(dragging||resizing){ saveHist(); syncProps(nodes.find(n=>n.id===selId)); }
+  dragging=null; resizing=null;
+});
+
+// ═══════════════════════════ CONTEXT MENU ═══════════════════════════
+let ctxTarget=null;
+function openCtx(e,id){
+  e.preventDefault(); ctxTarget=id;
+  const menu=document.getElementById('ctx-menu');
+  if(!menu){
+    const m=document.createElement('div');
+    m.id='ctx-menu';
+    m.style.cssText='position:fixed;background:var(--surface);border:1px solid var(--border-bright);border-radius:10px;padding:5px;z-index:9999;min-width:160px;box-shadow:0 8px 30px rgba(0,0,0,.5);font-size:12px;';
+    m.innerHTML=`
+      <div class="ctx-item" onclick="ctxDo('duplicate')"><i class="ti ti-copy"></i> Duplicate</div>
+      <div class="ctx-item" onclick="ctxDo('copy')"><i class="ti ti-clipboard"></i> Copy</div>
+      <div class="ctx-item" onclick="ctxDo('paste')"><i class="ti ti-clipboard-check"></i> Paste</div>
+      <div class="ctx-sep"></div>
+      <div class="ctx-item" onclick="ctxDo('front')"><i class="ti ti-stack-front"></i> Bring to front</div>
+      <div class="ctx-item" onclick="ctxDo('back')"><i class="ti ti-stack-back"></i> Send to back</div>
+      <div class="ctx-sep"></div>
+      <div class="ctx-item ctx-danger" onclick="ctxDo('delete')"><i class="ti ti-trash"></i> Delete</div>`;
+    document.body.appendChild(m);
+
+    // Add styles for ctx items
+    const s=document.createElement('style');
+    s.textContent=`.ctx-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;cursor:pointer;color:var(--subtle);transition:all .1s;}.ctx-item:hover{background:rgba(255,255,255,.06);color:var(--text);}.ctx-item i{font-size:13px;width:16px;}.ctx-sep{height:1px;background:var(--border);margin:3px 0;}.ctx-danger{color:#F87171!important;}.ctx-danger:hover{background:rgba(239,68,68,.1)!important;}`;
+    document.head.appendChild(s);
+  }
+  const menu2=document.getElementById('ctx-menu');
+  menu2.style.left=e.clientX+'px'; menu2.style.top=e.clientY+'px'; menu2.style.display='block';
+  select(id);
+}
+
+function closeCtx(){ const m=document.getElementById('ctx-menu'); if(m) m.style.display='none'; }
+document.addEventListener('click',()=>closeCtx());
+
+function ctxDo(action){
+  closeCtx();
+  const id=ctxTarget||selId; if(!id&&action!=='paste')return;
+  const n=nodes.find(n=>n.id===id);
+  if(action==='duplicate'&&n){ const c={...JSON.parse(JSON.stringify(n)),id:++nid,x:n.x+16,y:n.y+16,z:nodes.length}; nodes.push(c); renderNode(c); select(c.id); saveHist(); renderLayers(); }
+  if(action==='copy'&&n){ clipboard=JSON.parse(JSON.stringify(n)); toast('Copied'); }
+  if(action==='paste'&&clipboard){ const c={...JSON.parse(JSON.stringify(clipboard)),id:++nid,x:clipboard.x+24,y:clipboard.y+24,z:nodes.length}; nodes.push(c); renderNode(c); select(c.id); saveHist(); renderLayers(); }
+  if(action==='delete'&&id){ deleteNode(id); }
+  if(action==='front'&&n){ n.z=nodes.length+1; applyStyle(n); }
+  if(action==='back'&&n){ n.z=0; applyStyle(n); }
+}
+
+// Right-click on nodes
+document.getElementById('canvas-frame').addEventListener('contextmenu',e=>{
+  const node=e.target.closest('.c-node');
+  if(node){ const id=parseInt(node.id.replace('nd-','')); openCtx(e,id); }
+});
+
+// ═══════════════════════════ PROPERTIES PANEL ═══════════════════════════
+function renderProps(n){
+  if(!n)return;
+  document.getElementById('rp-title').textContent=n.type.charAt(0).toUpperCase()+n.type.slice(1);
+  document.getElementById('rp-type').textContent='Component';
+  const p=n.props;
+  let html='';
+
+  // Position & size
+  html+=`<div class="rp-section">
+    <div class="rp-section-title">Position & size</div>
+    <div class="rp-row">
+      <label class="rp-label">X</label><input class="rp-input" type="number" value="${Math.round(n.x)}" oninput="setProp(${n.id},'_x',+this.value)">
+      <label class="rp-label">Y</label><input class="rp-input" type="number" value="${Math.round(n.y)}" oninput="setProp(${n.id},'_y',+this.value)">
+    </div>
+    <div class="rp-row">
+      <label class="rp-label">W</label><input class="rp-input" type="number" value="${n.w}" oninput="setProp(${n.id},'_w',+this.value)">
+      <label class="rp-label">H</label><input class="rp-input" type="number" value="${n.h}" oninput="setProp(${n.id},'_h',+this.value)">
+    </div>
+    <div class="rp-row">
+      <label class="rp-label">Opacity</label>
+      <input class="rp-input" type="range" min="0" max="100" value="${p.opacity||100}" oninput="setPropR(${n.id},'opacity',+this.value,this)">
+      <span class="rp-val">${p.opacity||100}%</span>
+    </div>
+  </div>`;
+
+  // Type-specific props
+  if(['heading','text','badge','button','link'].includes(n.type)){
+    html+=`<div class="rp-section">
+      <div class="rp-section-title">Content</div>
+      <div class="rp-field"><label class="rp-label">Text</label><input class="rp-input rp-full" value="${p.text||''}" oninput="setProp(${n.id},'text',this.value)"></div>
+      ${n.type!=='badge'&&n.type!=='link'?`<div class="rp-field"><label class="rp-label">Font size</label><input class="rp-input" type="number" value="${p.fontSize||14}" oninput="setProp(${n.id},'fontSize',+this.value)"></div>`:''}
+      <div class="rp-field"><label class="rp-label">Color</label><input class="rp-input rp-color" type="color" value="${rgbToHex(p.color||'#ffffff')}" oninput="setProp(${n.id},'color',this.value)"></div>
+      ${n.type==='button'?`<div class="rp-field"><label class="rp-label">Background</label><input class="rp-input rp-color" type="color" value="${rgbToHex(p.bg||'#A3FF47')}" oninput="setProp(${n.id},'bg',this.value)"></div>
+      <div class="rp-field"><label class="rp-label">Radius</label><input class="rp-input" type="number" value="${p.radius||8}" oninput="setProp(${n.id},'radius',+this.value)"></div>`:''}
+    </div>`;
+  }
+
+  if(n.type==='stat'){
+    html+=`<div class="rp-section">
+      <div class="rp-section-title">Stat card</div>
+      <div class="rp-field"><label class="rp-label">Label</label><input class="rp-input rp-full" value="${p.label||''}" oninput="setProp(${n.id},'label',this.value)"></div>
+      <div class="rp-field"><label class="rp-label">Value</label><input class="rp-input rp-full" value="${p.value||''}" oninput="setProp(${n.id},'value',this.value)"></div>
+      <div class="rp-field"><label class="rp-label">Trend</label><input class="rp-input rp-full" value="${p.trend||''}" oninput="setProp(${n.id},'trend',this.value)"></div>
+    </div>`;
+  }
+
+  if(n.type==='chart'){
+    html+=`<div class="rp-section">
+      <div class="rp-section-title">Chart</div>
+      <div class="rp-field"><label class="rp-label">Title</label><input class="rp-input rp-full" value="${p.title||''}" oninput="setProp(${n.id},'title',this.value)"></div>
+    </div>`;
+  }
+
+  if(n.type==='input'||n.type==='dropdown'){
+    html+=`<div class="rp-section">
+      <div class="rp-section-title">Input</div>
+      <div class="rp-field"><label class="rp-label">Placeholder</label><input class="rp-input rp-full" value="${p.placeholder||''}" oninput="setProp(${n.id},'placeholder',this.value)"></div>
+    </div>`;
+  }
+
+  // Actions
+  html+=`<div class="rp-section">
+    <div class="rp-section-title">Actions</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="rp-btn" onclick="ctxDo('duplicate')">Duplicate</button>
+      <button class="rp-btn" onclick="ctxDo('front')">To front</button>
+      <button class="rp-btn" onclick="ctxDo('back')">To back</button>
+      <button class="rp-btn rp-btn-danger" onclick="deleteNode(${n.id})">Delete</button>
+    </div>
+  </div>`;
+
+  document.getElementById('rp-scroll').innerHTML=html;
+}
+
+function setProp(id,key,val){
+  const n=nodes.find(n=>n.id===id); if(!n)return;
+  if(key==='_x'){n.x=val;}else if(key==='_y'){n.y=val;}else if(key==='_w'){n.w=val;}else if(key==='_h'){n.h=val;}
+  else{n.props[key]=val;}
+  applyStyle(n);
+  renderNode(n);
+  saveHist();
+}
+
+function setPropR(id,key,val,el){
+  setProp(id,key,val);
+  const span=el.nextElementSibling;
+  if(span) span.textContent=val+(key==='opacity'?'%':'');
+}
+
+function syncProps(n){ if(n&&n.id===selId) renderProps(n); }
+
+function rgbToHex(c){
+  if(!c||c.startsWith('#'))return c||'#ffffff';
+  const m=c.match(/\d+/g); if(!m||m.length<3)return '#ffffff';
+  return '#'+m.slice(0,3).map(x=>parseInt(x).toString(16).padStart(2,'0')).join('');
+}
+
+// ═══════════════════════════ LAYERS PANEL ═══════════════════════════
+function renderLayers(){
+  const list=document.getElementById('layer-list'); if(!list)return;
+  const icons={header:'▬',sidebar:'▐',table:'⊞',chart:'📊',stat:'#',form:'⊡',heading:'H',text:'¶',button:'⬜',image:'🖼',divider:'─',input:'▱',dropdown:'▾',list:'≡',badge:'◉',link:'⎋'};
+  list.innerHTML=[...nodes].reverse().map(n=>`
+    <div class="layer-item ${n.id===selId?'act':''}" data-nid="${n.id}" onclick="select(${n.id})">
+      <span class="layer-icon">${icons[n.type]||'□'}</span>
+      <span class="layer-name">${n.type}</span>
+      <span class="layer-z">${n.z}</span>
+    </div>`).join('');
+}
+
+// ═══════════════════════════ HISTORY ═══════════════════════════
+function saveHist(){
+  history=history.slice(0,histIdx+1);
+  history.push(JSON.parse(JSON.stringify(nodes)));
+  histIdx=history.length-1;
+  if(history.length>50) history.shift();
+  renderLayers();
+  triggerAutoSave();
+}
+
+function undo(){
+  if(histIdx<=0)return;
+  histIdx--;
+  restoreHist();
+  toast('Undo');
+}
+
+function redo(){
+  if(histIdx>=history.length-1)return;
+  histIdx++;
+  restoreHist();
+  toast('Redo');
+}
+
+function restoreHist(){
+  const snap=history[histIdx];
+  document.querySelectorAll('.c-node').forEach(el=>el.remove());
+  nodes=JSON.parse(JSON.stringify(snap));
+  nid=Math.max(...nodes.map(n=>n.id),0);
+  nodes.forEach(n=>renderNode(n));
+  deselect(); renderLayers();
+}
+
+// ═══════════════════════════ CONNECTORS ═══════════════════════════
+const CONNS={
+  canva:{name:'Canva',icon:'🎨',color:'#7B2FFF'},
+  figma:{name:'Figma',icon:'🎭',color:'#0EA5E9'},
+  adobe:{name:'Adobe',icon:'🔴',color:'#FF0000'},
+  claude:{name:'Claude AI',icon:'🔮',color:'#7B2FFF'},
+  openai:{name:'OpenAI',icon:'🤖',color:'#10A37F'},
+  gemini:{name:'Gemini',icon:'✨',color:'#4285F4'},
+  stability:{name:'Stability AI',icon:'🖼',color:'#7B2FFF'},
+  sheets:{name:'Google Sheets',icon:'🟩',color:'#0F9D58'},
+  sf:{name:'Salesforce',icon:'☁️',color:'#00A1E0'},
+  airtable:{name:'Airtable',icon:'🟦',color:'#18BFFF'},
+  postgres:{name:'PostgreSQL',icon:'🐘',color:'#336791'},
+  api:{name:'REST API',icon:'⚡',color:'#F59E0B'},
+};
+
+function dropConn(ct,x,y){
+  const cfg=CONNS[ct]; if(!cfg)return;
+  const cn={id:++nid,ctype:ct,x,y,w:160,h:64,name:cfg.name,icon:cfg.icon,color:cfg.color};
+  connNodes.push(cn);
+  const el=document.createElement('div');
+  el.id='cn-'+cn.id; el.className='conn-node';
+  el.style.cssText=`left:${x}px;top:${y}px;width:${cn.w}px;height:${cn.h}px;position:absolute;background:${cn.color}1A;border:1.5px solid ${cn.color}44;border-radius:10px;display:flex;align-items:center;gap:8px;padding:0 12px;cursor:move;z-index:50;font-size:12px;color:var(--text);user-select:none`;
+  el.innerHTML=`<span style="font-size:1.3rem">${cn.icon}</span><div><div style="font-weight:500">${cn.name}</div><div style="font-size:10px;color:var(--muted)">Connector</div></div><div class="cn-port" style="position:absolute;right:-6px;top:50%;transform:translateY(-50%);width:12px;height:12px;border-radius:50%;background:${cn.color};border:2px solid var(--bg);cursor:crosshair" data-cnid="${cn.id}"></div>`;
+  el.addEventListener('mousedown',cnDown);
+  document.getElementById('canvas-frame').appendChild(el);
+  saveHist(); renderLayers();
+}
+
+function cnDown(e){
+  if(e.target.classList.contains('cn-port'))return;
+  e.stopPropagation();
+  const el=e.currentTarget;
+  const id=parseInt(el.id.replace('cn-',''));
+  const cn=connNodes.find(c=>c.id===id); if(!cn)return;
+  const fr=document.getElementById('canvas-frame').getBoundingClientRect();
+  const ox=(e.clientX-fr.left)/zoom-cn.x, oy=(e.clientY-fr.top)/zoom-cn.y;
+  dragging={id,type:'conn'};
+  dragOff={x:ox,y:oy};
+}
+
+// ═══════════════════════════ TOAST ═══════════════════════════
+function toast(msg){
+  let t=document.getElementById('bld-toast');
+  if(!t){t=document.createElement('div');t.id='bld-toast';t.style.cssText='position:fixed;bottom:60px;left:50%;transform:translateX(-50%) translateY(30px);background:var(--surface);border:1px solid var(--border-bright);border-radius:8px;padding:7px 16px;font-size:12px;color:var(--text);box-shadow:0 4px 20px rgba(0,0,0,.5);transition:all .25s;z-index:9999;opacity:0;pointer-events:none';document.body.appendChild(t);}
+  t.textContent=msg; t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(0)';
+  clearTimeout(window._bt);
+  window._bt=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(30px)';},1800);
+}
+
+// ═══════════════════════════ AUTO SAVE ═══════════════════════════
+let _saveTimer=null;
+function triggerAutoSave(){
+  const dot=document.getElementById('save-dot');
+  const lbl=document.getElementById('save-label');
+  if(dot) dot.classList.add('saving');
+  if(lbl) lbl.textContent='Saving…';
+  clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(()=>{
+    if(window.FLXStorage) FLXStorage.saveBuilderState('current',nodes,[],[]);
+    if(dot) dot.classList.remove('saving');
+    if(lbl) lbl.textContent='Saved at '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  },1200);
+}
+
+// ═══════════════════════════ RESTYLE ═══════════════════════════
+// Add missing CSS for properties panel
+const rpStyle=document.createElement('style');
+rpStyle.textContent=`
+.rp-section{margin-bottom:1.25rem}
+.rp-section-title{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin-bottom:.6rem}
+.rp-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.rp-field{margin-bottom:.6rem}
+.rp-label{font-size:10px;color:var(--muted);width:40px;flex-shrink:0}
+.rp-input{background:var(--s2);border:1px solid var(--bb);border-radius:6px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:11px;padding:4px 7px;outline:none;transition:border-color .15s;width:80px}
+.rp-input:focus{border-color:rgba(123,47,255,.5)}
+.rp-input.rp-full{width:100%}
+.rp-input.rp-color{width:40px;height:24px;padding:2px;cursor:pointer}
+.rp-input[type=range]{width:120px;accent-color:var(--violet)}
+.rp-val{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;width:28px}
+.rp-btn{padding:5px 10px;border-radius:6px;border:1px solid var(--bb);background:var(--s2);color:var(--subtle);font-size:10px;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif}
+.rp-btn:hover{border-color:rgba(255,255,255,.2);color:var(--text)}
+.rp-btn-danger{color:#F87171!important;border-color:rgba(239,68,68,.25)!important}
+.rp-btn-danger:hover{background:rgba(239,68,68,.1)!important}
+.no-sel{display:flex;flex-direction:column;align-items:center;justify-content:center;height:180px;gap:.75rem;text-align:center}
+.no-sel-icon{font-size:2rem;opacity:.2}
+.no-sel-txt{font-size:11px;color:var(--muted);font-weight:300;line-height:1.6;max-width:180px}
+`;
+document.head.appendChild(rpStyle);
+
+</script>
 <script src="js/storage.js"></script>
 
 <!-- SAVE INDICATOR -->
@@ -1296,3 +1614,6 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
+
+</body>
+</html>
