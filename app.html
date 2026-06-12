@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forgelux App</title>
+<link rel="stylesheet" href="/js/theme.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--violet:#7B2FFF;--lime:#A3FF47;--surface:rgba(255,255,255,.04);--border:rgba(255,255,255,.09);--muted:rgba(255,255,255,.4);--subtle:rgba(255,255,255,.65)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#080A0F;color:#fff;font-family:'DM Sans',sans-serif;min-height:100vh}
+#stage-wrap{display:flex;justify-content:center;padding:24px 16px;overflow-x:hidden}
+#stage{position:relative;width:1280px;transform-origin:top left}
+.rt-node{position:absolute}
+.n-header{background:linear-gradient(135deg,rgba(123,47,255,.3),rgba(14,165,233,.2));border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;padding:0 1rem;gap:.75rem}
+.n-header-logo{font-size:1rem}
+.n-header-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;color:#fff}
+.n-header-nav{display:flex;gap:1rem;margin-left:auto}
+.n-header-link{font-size:11px;color:rgba(255,255,255,.6)}
+.n-sidebar{background:rgba(123,47,255,.08);border-right:1px solid rgba(123,47,255,.2)}
+.n-divider{background:var(--border)}
+.n-image{background:rgba(255,255,255,.05);border:1px dashed rgba(255,255,255,.15);border-radius:inherit;display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:var(--muted)}
+.n-stat{background:var(--surface);border:1px solid var(--border);border-radius:inherit;padding:1rem;display:flex;flex-direction:column;gap:.4rem}
+.n-stat-icon{width:28px;height:28px;background:rgba(123,47,255,.2);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.85rem}
+.n-stat-val{font-family:'Syne',sans-serif;font-weight:700;font-size:1.4rem;letter-spacing:-.03em;color:#fff}
+.n-stat-lbl{font-size:10px;color:var(--muted)}
+.n-stat-trend{font-size:10px;color:var(--lime)}
+.n-chart{background:var(--surface);border:1px solid var(--border);border-radius:inherit;padding:.75rem;display:flex;flex-direction:column;gap:.5rem}
+.n-chart-title{font-size:11px;font-weight:500;color:var(--subtle)}
+.n-chart-bars{display:flex;align-items:flex-end;gap:3px;flex:1;min-height:40px}
+.n-chart-bar{flex:1;border-radius:2px 2px 0 0;background:rgba(123,47,255,.5);min-height:4px;transition:background .15s}
+.n-chart-bar:hover{background:var(--violet)}
+.n-table{background:var(--surface);border:1px solid var(--border);border-radius:inherit;overflow:hidden}
+.n-table-head{background:rgba(255,255,255,.04);display:flex;border-bottom:1px solid var(--border)}
+.n-table-cell{flex:1;padding:5px 8px;font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.n-table-row{display:flex;border-bottom:1px solid rgba(255,255,255,.03)}
+.n-table-row:last-child{border-bottom:none}
+.n-table-td{flex:1;padding:5px 8px;font-size:10px;color:var(--subtle);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.n-heading{font-family:'Syne',sans-serif;font-weight:700;color:#fff;line-height:1.1;display:flex;align-items:center}
+.n-text{color:rgba(255,255,255,.6);font-size:12px;line-height:1.6;font-weight:300}
+.n-button{display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer}
+.n-input{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;display:flex;align-items:center;padding:0 .75rem;color:rgba(255,255,255,.4);font-size:11px}
+.n-dropdown{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;display:flex;align-items:center;justify-content:space-between;padding:0 .75rem;color:rgba(255,255,255,.4);font-size:11px}
+.n-badge{display:inline-flex;align-items:center;justify-content:center;border-radius:100px;font-size:11px;font-weight:500}
+.n-link{color:#7DD3FC;font-size:12px;text-decoration:underline;display:flex;align-items:center}
+.n-form{background:var(--surface);border:1px solid var(--border);border-radius:inherit;padding:1rem;display:flex;flex-direction:column;gap:.5rem}
+.n-list{background:var(--surface);border:1px solid var(--border);border-radius:inherit;overflow:hidden}
+.n-list-item{display:flex;align-items:center;gap:.5rem;padding:6px .75rem;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px;color:var(--subtle)}
+.n-list-dot{width:6px;height:6px;border-radius:50%;background:var(--violet);flex-shrink:0}
+/* live overrides — same look, real controls */
+input.n-input,select.n-dropdown{width:100%;height:100%;color:#fff;outline:none;font-family:'DM Sans',sans-serif;appearance:none;-webkit-appearance:none}
+input.n-input::placeholder{color:rgba(255,255,255,.4)}
+select.n-dropdown option{background:#13151c;color:#fff}
+.n-button{user-select:none;transition:filter .12s}
+.n-button:hover{filter:brightness(1.08)}
+.rt-invalid{border-color:#ff5d5d !important}
+#rt-msg{position:fixed;left:50%;bottom:32px;transform:translateX(-50%);background:#13151c;border:1px solid var(--border);border-radius:10px;padding:.7rem 1.2rem;font-size:13px;display:none;z-index:50}
+#rt-state{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;gap:.8rem;text-align:center;padding:0 1rem}
+#rt-state .big{font-family:'Syne',sans-serif;font-weight:700;font-size:1.4rem}
+#rt-state .sub{color:var(--muted);font-size:13px;font-weight:300}
+#rt-footer{position:fixed;right:14px;bottom:12px;font-size:10px;color:var(--muted);opacity:.7}
+#rt-footer a{color:var(--subtle);text-decoration:none}
+</style>
+</head>
+<body>
+<div id="rt-state"><div class="big">Loading app…</div></div>
+<div id="stage-wrap" style="display:none"><div id="stage"></div></div>
+<div id="rt-msg"></div>
+<div id="rt-footer">Built with <a href="/">⬡ Forgelux</a></div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const sb = createClient(
+  'https://xizckgqxdllbopsmbzis.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
+);
+
+let APP = null;
+let NODES = [];
+
+function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function state(big, sub){
+  const el = document.getElementById('rt-state');
+  el.style.display = 'flex';
+  el.innerHTML = '<div class="big">'+esc(big)+'</div>' + (sub?'<div class="sub">'+esc(sub)+'</div>':'');
+  document.getElementById('stage-wrap').style.display = 'none';
+}
+
+function toast(msg){
+  const t = document.getElementById('rt-msg');
+  t.textContent = msg; t.style.display = 'block';
+  clearTimeout(t._h); t._h = setTimeout(()=>t.style.display='none', 3500);
+}
+
+function fieldKey(n){
+  return (n.props.fieldName || n.props.placeholder || ('field_'+n.id))
+    .toLowerCase().trim().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+}
+
+// ── Runtime renderer: same markup as the builder, but live ──
+function nodeHTML(n){
+  const p = n.props || {};
+  switch(n.type){
+    case 'header': return '<div class="n-header" style="width:100%;height:100%;background:'+(p.bg||'rgba(123,47,255,0.2)')+'"><span class="n-header-logo">⬡</span><span class="n-header-title">'+esc(p.title||'My App')+'</span></div>';
+    case 'sidebar': return '<div class="n-sidebar" style="width:100%;height:100%;background:'+(p.bg||'rgba(123,47,255,0.08)')+'"></div>';
+    case 'divider': return '<div class="n-divider" style="width:100%;height:100%;background:'+(p.bg||'rgba(255,255,255,0.1)')+'"></div>';
+    case 'image': return '<div class="n-image" style="width:100%;height:100%;border-radius:'+(p.radius||8)+'px">🖼</div>';
+    case 'stat': return '<div class="n-stat" style="width:100%;height:100%;border-radius:'+(p.radius||10)+'px"><div class="n-stat-icon">'+(p.icon||'📊')+'</div><div class="n-stat-val">'+esc(p.value||'0')+'</div><div class="n-stat-lbl">'+esc(p.label||'Label')+'</div>'+(p.trend?'<div class="n-stat-trend">'+esc(p.trend)+'</div>':'')+'</div>';
+    case 'chart': { const bars=p.bars||[40,65,55,80,70,90,85]; const max=Math.max(...bars,1);
+      return '<div class="n-chart" style="width:100%;height:100%;border-radius:'+(p.radius||10)+'px"><div class="n-chart-title">'+esc(p.title||'Chart')+'</div><div class="n-chart-bars">'+bars.map(b=>'<div class="n-chart-bar" style="height:'+Math.round(b/max*100)+'%"></div>').join('')+'</div></div>'; }
+    case 'table': { const cols=p.cols||['Column 1','Column 2','Column 3'];
+      return '<div class="n-table" style="width:100%;height:100%;border-radius:'+(p.radius||10)+'px"><div class="n-table-head">'+cols.map(c=>'<div class="n-table-cell">'+esc(c)+'</div>').join('')+'</div>'+[1,2,3].map(()=>'<div class="n-table-row">'+cols.map(()=>'<div class="n-table-td">—</div>').join('')+'</div>').join('')+'</div>'; }
+    case 'list': { const items=p.items||['Item one','Item two','Item three'];
+      return '<div class="n-list" style="width:100%;height:100%;border-radius:'+(p.radius||10)+'px">'+items.map(i=>'<div class="n-list-item"><div class="n-list-dot"></div>'+esc(i)+'</div>').join('')+'</div>'; }
+    case 'heading': return '<div class="n-heading" style="width:100%;height:100%;font-size:'+(p.fontSize||28)+'px;color:'+(p.color||'#FFFFFF')+';font-weight:'+(p.fontWeight||'700')+'">'+esc(p.text||'Heading')+'</div>';
+    case 'text': return '<div class="n-text" style="width:100%;height:100%;font-size:'+(p.fontSize||13)+'px;color:'+(p.color||'rgba(255,255,255,0.6)')+'">'+esc(p.text||'Text')+'</div>';
+    case 'badge': return '<div class="n-badge" style="width:100%;height:100%;background:'+(p.bg||'rgba(123,47,255,0.2)')+';color:'+(p.color||'#C4A3FF')+';border-radius:'+(p.radius??100)+'px">'+esc(p.text||'Badge')+'</div>';
+    case 'link': return '<a class="n-link" style="width:100%;height:100%" href="'+esc(p.url||'#')+'" target="_blank" rel="noopener">'+esc(p.text||'Link')+'</a>';
+    // ── Live controls ──
+    case 'input': return '<input class="n-input" style="border-radius:'+(p.radius||8)+'px;background:'+(p.bg||'rgba(255,255,255,0.06)')+'" placeholder="'+esc(p.placeholder||'Enter value…')+'" data-field="'+fieldKey(n)+'"'+(p.required?' data-required="1"':'')+'>';
+    case 'dropdown': { const opts=(typeof p.options==='string'?p.options.split(','):(p.options||[])).map(o=>String(o).trim()).filter(Boolean);
+      return '<select class="n-dropdown" style="border-radius:'+(p.radius||8)+'px" data-field="'+fieldKey(n)+'"'+(p.required?' data-required="1"':'')+'><option value="">'+esc(p.placeholder||'Select option…')+'</option>'+opts.map(o=>'<option value="'+esc(o)+'">'+esc(o)+'</option>').join('')+'</select>'; }
+    case 'button': return '<div class="n-button rt-action" data-node="'+n.id+'" style="width:100%;height:100%;background:'+(p.bg||'#A3FF47')+';color:'+(p.color||'#080A0F')+';border-radius:'+(p.radius||8)+'px;font-size:'+(p.fontSize||13)+'px">'+esc(p.text||'Button')+'</div>';
+    case 'form': { const fields=p.fields||['Name','Email'];
+      return '<div class="n-form" style="width:100%;height:100%;border-radius:'+(p.radius||10)+'px">'+(p.title?'<div style="font-family:\'Syne\',sans-serif;font-weight:600;font-size:13px;color:#fff;margin-bottom:4px">'+esc(p.title)+'</div>':'')+fields.map(f=>'<input class="n-input" style="height:34px;border-radius:6px" placeholder="'+esc(f)+'" data-field="'+String(f).toLowerCase().trim().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'')+'">').join('')+'<div class="n-button rt-action" data-node="'+n.id+'" data-form-submit="1" style="background:#A3FF47;color:#080A0F;border-radius:6px;padding:8px;font-size:11px;font-weight:600;text-align:center;margin-top:4px;justify-content:center">'+esc(p.submitText||'Submit')+'</div></div>'; }
+    default: return '<div style="width:100%;height:100%"></div>';
+  }
+}
+
+function render(){
+  const stage = document.getElementById('stage');
+  stage.innerHTML = '';
+  let maxBottom = 400;
+  [...NODES].sort((a,b)=>(a.z||0)-(b.z||0)).forEach(n=>{
+    if (n.visible === false) return;
+    const el = document.createElement('div');
+    el.className = 'rt-node';
+    el.style.cssText = 'left:'+n.x+'px;top:'+n.y+'px;width:'+n.w+'px;height:'+n.h+'px;z-index:'+((n.z||0)+1)+';opacity:'+((n.props?.opacity??100)/100)+';border-radius:'+(n.props?.radius||0)+'px';
+    el.innerHTML = nodeHTML(n);
+    stage.appendChild(el);
+    maxBottom = Math.max(maxBottom, n.y + n.h);
+  });
+  // Scale 1280px canvas to viewport
+  const scale = Math.min(1, (window.innerWidth - 32) / 1280);
+  stage.style.transform = 'scale('+scale+')';
+  stage.style.height = (maxBottom + 60) + 'px';
+  document.getElementById('stage-wrap').style.height = ((maxBottom + 60) * scale + 48) + 'px';
+  document.getElementById('rt-state').style.display = 'none';
+  document.getElementById('stage-wrap').style.display = 'flex';
+
+  stage.querySelectorAll('.rt-action').forEach(b => b.addEventListener('click', onAction));
+}
+
+function collectData(scopeEl){
+  const root = scopeEl || document.getElementById('stage');
+  const data = {};
+  let valid = true;
+  root.querySelectorAll('[data-field]').forEach(el=>{
+    el.classList.remove('rt-invalid');
+    const v = el.value?.trim?.() ?? '';
+    if (el.dataset.required && !v) { el.classList.add('rt-invalid'); valid = false; }
+    data[el.dataset.field] = v;
+  });
+  return { data, valid };
+}
+
+async function onAction(e){
+  const nodeId = +e.currentTarget.dataset.node;
+  const n = NODES.find(x=>x.id===nodeId);
+  if (!n) return;
+  const p = n.props || {};
+  const action = e.currentTarget.dataset.formSubmit ? 'submit' : (p.action || 'none');
+
+  if (action === 'url') {
+    if (p.url) window.open(p.url.startsWith('http')?p.url:'https://'+p.url, '_blank', 'noopener');
+    return;
+  }
+  if (action !== 'submit' && action !== 'workflow') return;
+
+  const scope = e.currentTarget.dataset.formSubmit ? e.currentTarget.closest('.n-form') : null;
+  const { data, valid } = collectData(scope);
+  if (!valid) { toast('Please fill in the required fields'); return; }
+
+  e.currentTarget.style.pointerEvents = 'none';
+  try {
+    const row = { app_id: APP.id, workspace_id: APP.workspace_id, data };
+    if (action === 'workflow' && p.automationId) row.automation_id = p.automationId;
+    const { error } = await sb.from('submissions').insert(row);
+    if (error) throw error;
+    toast(p.successMsg || (action==='workflow' ? '✓ Workflow started' : '✓ Submitted — thank you!'));
+    document.querySelectorAll('[data-field]').forEach(el=>{ if(!scope || scope.contains(el)) el.value=''; });
+  } catch(err) {
+    console.warn(err);
+    toast('Something went wrong — please try again');
+  } finally {
+    e.currentTarget.style.pointerEvents = '';
+  }
+}
+
+async function boot(){
+  const id = new URLSearchParams(location.search).get('id');
+  if (!id) { state('App not found', 'This link is missing an app id.'); return; }
+  try {
+    const { data: app, error } = await sb.from('apps').select('*').eq('id', id).single();
+    if (error || !app) { state('App not found', 'It may be unpublished or the link is wrong.'); return; }
+    APP = app;
+    document.title = (app.name || 'App') + ' — Forgelux';
+    NODES = app.canvas_json?.nodes || [];
+    if (!NODES.length) { state(app.name || 'This app', 'Nothing here yet — the canvas is empty.'); return; }
+    render();
+    window.addEventListener('resize', render);
+  } catch(e) {
+    state('Could not load app', 'Check your connection and refresh.');
+  }
+}
+boot();
+</script>
+</body>
+</html>
