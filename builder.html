@@ -489,6 +489,14 @@ async function ensureWorkspace() {
   return cloudWorkspaceId;
 }
 
+let automationsCache = [];
+async function loadWorkflows() {
+  try {
+    await ensureWorkspace();
+    automationsCache = await window.FLXdb.getAutomations(cloudWorkspaceId) || [];
+  } catch(e) { console.warn('Could not load workflows', e); }
+}
+
 // ═══════════════════════════════════════════════════════
 // VIEWPORT
 // ═══════════════════════════════════════════════════════
@@ -988,12 +996,52 @@ function renderProps(n) {
         <span class="rp-label" style="margin-left:4px">Text</span><input class="rp-input rp-input-color" type="color" value="${toHex(p.color||'#080A0F')}" oninput="setPropAndRender(${n.id},'color',this.value)">
       </div>
     </div>`;
+
+    // ── Actions (what happens when clicked in the live app) ──
+    const action = p.action || 'none';
+    html += `<div class="rp-section">
+      <div class="rp-section-title">⚡ Action</div>
+      <div class="rp-field"><label class="rp-lbl-full">On click</label>
+        <select class="rp-input rp-input-full" onchange="setPropAndProps(${n.id},'action',this.value)">
+          <option value="none" ${action==='none'?'selected':''}>Nothing</option>
+          <option value="submit" ${action==='submit'?'selected':''}>Submit form data</option>
+          <option value="url" ${action==='url'?'selected':''}>Open a URL</option>
+          <option value="workflow" ${action==='workflow'?'selected':''}>Run a workflow</option>
+        </select>
+      </div>`;
+    if (action === 'url') {
+      html += `<div class="rp-field"><label class="rp-lbl-full">URL</label>
+        <input class="rp-input rp-input-full" placeholder="https://…" value="${p.url||''}" oninput="setProp(${n.id},'url',this.value)"></div>`;
+    }
+    if (action === 'workflow') {
+      html += `<div class="rp-field"><label class="rp-lbl-full">Workflow</label>
+        <select class="rp-input rp-input-full" onchange="setProp(${n.id},'automationId',this.value)">
+          <option value="">Choose a workflow…</option>
+          ${automationsCache.map(a=>`<option value="${a.id}" ${p.automationId===a.id?'selected':''}>${a.name||'Untitled workflow'}</option>`).join('')}
+        </select>
+        ${automationsCache.length?'':'<div style="font-size:10px;color:var(--muted);margin-top:4px">No workflows yet — create one in <a href="/automations" style="color:var(--violet)">Automations</a>. It will also receive the form data.</div>'}
+      </div>`;
+    }
+    if (action === 'submit' || action === 'workflow') {
+      html += `<div class="rp-field"><label class="rp-lbl-full">Success message</label>
+        <input class="rp-input rp-input-full" placeholder="✓ Submitted — thank you!" value="${p.successMsg||''}" oninput="setProp(${n.id},'successMsg',this.value)"></div>
+      <div style="font-size:10px;color:var(--muted);line-height:1.5">Collects every input & dropdown on the canvas and saves it as a submission${action==='workflow'?', then queues the workflow':''}.</div>`;
+    }
+    html += `</div>`;
   }
 
   if (['input','dropdown'].includes(n.type)) {
     html += `<div class="rp-section">
       <div class="rp-section-title">Input</div>
       <div class="rp-field"><label class="rp-lbl-full">Placeholder</label><input class="rp-input rp-input-full" value="${p.placeholder||''}" oninput="setPropAndRender(${n.id},'placeholder',this.value)"></div>
+      <div class="rp-field"><label class="rp-lbl-full">Field name <span style="color:var(--muted);font-weight:300">(key in submissions)</span></label>
+        <input class="rp-input rp-input-full" placeholder="e.g. email" value="${p.fieldName||''}" oninput="setProp(${n.id},'fieldName',this.value)"></div>
+      ${n.type==='dropdown'?`<div class="rp-field"><label class="rp-lbl-full">Options <span style="color:var(--muted);font-weight:300">(comma separated)</span></label>
+        <input class="rp-input rp-input-full" placeholder="Bug report, Feature request, Other" value="${(Array.isArray(p.options)?p.options.join(', '):(p.options||''))}" oninput="setProp(${n.id},'options',this.value)"></div>`:''}
+      <div class="rp-row" style="align-items:center">
+        <input type="checkbox" id="rp-req-${n.id}" ${p.required?'checked':''} onchange="setProp(${n.id},'required',this.checked)" style="accent-color:var(--violet)">
+        <label for="rp-req-${n.id}" style="font-size:11px;color:var(--subtle);cursor:pointer">Required field</label>
+      </div>
     </div>`;
   }
 
@@ -1098,6 +1146,14 @@ function setPropAndRender(id, key, val) {
   // Re-select to keep ring visible
   document.getElementById('nd-'+id)?.classList.add('sel');
   document.getElementById('rp-subtitle').textContent = `${n.w}×${n.h}px · z:${n.z}`;
+}
+
+// Sets a prop AND re-renders the props panel (used when one prop
+// changes which other fields are shown, e.g. the button Action type)
+function setPropAndProps(id, key, val) {
+  setPropAndRender(id, key, val);
+  const n = nodes.find(n => n.id === id); if (!n) return;
+  renderProps(n);
 }
 
 function syncProps(n) {
@@ -1382,9 +1438,12 @@ function loadVersion(key) {
 // SHARE & PUBLISH
 // ═══════════════════════════════════════════════════════
 function openShare() {
-  const name = document.getElementById('app-name').value || 'my-app';
-  const slug = name.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
-  document.getElementById('share-url-input').value = `https://forgelux.co.uk/apps/${slug}`;
+  const input = document.getElementById('share-url-input');
+  if (cloudAppId) {
+    input.value = location.origin + '/app?id=' + cloudAppId;
+  } else {
+    input.value = 'Publish your app to get its link';
+  }
   openModal('share-modal');
 }
 
@@ -1411,7 +1470,9 @@ async function publishApp() {
       await window.FLXdb.saveApp(cloudAppId, { nodes, nid, name });
     }
     await window.FLXdb.publishApp(cloudAppId);
-    toast('✓ App published');
+    const shareInput = document.getElementById('share-url-input');
+    if (shareInput) shareInput.value = location.origin + '/app?id=' + cloudAppId;
+    toast('✓ App published — live at /app?id=' + cloudAppId.slice(0,8) + '…');
   } catch(e) {
     console.warn('Publish failed', e);
     toast('Publish failed — try again');
@@ -1458,6 +1519,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (hasDb) {
     cloudSession = await window.FLXdb.getSession();
     if (!cloudSession) { window.location.href = '/login'; return; }
+    loadWorkflows(); // populate the Action panel's workflow picker (async)
   } else if (!sessionStorage.getItem('flx_user')) {
     // CDN unreachable AND no cached login — send to login
     window.location.href = '/login';
