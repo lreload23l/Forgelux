@@ -269,16 +269,7 @@ async function socialLogin(provider) {
   }
 
   try {
-<<<<<<< HEAD
-    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-    const sb = createClient(
-      'https://xizckgqxdllbopsmbzis.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
-    );
-
-=======
     const sb = await getSB();
->>>>>>> 636a81e (Wire builder to Supabase, remove test-account backdoor, add real auth guards)
     const { error } = await sb.auth.signInWithOAuth({
       provider: 'google',
       options: {

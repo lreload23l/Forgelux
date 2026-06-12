@@ -459,8 +459,6 @@ let dragType = null;
 let selTpl = null;
 let saveTimer = null;
 
-<<<<<<< HEAD
-=======
 // ── Cloud persistence state ──
 let cloudAppId = null;       // UUID of the row in the `apps` table
 let cloudWorkspaceId = null; // workspace this app belongs to
@@ -491,7 +489,6 @@ async function ensureWorkspace() {
   return cloudWorkspaceId;
 }
 
->>>>>>> 636a81e (Wire builder to Supabase, remove test-account backdoor, add real auth guards)
 // ═══════════════════════════════════════════════════════
 // VIEWPORT
 // ═══════════════════════════════════════════════════════
@@ -850,7 +847,6 @@ function canvasMouseDown(e) {
       e.preventDefault();
     }
   }
-<<<<<<< HEAD
 }
 
 document.addEventListener('mousemove', e => {
@@ -889,373 +885,6 @@ document.addEventListener('mousemove', e => {
   }
 });
 
-document.addEventListener('mouseup', () => {
-  if (dragging || resizing) saveHist();
-  dragging = null; resizing = null; isPanning = false;
-});
-
-// ═══════════════════════════════════════════════════════
-// CONTEXT MENU
-// ═══════════════════════════════════════════════════════
-let ctxId = null;
-
-function nodeContextMenu(e) {
-  e.preventDefault();
-  e.stopPropagation();
-  const el = e.currentTarget;
-  ctxId = parseInt(el.id.replace('nd-',''));
-  if (!isNaN(ctxId)) select(ctxId);
-  const menu = document.getElementById('ctx-menu');
-  menu.style.left = e.clientX+'px';
-  menu.style.top  = e.clientY+'px';
-  menu.style.display = 'block';
-}
-
-function closeCtxMenu() {
-  document.getElementById('ctx-menu').style.display = 'none';
-}
-
-document.addEventListener('click', closeCtxMenu);
-
-function ctxAction(action) {
-  closeCtxMenu();
-  const id = ctxId || selId;
-  const n = nodes.find(n => n.id === id);
-
-  if (action === 'duplicate' && n) {
-    const copy = { ...JSON.parse(JSON.stringify(n)), id:++nid, x:n.x+16, y:n.y+16, z:nodes.length };
-    nodes.push(copy); renderNode(copy); select(copy.id); saveHist(); renderLayers();
-  }
-  if (action === 'copy' && n)  { clipboard = JSON.parse(JSON.stringify(n)); toast('Copied'); }
-  if (action === 'paste' && clipboard) {
-    const copy = { ...JSON.parse(JSON.stringify(clipboard)), id:++nid, x:clipboard.x+24, y:clipboard.y+24, z:nodes.length };
-    nodes.push(copy); renderNode(copy); select(copy.id); saveHist(); renderLayers();
-  }
-  if (action === 'delete' && id) deleteNode(id);
-  if (action === 'front' && n)  { n.z = nodes.length+1; document.getElementById('nd-'+n.id).style.zIndex = n.z+1; }
-  if (action === 'back'  && n)  { n.z = 0; document.getElementById('nd-'+n.id).style.zIndex = 1; }
-}
-
-// ═══════════════════════════════════════════════════════
-// PROPERTIES PANEL
-// ═══════════════════════════════════════════════════════
-function renderProps(n) {
-  if (!n) { deselect(); return; }
-  document.getElementById('rp-title').textContent = n.type.charAt(0).toUpperCase() + n.type.slice(1);
-  document.getElementById('rp-subtitle').textContent = `${n.w}×${n.h}px · z:${n.z}`;
-
-  let html = '';
-  const p = n.props;
-
-  // ── Position & Size ──
-  html += `<div class="rp-section">
-    <div class="rp-section-title">Position & size</div>
-    <div class="rp-row">
-      <span class="rp-label">X</span><input class="rp-input rp-input-sm" type="number" value="${Math.round(n.x)}" oninput="setPos(${n.id},'x',+this.value)">
-      <span class="rp-label" style="margin-left:4px">Y</span><input class="rp-input rp-input-sm" type="number" value="${Math.round(n.y)}" oninput="setPos(${n.id},'y',+this.value)">
-    </div>
-    <div class="rp-row">
-      <span class="rp-label">W</span><input class="rp-input rp-input-sm" type="number" value="${n.w}" oninput="setPos(${n.id},'w',+this.value)">
-      <span class="rp-label" style="margin-left:4px">H</span><input class="rp-input rp-input-sm" type="number" value="${n.h}" oninput="setPos(${n.id},'h',+this.value)">
-    </div>
-    <div class="rp-row">
-      <span class="rp-label">Opacity</span>
-      <input class="rp-input" type="range" min="0" max="100" value="${p.opacity||100}" oninput="setProp(${n.id},'opacity',+this.value);this.nextElementSibling.textContent=this.value+'%'">
-      <span class="rp-val">${p.opacity||100}%</span>
-    </div>
-    <div class="rp-row">
-      <span class="rp-label">Radius</span>
-      <input class="rp-input rp-input-sm" type="number" value="${p.radius||0}" oninput="setPropAndRender(${n.id},'radius',+this.value)">
-    </div>
-  </div>`;
-
-  // ── Content props by type ──
-  if (['heading','text'].includes(n.type)) {
-    html += `<div class="rp-section">
-      <div class="rp-section-title">Text</div>
-      <div class="rp-field"><label class="rp-lbl-full">Content</label>
-        <textarea class="rp-input rp-input-full" rows="3" style="resize:vertical" oninput="setPropAndRender(${n.id},'text',this.value)">${p.text||''}</textarea>
-      </div>
-      <div class="rp-row">
-        <span class="rp-label">Size</span><input class="rp-input rp-input-sm" type="number" value="${p.fontSize||14}" oninput="setPropAndRender(${n.id},'fontSize',+this.value)">
-        <span class="rp-label" style="margin-left:4px">Color</span><input class="rp-input rp-input-color" type="color" value="${toHex(p.color||'#ffffff')}" oninput="setPropAndRender(${n.id},'color',this.value)">
-      </div>
-    </div>`;
-  }
-
-  if (n.type === 'button') {
-    html += `<div class="rp-section">
-      <div class="rp-section-title">Button</div>
-      <div class="rp-field"><label class="rp-lbl-full">Label</label><input class="rp-input rp-input-full" value="${p.text||'Button'}" oninput="setPropAndRender(${n.id},'text',this.value)"></div>
-      <div class="rp-row">
-        <span class="rp-label">BG</span><input class="rp-input rp-input-color" type="color" value="${toHex(p.bg||'#A3FF47')}" oninput="setPropAndRender(${n.id},'bg',this.value)">
-        <span class="rp-label" style="margin-left:4px">Text</span><input class="rp-input rp-input-color" type="color" value="${toHex(p.color||'#080A0F')}" oninput="setPropAndRender(${n.id},'color',this.value)">
-      </div>
-    </div>`;
-  }
-
-  if (['input','dropdown'].includes(n.type)) {
-    html += `<div class="rp-section">
-      <div class="rp-section-title">Input</div>
-      <div class="rp-field"><label class="rp-lbl-full">Placeholder</label><input class="rp-input rp-input-full" value="${p.placeholder||''}" oninput="setPropAndRender(${n.id},'placeholder',this.value)"></div>
-    </div>`;
-  }
-
-  if (n.type === 'stat') {
-    html += `<div class="rp-section">
-      <div class="rp-section-title">Stat card</div>
-      <div class="rp-field"><label class="rp-lbl-full">Label</label><input class="rp-input rp-input-full" value="${p.label||''}" oninput="setPropAndRender(${n.id},'label',this.value)"></div>
-      <div class="rp-field"><label class="rp-lbl-full">Value</label><input class="rp-input rp-input-full" value="${p.value||''}" oninput="setPropAndRender(${n.id},'value',this.value)"></div>
-      <div class="rp-field"><label class="rp-lbl-full">Trend</label><input class="rp-input rp-input-full" placeholder="e.g. ↑ 12%" value="${p.trend||''}" oninput="setPropAndRender(${n.id},'trend',this.value)"></div>
-      <div class="rp-field"><label class="rp-lbl-full">Icon</label><input class="rp-input rp-input-full" value="${p.icon||''}" oninput="setPropAndRender(${n.id},'icon',this.value)"></div>
-    </div>`;
-  }
-
-  if (n.type === 'badge') {
-    html += `<div class="rp-section">
-      <div class="rp-section-title">Badge</div>
-      <div class="rp-field"><label class="rp-lbl-full">Text</label><input class="rp-input rp-input-full" value="${p.text||'Badge'}" oninput="setPropAndRender(${n.id},'text',this.value)"></div>
-      <div class="rp-row">
-        <span class="rp-label">BG</span><input class="rp-input rp-input-color" type="color" value="${toHex(p.bg||'#7B2FFF')}" oninput="setPropAndRender(${n.id},'bg',this.value)">
-        <span class="rp-label" style="margin-left:4px">Text</span><input class="rp-input rp-input-color" type="color" value="${toHex(p.color||'#C4A3FF')}" oninput="setPropAndRender(${n.id},'color',this.value)">
-      </div>
-    </div>`;
-  }
-
-  if (n.type === 'chart') {
-    html += `<div class="rp-section">
-      <div class="rp-section-title">Chart</div>
-      <div class="rp-field"><label class="rp-lbl-full">Title</label><input class="rp-input rp-input-full" value="${p.title||''}" oninput="setPropAndRender(${n.id},'title',this.value)"></div>
-    </div>`;
-  }
-
-  if (n.type === 'header') {
-    html += `<div class="rp-section">
-      <div class="rp-section-title">Header</div>
-      <div class="rp-field"><label class="rp-lbl-full">App title</label><input class="rp-input rp-input-full" value="${p.title||''}" oninput="setPropAndRender(${n.id},'title',this.value)"></div>
-    </div>`;
-  }
-
-  // ── Data source (for data components) ──
-  if (['table','chart','stat','list'].includes(n.type)) {
-    const src = p.dataSource || '';
-    html += `<div class="rp-section">
-      <div class="rp-section-title">Data source</div>
-      <div class="rp-field">
-        <label class="rp-lbl-full">Source</label>
-        <select class="rp-select" onchange="setPropAndRender(${n.id},'dataSource',this.value)">
-          <option value="" ${!src?'selected':''}>Static / manual</option>
-          <option value="apps" ${src==='apps'?'selected':''}>apps</option>
-          <option value="automations" ${src==='automations'?'selected':''}>automations</option>
-          <option value="automation_runs" ${src==='automation_runs'?'selected':''}>automation_runs</option>
-          <option value="workspace_members" ${src==='workspace_members'?'selected':''}>workspace_members</option>
-          <option value="connectors" ${src==='connectors'?'selected':''}>connectors</option>
-          <option value="sheets" ${src==='sheets'?'selected':''}>Google Sheets</option>
-          <option value="airtable" ${src==='airtable'?'selected':''}>Airtable</option>
-          <option value="api" ${src==='api'?'selected':''}>REST API</option>
-        </select>
-      </div>
-      ${src ? `
-      <div class="rp-field"><label class="rp-lbl-full">Field / column</label><input class="rp-input rp-input-full" placeholder="e.g. name, status" value="${p.dataField||''}" oninput="setProp(${n.id},'dataField',this.value)"></div>
-      <div class="rp-field"><label class="rp-lbl-full">Filter</label><input class="rp-input rp-input-full" placeholder="e.g. status = 'live'" value="${p.dataFilter||''}" oninput="setProp(${n.id},'dataFilter',this.value)"></div>
-      <div class="rp-field"><label class="rp-lbl-full">Limit</label><input class="rp-input rp-input-sm" type="number" value="${p.dataLimit||100}" oninput="setProp(${n.id},'dataLimit',+this.value)"></div>
-      <div class="rp-info">⚡ Live data loads when your app is published. Shows sample data in the builder.</div>
-      ` : `<div style="font-size:10px;color:var(--muted);line-height:1.5">Select a source to bind live data when your app is published.</div>`}
-    </div>`;
-  }
-
-  // ── Actions ──
-  html += `<div class="rp-section">
-    <div class="rp-section-title">Actions</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap">
-      <button class="rp-btn" onclick="ctxAction('duplicate')">Duplicate</button>
-      <button class="rp-btn" onclick="ctxAction('front')">To front</button>
-      <button class="rp-btn" onclick="ctxAction('back')">To back</button>
-      <button class="rp-btn rp-btn-danger" onclick="deleteNode(${n.id})">Delete</button>
-    </div>
-  </div>`;
-
-  document.getElementById('rp-scroll').innerHTML = html;
-}
-
-function setPos(id, key, val) {
-  const n = nodes.find(n => n.id === id); if (!n) return;
-  n[key] = val;
-  const el = document.getElementById('nd-'+id);
-  if (el) {
-    if (key==='x') el.style.left = val+'px';
-    if (key==='y') el.style.top  = val+'px';
-    if (key==='w') el.style.width  = val+'px';
-    if (key==='h') el.style.height = val+'px';
-  }
-}
-
-function setProp(id, key, val) {
-  const n = nodes.find(n => n.id === id); if (!n) return;
-  n.props[key] = val;
-}
-
-function setPropAndRender(id, key, val) {
-  setProp(id, key, val);
-  const n = nodes.find(n => n.id === id); if (!n) return;
-  renderNode(n);
-  // Re-select to keep ring visible
-  document.getElementById('nd-'+id)?.classList.add('sel');
-  document.getElementById('rp-subtitle').textContent = `${n.w}×${n.h}px · z:${n.z}`;
-}
-
-function syncProps(n) {
-  if (n && n.id === selId) {
-    document.getElementById('rp-subtitle').textContent = `${n.w}×${n.h}px · z:${n.z}`;
-    // Update X/Y inputs
-    const inputs = document.querySelectorAll('#rp-scroll input[type=number]');
-    if (inputs[0]) inputs[0].value = Math.round(n.x);
-    if (inputs[1]) inputs[1].value = Math.round(n.y);
-    if (inputs[2]) inputs[2].value = n.w;
-    if (inputs[3]) inputs[3].value = n.h;
-  }
-}
-
-function toHex(c) {
-  if (!c || c.startsWith('#')) return c || '#ffffff';
-  const m = c.match(/\d+/g);
-  if (!m || m.length < 3) return '#ffffff';
-  return '#' + m.slice(0,3).map(x => parseInt(x).toString(16).padStart(2,'0')).join('');
-}
-
-// ═══════════════════════════════════════════════════════
-// LAYERS
-// ═══════════════════════════════════════════════════════
-function renderLayers() {
-  const list = document.getElementById('layers-list');
-  if (!list) return;
-  const icons = { header:'▬', sidebar:'▐', divider:'─', image:'🖼', stat:'#', chart:'📊', table:'⊞', list:'≡', heading:'H', text:'¶', badge:'◉', link:'⎋', button:'⬜', input:'▱', dropdown:'▾', form:'⊡' };
-  if (!nodes.length) {
-    list.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);font-size:11px">No components yet</div>';
-    return;
-  }
-  list.innerHTML = [...nodes].reverse().map(n => `
-    <div class="layer-item ${n.id===selId?'act':''}" onclick="select(${n.id})">
-      <span class="layer-icon">${icons[n.type]||'□'}</span>
-      <span class="layer-name">${n.type}</span>
-      <span class="layer-vis" onclick="event.stopPropagation();toggleVisible(${n.id})">${n.visible===false?'👁‍🗨':'👁'}</span>
-    </div>`).join('');
-}
-
-function toggleVisible(id) {
-  const n = nodes.find(n => n.id === id); if (!n) return;
-  n.visible = n.visible === false ? true : false;
-  const el = document.getElementById('nd-'+id);
-  if (el) el.style.display = n.visible === false ? 'none' : '';
-  renderLayers();
-}
-
-// ═══════════════════════════════════════════════════════
-// HISTORY
-// ═══════════════════════════════════════════════════════
-function saveHist() {
-  history = history.slice(0, histIdx + 1);
-  history.push(JSON.parse(JSON.stringify(nodes)));
-  histIdx = history.length - 1;
-  if (history.length > 50) { history.shift(); histIdx--; }
-  triggerSave();
-}
-
-function undo() {
-  if (histIdx <= 0) return;
-  histIdx--;
-  restoreSnap();
-  toast('Undo');
-}
-
-function redo() {
-  if (histIdx >= history.length - 1) return;
-  histIdx++;
-  restoreSnap();
-  toast('Redo');
-}
-
-function restoreSnap() {
-  document.querySelectorAll('.c-node').forEach(el => el.remove());
-  nodes = JSON.parse(JSON.stringify(history[histIdx]));
-  nid = Math.max(...nodes.map(n => n.id), 0);
-  nodes.forEach(n => renderNode(n));
-  deselect(); renderLayers();
-  if (!nodes.length) document.getElementById('canvas-hint').style.display = '';
-  else document.getElementById('canvas-hint').style.display = 'none';
-}
-
-// ═══════════════════════════════════════════════════════
-// AUTO SAVE
-// ═══════════════════════════════════════════════════════
-function triggerSave() {
-  const dot = document.getElementById('save-dot');
-  const lbl = document.getElementById('save-lbl');
-  dot.classList.add('saving');
-  lbl.textContent = 'Saving…';
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    const name = document.getElementById('app-name').value || 'untitled';
-    const key = 'flx_builder_' + name.toLowerCase().replace(/\s+/g,'-');
-    try { localStorage.setItem(key, JSON.stringify({ nodes, savedAt: new Date().toISOString() })); } catch(e) {}
-    dot.classList.remove('saving');
-    lbl.textContent = 'Saved ' + new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-  }, 1200);
-}
-
-// Ctrl+S
-document.addEventListener('keydown', e => {
-  if ((e.ctrlKey||e.metaKey) && e.key === 's') { e.preventDefault(); triggerSave(); toast('✓ Saved'); }
-  if ((e.ctrlKey||e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
-  if ((e.ctrlKey||e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key==='z'))) { e.preventDefault(); redo(); }
-  if ((e.ctrlKey||e.metaKey) && e.key === 'd') { e.preventDefault(); ctxAction('duplicate'); }
-  if (e.key === 'Delete' || e.key === 'Backspace') {
-    if (selId && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-      e.preventDefault(); deleteNode(selId);
-    }
-=======
-}
-
-document.addEventListener('mousemove', e => {
-  if (dragging) {
-    const n = nodes.find(n => n.id === dragging.id);
-    if (!n) return;
-    const vp = document.getElementById('canvas-vp').getBoundingClientRect();
-    n.x = Math.max(0, Math.round(((e.clientX - vp.left) / zoom - dragOff.x) / 8) * 8);
-    n.y = Math.max(0, Math.round(((e.clientY - vp.top)  / zoom - dragOff.y) / 8) * 8);
-    const el = document.getElementById('nd-'+n.id);
-    if (el) { el.style.left = n.x+'px'; el.style.top = n.y+'px'; }
-    syncProps(n);
-  }
-
-  if (resizing) {
-    const n = nodes.find(n => n.id === resizing.id);
-    if (!n) return;
-    const vp = document.getElementById('canvas-vp').getBoundingClientRect();
-    const cx = (e.clientX - vp.left) / zoom;
-    const cy = (e.clientY - vp.top)  / zoom;
-    const dx = cx - rsStart.cx, dy = cy - rsStart.cy;
-    const d = resizing.dir;
-    if (d.includes('e')) n.w = Math.max(40, Math.round((rsStart.w + dx)/8)*8);
-    if (d.includes('s')) n.h = Math.max(20, Math.round((rsStart.h + dy)/8)*8);
-    if (d.includes('w')) { n.w = Math.max(40, Math.round((rsStart.w - dx)/8)*8); n.x = Math.round((rsStart.x + rsStart.w - n.w)/8)*8; }
-    if (d.includes('n')) { n.h = Math.max(20, Math.round((rsStart.h - dy)/8)*8); n.y = Math.round((rsStart.y + rsStart.h - n.h)/8)*8; }
-    const el = document.getElementById('nd-'+n.id);
-    if (el) { el.style.left=n.x+'px'; el.style.top=n.y+'px'; el.style.width=n.w+'px'; el.style.height=n.h+'px'; }
-    syncProps(n);
-  }
-
-  if (isPanning) {
-    panX = e.clientX - panStart.x;
-    panY = e.clientY - panStart.y;
-    updateVP();
->>>>>>> 636a81e (Wire builder to Supabase, remove test-account backdoor, add real auth guards)
-  }
-  if (e.key === 'Escape') deselect();
-});
-
-<<<<<<< HEAD
-=======
 document.addEventListener('mouseup', () => {
   if (dragging || resizing) saveHist();
   dragging = null; resizing = null; isPanning = false;
@@ -1609,7 +1238,6 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') deselect();
 });
 
->>>>>>> 636a81e (Wire builder to Supabase, remove test-account backdoor, add real auth guards)
 // ═══════════════════════════════════════════════════════
 // TEMPLATES
 // ═══════════════════════════════════════════════════════
@@ -1766,11 +1394,6 @@ function copyShareUrl() {
   toast('✓ URL copied');
 }
 
-<<<<<<< HEAD
-function publishApp() {
-  triggerSave();
-  toast('✓ App published — live at your app URL');
-=======
 async function publishApp() {
   triggerSave();
   if (!cloudSession || !window.FLXdb) {
@@ -1793,7 +1416,6 @@ async function publishApp() {
     console.warn('Publish failed', e);
     toast('Publish failed — try again');
   }
->>>>>>> 636a81e (Wire builder to Supabase, remove test-account backdoor, add real auth guards)
   closeModal('share-modal');
 }
 
@@ -1811,52 +1433,6 @@ function closeModal(id) {
 // Close on overlay click
 document.querySelectorAll('.bld-overlay').forEach(ov => {
   ov.addEventListener('click', e => { if (e.target === ov) closeModal(ov.id); });
-<<<<<<< HEAD
-});
-
-// ═══════════════════════════════════════════════════════
-// TOAST
-// ═══════════════════════════════════════════════════════
-function toast(msg) {
-  const t = document.getElementById('bld-toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(window._bt);
-  window._bt = setTimeout(() => t.classList.remove('show'), 1800);
-}
-
-// ═══════════════════════════════════════════════════════
-// BOOT
-// ═══════════════════════════════════════════════════════
-window.addEventListener('DOMContentLoaded', () => {
-  updateVP();
-  renderTemplates();
-
-  // Check URL params
-  const params = new URLSearchParams(window.location.search);
-  const appId = params.get('app');
-
-  if (appId) {
-    const key = 'flx_builder_' + appId;
-    try {
-      const d = JSON.parse(localStorage.getItem(key)||'{}');
-      if (d.nodes?.length) {
-        nodes = d.nodes;
-        nid = Math.max(...nodes.map(n=>n.id),0);
-        nodes.forEach(n=>renderNode(n));
-        document.getElementById('app-name').value = appId.replace(/-/g,' ');
-        document.getElementById('canvas-hint').style.display = 'none';
-        saveHist(); renderLayers();
-        return;
-      }
-    } catch(e) {}
-  }
-
-  // Default: blank canvas
-  document.getElementById('canvas-hint').style.display = '';
-});
-
-=======
 });
 
 // ═══════════════════════════════════════════════════════
@@ -1936,7 +1512,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('canvas-hint').style.display = '';
 });
 
->>>>>>> 636a81e (Wire builder to Supabase, remove test-account backdoor, add real auth guards)
 </script>
 </body>
 </html>
