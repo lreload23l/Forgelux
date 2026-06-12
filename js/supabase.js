@@ -93,6 +93,16 @@ export async function getApps(workspaceId) {
   return data
 }
 
+export async function getApp(appId) {
+  const { data, error } = await supabase
+    .from('apps')
+    .select('*')
+    .eq('id', appId)
+    .single()
+  if (error) throw error
+  return data
+}
+
 export async function createApp(workspaceId, name, type = 'web') {
   const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
   const user = await getCurrentUser()
@@ -105,10 +115,12 @@ export async function createApp(workspaceId, name, type = 'web') {
   return data
 }
 
-export async function saveApp(appId, canvasJson) {
+export async function saveApp(appId, canvasJson, name) {
+  const patch = { canvas_json: canvasJson, updated_at: new Date().toISOString() }
+  if (name) patch.name = name
   const { data, error } = await supabase
     .from('apps')
-    .update({ canvas_json: canvasJson, updated_at: new Date().toISOString() })
+    .update(patch)
     .eq('id', appId)
     .select()
     .single()
@@ -230,7 +242,7 @@ export async function getDashboardStats(workspaceId) {
 window.FLXdb = {
   supabase, signIn, signUp, signOut, getSession, getCurrentUser,
   getWorkspace, getUserWorkspaces, createWorkspace,
-  getApps, createApp, saveApp, publishApp, deleteApp,
+  getApps, getApp, createApp, saveApp, publishApp, deleteApp,
   getAutomations, saveAutomation, getAutomationRuns,
   getTeamMembers, inviteMember, updateMemberRole, removeMember,
   getDashboardStats

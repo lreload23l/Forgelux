@@ -164,13 +164,17 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 </div>
 
 <script>
-// ── TEST ACCOUNTS ──
-const ACCOUNTS = [
-  { email:'luke@forgelux.co.uk',   password:'Forgelux123!', name:'Luke Ryan',    initials:'LR', plan:'Pro',     role:'Owner',  workspace:"Luke's Workspace", runsUsed:34012, runsTotal:50000, seatsUsed:7, seatsTotal:25 },
-  { email:'admin@forgelux.co.uk',  password:'Forgelux123!', name:'Admin User',   initials:'AU', plan:'Pro',     role:'Admin',  workspace:"Luke's Workspace", runsUsed:34012, runsTotal:50000, seatsUsed:7, seatsTotal:25 },
-  { email:'test@forgelux.co.uk',   password:'Forgelux123!', name:'Test User',    initials:'TU', plan:'Starter', role:'Editor', workspace:'Test Workspace',   runsUsed:1200,  runsTotal:5000,  seatsUsed:2, seatsTotal:5  },
-  { email:'viewer@forgelux.co.uk', password:'Forgelux123!', name:'Viewer User',  initials:'VU', plan:'Starter', role:'Viewer', workspace:'Test Workspace',   runsUsed:1200,  runsTotal:5000,  seatsUsed:2, seatsTotal:5  },
-];
+// ── SHARED SUPABASE CLIENT (cached, created once) ──
+let _sb = null;
+async function getSB() {
+  if (_sb) return _sb;
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  _sb = createClient(
+    'https://xizckgqxdllbopsmbzis.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
+  );
+  return _sb;
+}
 
 // ── TAB SWITCHING ──
 function switchTab(tab) {
@@ -191,14 +195,14 @@ async function doSignIn() {
 
   btn.textContent = 'Signing in…'; btn.disabled = true;
 
-  // Try Supabase first (real accounts)
   try {
-    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-    const sb = createClient(
-      'https://xizckgqxdllbopsmbzis.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
-    );
+    const sb = await getSB();
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) {
+      showErr(errEl, error.message === 'Invalid login credentials' ? 'Incorrect email or password.' : error.message);
+      btn.textContent = 'Sign in to Forgelux'; btn.disabled = false;
+      return;
+    }
     if (data?.user) {
       const user = {
         id: data.user.id,
@@ -206,27 +210,19 @@ async function doSignIn() {
         name: data.user.user_metadata?.full_name || email.split('@')[0],
         initials: (data.user.user_metadata?.full_name || email).split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2),
         plan: 'Pro', role: 'Owner', workspace: "My Workspace",
-        runsUsed: 0, runsTotal: 50000, seatsUsed: 1, seatsTotal: 25,
-        supabaseSession: data.session
+        runsUsed: 0, runsTotal: 50000, seatsUsed: 1, seatsTotal: 25
       };
       sessionStorage.setItem('flx_user', JSON.stringify(user));
       window.location.href = '/dashboard';
       return;
     }
-  } catch(e) { /* Supabase unavailable, try test accounts */ }
-
-  // Fall back to test accounts
-  const user = ACCOUNTS.find(a => a.email.toLowerCase() === email.toLowerCase() && a.password === password);
-  if (user) {
-    sessionStorage.setItem('flx_user', JSON.stringify(user));
-    window.location.href = '/dashboard';
-  } else {
-    showErr(errEl, 'Incorrect email or password.');
+  } catch(e) {
+    showErr(errEl, 'Could not reach the sign-in service. Check your connection and try again.');
     btn.textContent = 'Sign in to Forgelux'; btn.disabled = false;
   }
 }
 
-// ── SIGN UP (demo — uses owner account) ──
+// ── SIGN UP ──
 async function doSignUp() {
   const fname = document.getElementById('up-fname').value.trim();
   const lname = document.getElementById('up-lname').value.trim();
@@ -241,11 +237,7 @@ async function doSignUp() {
   btn.textContent = 'Creating account…'; btn.disabled = true;
 
   try {
-    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-    const sb = createClient(
-      'https://xizckgqxdllbopsmbzis.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
-    );
+    const sb = await getSB();
     const fullName = (fname + ' ' + lname).trim();
     const { data, error } = await sb.auth.signUp({
       email, password: pass,
@@ -264,11 +256,8 @@ async function doSignUp() {
       return;
     }
   } catch(e) {
-    // Fall back to demo session
-    const initials = (fname[0]+((lname||'')[0]||'')).toUpperCase();
-    const user = { ...ACCOUNTS[0], name: fname+' '+lname, initials };
-    sessionStorage.setItem('flx_user', JSON.stringify(user));
-    window.location.href = '/dashboard';
+    showErr(errEl, 'Could not reach the sign-up service. Check your connection and try again.');
+    btn.textContent = 'Create my account →'; btn.disabled = false;
   }
 }
 
@@ -280,12 +269,16 @@ async function socialLogin(provider) {
   }
 
   try {
+<<<<<<< HEAD
     const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
     const sb = createClient(
       'https://xizckgqxdllbopsmbzis.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpemNrZ3F4ZGxsYm9wc21iemlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2OTE4NzIsImV4cCI6MjA5NjI2Nzg3Mn0.OkPjI4XGYiIbYO1Mf7DgVSkQrUfV__zZ1LinTnQjI28'
     );
 
+=======
+    const sb = await getSB();
+>>>>>>> 636a81e (Wire builder to Supabase, remove test-account backdoor, add real auth guards)
     const { error } = await sb.auth.signInWithOAuth({
       provider: 'google',
       options: {

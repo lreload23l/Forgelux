@@ -1,13 +1,6 @@
 // ─── Forgelux Auth ───────────────────────────────────────────────
-// Uses Supabase auth in production.
-// Falls back to test accounts for local development.
-
-const TEST_ACCOUNTS = [
-  { email:'luke@forgelux.co.uk',   password:'Forgelux123!', name:'Luke Ryan',   initials:'LR', plan:'Pro',     role:'Owner',  workspace:"Luke's Workspace", runsUsed:34012, runsTotal:50000, seatsUsed:7, seatsTotal:25 },
-  { email:'admin@forgelux.co.uk',  password:'Forgelux123!', name:'Admin User',  initials:'AU', plan:'Pro',     role:'Admin',  workspace:"Luke's Workspace", runsUsed:34012, runsTotal:50000, seatsUsed:7, seatsTotal:25 },
-  { email:'test@forgelux.co.uk',   password:'Forgelux123!', name:'Test User',   initials:'TU', plan:'Starter', role:'Editor', workspace:'Test Workspace',   runsUsed:1200,  runsTotal:5000,  seatsUsed:2, seatsTotal:5  },
-  { email:'viewer@forgelux.co.uk', password:'Forgelux123!', name:'Viewer User', initials:'VU', plan:'Starter', role:'Viewer', workspace:'Test Workspace',   runsUsed:1200,  runsTotal:5000,  seatsUsed:2, seatsTotal:5  },
-];
+// Session helpers. The sessionStorage copy of the user profile is a
+// UI cache only — real access control is the Supabase session + RLS.
 
 function saveSession(user) {
   sessionStorage.setItem('flx_user', JSON.stringify(user));
@@ -22,7 +15,6 @@ function getUser() {
 
 function logout() {
   sessionStorage.removeItem('flx_user');
-  // If Supabase is loaded, sign out from there too
   if (window.FLXdb) window.FLXdb.signOut();
   else window.location.href = '/login';
 }
@@ -32,17 +24,30 @@ const PUBLIC_PAGES = ['index', 'login', ''];
 function requireAuth() {
   const page = window.location.pathname.split('/').pop().replace('.html','') || 'index';
   if (PUBLIC_PAGES.includes(page)) return null;
+
+  // Fast UI guard (instant redirect, no flash of protected content)
   const user = getUser();
   if (!user) { window.location.href = '/login'; return null; }
+
+  // Real guard: verify the Supabase session in the background.
+  // A forged sessionStorage entry gets bounced here, and RLS means
+  // it could never read data anyway.
+  verifyRealSession();
   return user;
 }
 
-function attemptLogin(email, password) {
-  const match = TEST_ACCOUNTS.find(
-    a => a.email.toLowerCase() === email.toLowerCase().trim() && a.password === password
-  );
-  if (match) { saveSession(match); return { success: true, user: match }; }
-  return { success: false, error: 'Incorrect email or password.' };
+async function verifyRealSession() {
+  try {
+    const mod = await import('/js/supabase.js');
+    const { data } = await mod.supabase.auth.getSession();
+    if (!data?.session) {
+      sessionStorage.removeItem('flx_user');
+      window.location.href = '/login';
+    }
+  } catch(e) {
+    // Network/CDN failure — fail open for UI, RLS still protects data.
+    console.warn('Session verification unavailable', e);
+  }
 }
 
 function setActiveNav() {
@@ -52,4 +57,4 @@ function setActiveNav() {
   });
 }
 
-window.FLX = { getUser, requireAuth, logout, setActiveNav, attemptLogin, saveSession, TEST_ACCOUNTS };
+window.FLX = { getUser, requireAuth, logout, setActiveNav, saveSession };

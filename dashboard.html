@@ -807,7 +807,24 @@ function clearAll() {
 async function loadDashboard() {
   const raw = sessionStorage.getItem('flx_user');
   const su = raw ? JSON.parse(raw) : null;
-  if (!su) return;
+  if (!su) {
+    // No cached login — check for a real session before bouncing
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = '/login'; return; }
+      // Session exists but cache was lost (e.g. new tab) — rebuild it
+      const u = session.user;
+      const name0 = u.user_metadata?.full_name || u.email.split('@')[0];
+      sessionStorage.setItem('flx_user', JSON.stringify({
+        id: u.id, email: u.email, name: name0,
+        initials: name0.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2),
+        plan: 'Pro', role: 'Owner', workspace: 'My Workspace',
+        runsUsed: 0, runsTotal: 50000, seatsUsed: 1, seatsTotal: 25
+      }));
+      location.reload();
+    } catch(e) { window.location.href = '/login'; }
+    return;
+  }
 
   // Update sidebar
   const name = su.name || su.email || 'User';
