@@ -1,58 +1,8 @@
 {
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "rewrites": [
-    {
-      "source": "/dashboard",
-      "destination": "/dashboard.html"
-    },
-    {
-      "source": "/apps",
-      "destination": "/apps.html"
-    },
-    {
-      "source": "/builder",
-      "destination": "/builder.html"
-    },
-    {
-      "source": "/automations",
-      "destination": "/automations.html"
-    },
-    {
-      "source": "/analytics",
-      "destination": "/analytics.html"
-    },
-    {
-      "source": "/team",
-      "destination": "/team.html"
-    },
-    {
-      "source": "/billing",
-      "destination": "/billing.html"
-    },
-    {
-      "source": "/settings",
-      "destination": "/settings.html"
-    },
-    {
-      "source": "/login",
-      "destination": "/login.html"
-    },
-    {
-      "source": "/database",
-      "destination": "/database.html"
-    },
-    {
-      "source": "/integrations",
-      "destination": "/integrations.html"
-    },
-    {
-      "source": "/app",
-      "destination": "/app.html"
-    },
-    {
-      "source": "/auth/callback",
-      "destination": "/auth/callback.html"
+  "functions": {
+    "api/chat.js": {
+      "memory": 128,
+      "maxDuration": 15
     }
-  ]
+  }
 }
