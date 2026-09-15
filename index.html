@@ -269,6 +269,25 @@ footer {
 .footer-copy { font-size: 0.78rem; color: var(--muted); }
 hr.rule { border: none; border-top: 1px solid var(--border); margin: 0 5rem; }
 
+
+/* ── CONTACT FORM ── */
+.cf-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; }
+.cf-field { display:flex; flex-direction:column; gap:0.4rem; }
+.cf-label { font-size:0.75rem; font-weight:500; color:var(--subtle); letter-spacing:0.03em; }
+.cf-input {
+  background:#161B25; border:1px solid rgba(255,255,255,0.09);
+  border-radius:8px; padding:0.7rem 0.9rem;
+  color:var(--text); font-family:'Inter',sans-serif;
+  font-size:0.88rem; font-weight:300; outline:none;
+  transition:border-color 0.2s; width:100%;
+  appearance:none; -webkit-appearance:none;
+}
+.cf-input::placeholder { color:var(--muted); }
+.cf-input:focus { border-color:rgba(123,47,255,0.5); }
+.cf-select { cursor:pointer; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%236B7280'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 0.9rem center; padding-right:2.5rem; }
+.cf-textarea { resize:vertical; min-height:110px; }
+@media(max-width:600px) { .cf-row { grid-template-columns:1fr; } }
+
 /* ── CHATBOT WIDGET ── */
 #chat-trigger {
   display: none; /* CHATBOT HIDDEN — remove this line to enable */
@@ -821,6 +840,55 @@ function showQuickReplies(options) {
 }
 
 function clearQuickReplies() { document.getElementById('quick-replies').innerHTML = ''; }
+
+// ── CONTACT FORM ────────────────────────────────────────────────────────────
+async function submitContactForm() {
+  const name    = document.getElementById('cf-name').value.trim();
+  const email   = document.getElementById('cf-email').value.trim();
+  const service = document.getElementById('cf-service').value;
+  const budget  = document.getElementById('cf-budget').value;
+  const message = document.getElementById('cf-message').value.trim();
+  const status  = document.getElementById('cf-status');
+  const btn     = document.getElementById('cf-submit');
+
+  if (!name || !email || !service || !message) {
+    status.textContent = 'Please fill in all required fields.';
+    status.style.color = '#f87171';
+    return;
+  }
+  if (!/^[^@]+@[^@]+\.[^@]+$/.test(email)) {
+    status.textContent = 'Please enter a valid email address.';
+    status.style.color = '#f87171';
+    return;
+  }
+
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+  status.textContent = '';
+
+  try {
+    await fetch(SHEET_WEBHOOK_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        timestamp: new Date().toISOString(),
+        name, email,
+        service, budget,
+        notes: message,
+        source: 'contact-form'
+      })
+    });
+    document.getElementById('contact-form-wrap').style.display = 'none';
+    document.getElementById('contact-success').style.display = 'block';
+  } catch(e) {
+    btn.textContent = 'Send message';
+    btn.disabled = false;
+    status.textContent = 'Something went wrong. Please try again.';
+    status.style.color = '#f87171';
+  }
+}
+
 </script>
 
 </body>
